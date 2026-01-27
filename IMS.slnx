@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="directory.packages.props" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/IMS.API/IMS.API.csproj" />
+    <Project Path="src/IMS.Application/IMS.Application.csproj" />
+    <Project Path="src/IMS.Domain/IMS.Domain.csproj" />
+    <Project Path="src/IMS.Infrastructure/IMS.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Domain.UnitTests/Domain.UnitTests.csproj" Id="cebe759b-fe02-46c9-a212-b257a565c884" />
+  </Folder>
+</Solution>
