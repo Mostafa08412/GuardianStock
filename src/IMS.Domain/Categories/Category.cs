@@ -10,7 +10,7 @@ namespace IMS.Domain.Categories
         {
         }
 
-        public Category(Guid id, string name, string description) : base(id)
+        private Category(Guid id, string name, string description) : base(id)
         {
             Name = name;
             Description = description;
@@ -34,12 +34,12 @@ namespace IMS.Domain.Categories
             var newId = Guid.CreateVersion7();
 
 
-            if (string.IsNullOrEmpty(name))
+            if (string.IsNullOrWhiteSpace(name))
             {
                 return Result<Category>.Failure(Errors.CategoryErrors.NameIsRequired);
             }
 
-            if (string.IsNullOrEmpty(description))
+            if (string.IsNullOrWhiteSpace(description))
             {
                 return Result<Category>.Failure(Errors.CategoryErrors.DescriptionIsRequired);
             }
@@ -51,7 +51,7 @@ namespace IMS.Domain.Categories
 
         public Result Rename(string newName)
         {
-            if (string.IsNullOrEmpty(newName))
+            if (string.IsNullOrWhiteSpace(newName))
             {
                 return Result<Category>.Failure(Errors.CategoryErrors.NameIsRequired);
             }
@@ -64,7 +64,7 @@ namespace IMS.Domain.Categories
 
         public Result Redescription(string newDescription)
         {
-            if (string.IsNullOrEmpty(newDescription))
+            if (string.IsNullOrWhiteSpace(newDescription))
             {
                 return Result<Category>.Failure(Errors.CategoryErrors.DescriptionIsRequired);
             }
