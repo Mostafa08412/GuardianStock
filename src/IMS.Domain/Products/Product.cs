@@ -23,7 +23,7 @@ namespace IMS.Domain.Products
 
         public string Name { get; private set; }
 
-        public string Sku { get; private set; } // IMMUTABLE
+        public string Sku { get; init; } // IMMUTABLE
 
         public string Description { get; private set; }
 
@@ -86,7 +86,7 @@ namespace IMS.Domain.Products
 
         public Result Rename(string newName)
         {
-            if (string.IsNullOrEmpty(newName))
+            if (string.IsNullOrWhiteSpace(newName))
             {
                 return Result<Category>.Failure(Errors.ProductErrors.NameIsRequired);
             }
@@ -99,9 +99,9 @@ namespace IMS.Domain.Products
 
         public Result Redescription(string newDescription)
         {
-            if (string.IsNullOrEmpty(newDescription))
+            if (string.IsNullOrWhiteSpace(newDescription))
             {
-                return Result<Category>.Failure(Errors.ProductErrors.DescriptionIsRequired);
+                return Result.Failure(Errors.ProductErrors.DescriptionIsRequired);
             }
 
             Description = newDescription;
