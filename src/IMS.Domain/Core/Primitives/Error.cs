@@ -2,7 +2,7 @@
 
 namespace IMS.Domain.Core.Primitives
 {
-    public class Error
+    public class Error : ValueObject
     {
         public string Code { get; } = string.Empty;
 
@@ -19,6 +19,11 @@ namespace IMS.Domain.Core.Primitives
 
         public override string ToString() => $"{ErrorType.ToString()}-{Code}: {Description}";
 
-
+        public override IEnumerable<object> GetAtomicValues()
+        {
+            yield return Code;
+            yield return ErrorType;
+            yield return Description;
+        }
     }
 }
