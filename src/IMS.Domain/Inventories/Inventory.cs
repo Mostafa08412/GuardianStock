@@ -6,13 +6,13 @@ namespace IMS.Domain.Inventories
 {
     public class Inventory : Aggregate, IAuditable
     {
-
+        public static readonly int MinimumLowStockThreshold = 10;
         protected Inventory() : base()
         {
 
         }
 
-        public Inventory(Guid id, int quantity, int lowStockThreshold, Guid productId) : base(id)
+        private Inventory(Guid id, int quantity, int lowStockThreshold, Guid productId) : base(id)
         {
             Quantity = quantity;
             LowStockThreshold = lowStockThreshold;
@@ -34,12 +34,17 @@ namespace IMS.Domain.Inventories
             get
             {
                 decimal quantity = new Decimal(this.Quantity);
+
                 decimal lowStockThreshold = new Decimal(this.LowStockThreshold);
+
+                if (lowStockThreshold == 0) return InventoryStatus.Critical;
 
                 decimal ratio = quantity / lowStockThreshold;
 
                 if (ratio <= 0.3m) return InventoryStatus.Critical;
+
                 else if (ratio > 0.3m && ratio <= 1.0m) return InventoryStatus.Low;
+
                 else return InventoryStatus.Healthy;
 
             }
@@ -65,14 +70,14 @@ namespace IMS.Domain.Inventories
                 return Result<Inventory>.Failure(Errors.InventoryErrors.InvalidQuantity);
             }
 
-            if (lowStockThreshold < 10)
+            if (lowStockThreshold < MinimumLowStockThreshold)
             {
                 return Result<Inventory>.Failure(Errors.InventoryErrors.InvalidLowStockThreshold);
             }
 
             if (productId == Guid.Empty)
             {
-                return Result<Inventory>.Failure(Errors.InventoryErrors.InvalidLowStockThreshold);
+                return Result<Inventory>.Failure(Errors.InventoryErrors.ProductIsRequired);
             }
 
             var newInventory = new Inventory(newId, quantity, lowStockThreshold, productId);
@@ -184,7 +189,7 @@ namespace IMS.Domain.Inventories
         public static class InventoryErrors
         {
             public static Error InvalidQuantity => new Error("Inventory.InvalidQuantity", "Inventory quantity must be greater than 1.", ErrorType.Validation);
-            public static Error InvalidLowStockThreshold => new Error("Inventory.InvalidLowStockThreshold", "Low stock threshold minimum is 10.", ErrorType.Validation);
+            public static Error InvalidLowStockThreshold => new Error("Inventory.InvalidLowStockThreshold", $"Low stock threshold minimum is {Inventory.MinimumLowStockThreshold}.", ErrorType.Validation);
             public static Error ProductIsRequired => new Error("Inventory.ProductIsRequired", "Inventory product is required.", ErrorType.Validation);
 
             public static Error InvalidShipQuantity => new Error("Inventory.InvalidShipQuantity", "The quantity to ship must be greater than zero.", ErrorType.Validation);
