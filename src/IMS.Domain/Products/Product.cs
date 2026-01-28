@@ -11,11 +11,13 @@ namespace IMS.Domain.Products
         {
         }
 
-        private Product(Guid id, string name, string sku, string description, Guid categoryId) : base(id)
+        private Product(Guid id, string name, string sku, string description, decimal price, string supplier, Guid categoryId) : base(id)
         {
             Name = name;
             Sku = sku;
             Description = description;
+            Price = price;
+            Supplier = supplier;
             CategoryId = categoryId;
         }
 
@@ -24,6 +26,10 @@ namespace IMS.Domain.Products
         public string Sku { get; private set; } // IMMUTABLE
 
         public string Description { get; private set; }
+
+        public decimal Price { get; private set; }
+
+        public string Supplier { get; private set; }
 
         public Guid CategoryId { get; private set; }
 
@@ -36,24 +42,33 @@ namespace IMS.Domain.Products
         public string UpdatedBy { get; private set; }
 
 
-        public static Result<Product> Create(string name, string sku, string description, Guid categoryId)
+        public static Result<Product> Create(string name, string sku, string description, decimal price, string supplier, Guid categoryId)
         {
             var newId = Guid.CreateVersion7();
 
-
-            if (string.IsNullOrEmpty(name))
+            if (string.IsNullOrWhiteSpace(name))
             {
                 return Result<Product>.Failure(Errors.ProductErrors.NameIsRequired);
             }
 
-            if (string.IsNullOrEmpty(sku))
+            if (string.IsNullOrWhiteSpace(sku))
             {
                 return Result<Product>.Failure(Errors.ProductErrors.SkuIsRequired);
             }
 
-            if (string.IsNullOrEmpty(description))
+            if (string.IsNullOrWhiteSpace(description))
             {
                 return Result<Product>.Failure(Errors.ProductErrors.DescriptionIsRequired);
+            }
+
+            if (price <= 0)
+            {
+                return Result<Product>.Failure(Errors.ProductErrors.InvalidPrice);
+            }
+
+            if (string.IsNullOrWhiteSpace(supplier))
+            {
+                return Result<Product>.Failure(Errors.ProductErrors.SupplierIsRequired);
             }
 
             if (categoryId == Guid.Empty)
@@ -61,7 +76,7 @@ namespace IMS.Domain.Products
                 return Result<Product>.Failure(Errors.ProductErrors.CategoryIsRequired);
             }
 
-            var newProduct = new Product(newId, name, sku, description, categoryId);
+            var newProduct = new Product(newId, name, sku, description, price, supplier, categoryId);
 
             return Result<Product>.Success(newProduct);
         }
@@ -107,6 +122,30 @@ namespace IMS.Domain.Products
             return Result.Success();
         }
 
+        public Result UpdatePrice(decimal newPrice)
+        {
+            if (newPrice <= 0)
+            {
+                return Result.Failure(Errors.ProductErrors.InvalidPrice);
+            }
+
+            Price = newPrice;
+
+            return Result.Success();
+        }
+
+        public Result UpdateSupplier(string newSupplier)
+        {
+            if (string.IsNullOrWhiteSpace(newSupplier))
+            {
+                return Result.Failure(Errors.ProductErrors.SupplierIsRequired);
+            }
+
+            Supplier = newSupplier;
+
+            return Result.Success();
+        }
+
         public static class Errors
         {
 
@@ -115,8 +154,9 @@ namespace IMS.Domain.Products
                 public static Error NameIsRequired => new Error("Product.NameIsRequired", "Product name is required", ErrorType.Validation);
                 public static Error DescriptionIsRequired => new Error("Product.DescriptionIsRequired", "Product description is required", ErrorType.Validation);
                 public static Error SkuIsRequired => new Error("Product.SkuIsRequired", "Product sku is required", ErrorType.Validation);
+                public static Error InvalidPrice => new Error("Product.InvalidPrice", "Product price must be greater than zero", ErrorType.Validation);
+                public static Error SupplierIsRequired => new Error("Product.SupplierIsRequired", "Product supplier is required", ErrorType.Validation);
                 public static Error CategoryIsRequired => new Error("Product.CategoryIsRequired", "Product category is required", ErrorType.Validation);
-
             }
 
         }
