@@ -320,7 +320,7 @@ namespace Domain.UnitTests.Inventories
         [InlineData(10, 10, InventoryStatus.Low)]
         [InlineData(5, 10, InventoryStatus.Low)]
         [InlineData(3, 10, InventoryStatus.Critical)]
-        public void GetInventoryStatus_GivenQuantityandThreshold_ShouldReturnExcpectedStatus(int quantity, int lowStockThreshold, InventoryStatus expectedStatus)
+        public void GetInventoryStatus_GivenQuantityAndThreshold_ShouldReturnExpectedStatus(int quantity, int lowStockThreshold, InventoryStatus expectedStatus)
         {
             var inventory = InventoryBuilder
                 .Create()
@@ -334,6 +334,156 @@ namespace Domain.UnitTests.Inventories
 
         }
 
+
+        #endregion
+
+        #region ConfirmNotificationSent method tests
+
+        [Fact]
+        public void ConfirmNotificationSent_WithActiveAlert_ShouldMarkAlertAsSent()
+        {
+            // Arrange
+            var inventory = InventoryBuilder.Create()
+                .WithQuantity(21)
+                .WithLowStockThreshold(20)
+                .BuildSuccessfully();
+
+            inventory.Ship(2); // Triggers alert
+
+            // Act
+            inventory.ConfirmNotificationSent();
+
+            // Assert
+            inventory.LowStockAlert.Should().NotBeNull();
+            inventory.LowStockAlert!.NotificationSentAt.Should().NotBeNull();
+            inventory.LowStockAlert.NotificationSentAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        }
+
+        [Fact]
+        public void ConfirmNotificationSent_WithoutActiveAlert_ShouldNotThrow()
+        {
+            // Arrange
+            var inventory = InventoryBuilder.Create()
+                .WithQuantity(50)
+                .WithLowStockThreshold(20)
+                .BuildSuccessfully();
+
+            // Act - should not throw even when no alert exists
+            var act = () => inventory.ConfirmNotificationSent();
+
+            // Assert
+            act.Should().NotThrow();
+            inventory.LowStockAlert.Should().BeNull();
+        }
+
+        [Fact]
+        public void ConfirmNotificationSent_CalledTwice_ShouldNotChangeFirstTimestamp()
+        {
+            // Arrange
+            var inventory = InventoryBuilder.Create()
+                .WithQuantity(21)
+                .WithLowStockThreshold(20)
+                .BuildSuccessfully();
+
+            inventory.Ship(2); // Triggers alert
+            inventory.ConfirmNotificationSent();
+            var firstNotificationTime = inventory.LowStockAlert!.NotificationSentAt;
+
+            // Wait a tiny bit to ensure time would differ if updated
+            System.Threading.Thread.Sleep(10);
+
+            // Act
+            inventory.ConfirmNotificationSent();
+
+            // Assert - timestamp should remain unchanged
+            inventory.LowStockAlert!.NotificationSentAt.Should().Be(firstNotificationTime);
+        }
+
+        #endregion
+
+        #region DismissLowStockAlert method tests
+
+        [Fact]
+        public void DismissLowStockAlert_WithActiveAlert_ShouldMarkAlertAsDismissed()
+        {
+            // Arrange
+            var inventory = InventoryBuilder.Create()
+                .WithQuantity(21)
+                .WithLowStockThreshold(20)
+                .BuildSuccessfully();
+
+            inventory.Ship(2); // Triggers alert
+            inventory.ConfirmNotificationSent();
+
+            // Act
+            inventory.DismissLowStockAlert();
+
+            // Assert
+            inventory.LowStockAlert.Should().NotBeNull();
+            inventory.LowStockAlert!.DismissedAt.Should().NotBeNull();
+            inventory.LowStockAlert.DismissedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        }
+
+        [Fact]
+        public void DismissLowStockAlert_WithoutActiveAlert_ShouldNotThrow()
+        {
+            // Arrange
+            var inventory = InventoryBuilder.Create()
+                .WithQuantity(50)
+                .WithLowStockThreshold(20)
+                .BuildSuccessfully();
+
+            // Act - should not throw even when no alert exists
+            var act = () => inventory.DismissLowStockAlert();
+
+            // Assert
+            act.Should().NotThrow();
+            inventory.LowStockAlert.Should().BeNull();
+        }
+
+        [Fact]
+        public void DismissLowStockAlert_CalledTwice_ShouldNotChangeFirstTimestamp()
+        {
+            // Arrange
+            var inventory = InventoryBuilder.Create()
+                .WithQuantity(21)
+                .WithLowStockThreshold(20)
+                .BuildSuccessfully();
+
+            inventory.Ship(2); // Triggers alert
+            inventory.ConfirmNotificationSent();
+            inventory.DismissLowStockAlert();
+            var firstDismissedTime = inventory.LowStockAlert!.DismissedAt;
+
+            // Wait a tiny bit to ensure time would differ if updated
+            System.Threading.Thread.Sleep(10);
+
+            // Act
+            inventory.DismissLowStockAlert();
+
+            // Assert - timestamp should remain unchanged
+            inventory.LowStockAlert!.DismissedAt.Should().Be(firstDismissedTime);
+        }
+
+        [Fact]
+        public void DismissLowStockAlert_BeforeConfirmNotification_ShouldStillWork()
+        {
+            // Arrange
+            var inventory = InventoryBuilder.Create()
+                .WithQuantity(21)
+                .WithLowStockThreshold(20)
+                .BuildSuccessfully();
+
+            inventory.Ship(2); // Triggers alert
+
+            // Act - dismiss without confirming notification first
+            inventory.DismissLowStockAlert();
+
+            // Assert
+            inventory.LowStockAlert.Should().NotBeNull();
+            inventory.LowStockAlert!.DismissedAt.Should().NotBeNull();
+            inventory.LowStockAlert.NotificationSentAt.Should().BeNull();
+        }
 
         #endregion
     }
