@@ -70,6 +70,12 @@ namespace IMS.Domain.Inventories
                 return Result<Inventory>.Failure(Errors.InventoryErrors.InvalidQuantity);
             }
 
+            if (quantity < lowStockThreshold)
+            {
+                return Result<Inventory>.Failure(Errors.InventoryErrors.QuantityCannotBeLowerThanThreshold);
+
+            }
+
             if (lowStockThreshold < MinimumLowStockThreshold)
             {
                 return Result<Inventory>.Failure(Errors.InventoryErrors.InvalidLowStockThreshold);
@@ -123,7 +129,7 @@ namespace IMS.Domain.Inventories
 
                 if (LowStockAlert == null)
                 {
-                    LowStockAlert = LowStockAlert.Trigger(LowStockThreshold);
+                    TriggerLowStockAlert(LowStockThreshold);
                     //Trigger a LowStockAlertTriggered Domain Event
                     AddDomainEvent(new LowStockAlertTriggeredDomainEvent(ProductId, Id, LowStockAlert.TriggeredAtUTC, LowStockThreshold, Quantity));
                 }
@@ -146,7 +152,7 @@ namespace IMS.Domain.Inventories
 
         public Result AdjustLowStockThreshold(int newLowStockThreshold)
         {
-            if (newLowStockThreshold < 10)
+            if (newLowStockThreshold < MinimumLowStockThreshold)
             {
                 return Result.Failure(Errors.InventoryErrors.InvalidLowStockThreshold);
             }
@@ -161,7 +167,7 @@ namespace IMS.Domain.Inventories
 
             if (Quantity <= LowStockThreshold)
             {
-                LowStockAlert = LowStockAlert.Trigger(newLowStockThreshold);
+                TriggerLowStockAlert(newLowStockThreshold);
                 AddDomainEvent(new LowStockAlertTriggeredDomainEvent(ProductId, Id, LowStockAlert.TriggeredAtUTC, LowStockThreshold, Quantity));
 
             }
@@ -179,6 +185,17 @@ namespace IMS.Domain.Inventories
         public void ResetLowStockAlert()
         {
             this.LowStockAlert = null;
+        }
+        public void DismissLowStockAlert()
+        {
+            if (LowStockAlert != null && !LowStockAlert.DismissedAt.HasValue)
+                this.LowStockAlert = LowStockAlert.Dismiss();
+        }
+
+        public void TriggerLowStockAlert(int LowStockThreshold)
+        {
+            if (LowStockAlert == null)
+                this.LowStockAlert = LowStockAlert.Trigger(LowStockThreshold);
         }
 
     }
@@ -198,6 +215,7 @@ namespace IMS.Domain.Inventories
 
             public static Error InsufficientStock = new("Inventory.InsufficientStock", "The available quantity in stock is not enough to fulfill this request.", ErrorType.ConditionNotMet);
 
+            public static Error QuantityCannotBeLowerThanThreshold = new("Inventory.QuantityCannotBeLowerThanThreshold", "The quantity must be greater that the threshold", ErrorType.Validation);
             public static Error CannotAdjustThresholdWithActiveAlert => new(
             "Inventory.CannotAdjustThresholdWithActiveAlert",
             "The low stock threshold cannot be adjusted while there is an active alert. Please dismiss or reset the alert first.",
