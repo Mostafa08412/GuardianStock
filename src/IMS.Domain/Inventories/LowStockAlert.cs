@@ -18,7 +18,7 @@ namespace IMS.Domain.Inventories
 
         public DateTime? DismissedAt { get; private set; }
 
-        public DateTime? TriggeredAtUTC { get; private set; }
+        public DateTime TriggeredAtUTC { get; private set; }
 
         public bool IsNotificationSent => NotificationSentAt != null;
 
@@ -27,11 +27,9 @@ namespace IMS.Domain.Inventories
 
 
         public static LowStockAlert Trigger(int threshold) => new(threshold, null, null, DateTime.UtcNow);
-        public LowStockAlert MarkAsSent() => new(Threshold, DateTime.UtcNow, null, TriggeredAtUTC!.Value);
-        public LowStockAlert Dismiss() => new(Threshold, NotificationSentAt, DateTime.Now, TriggeredAtUTC!.Value);
-        public LowStockAlert Reset() => null;
+        public LowStockAlert MarkAsSent() => new(Threshold, DateTime.UtcNow, null, TriggeredAtUTC);
+        public LowStockAlert Dismiss() => new(Threshold, NotificationSentAt, DateTime.UtcNow, TriggeredAtUTC);
 
-        public LowStockAlert ResetWithNewThreshold(int newThreshold) => new(newThreshold, null, null, default);
         public override IEnumerable<object> GetAtomicValues()
         {
             yield return Threshold;

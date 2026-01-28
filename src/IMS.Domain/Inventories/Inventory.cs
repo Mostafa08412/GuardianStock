@@ -89,9 +89,9 @@ namespace IMS.Domain.Inventories
 
             Quantity += addedQuantity;
 
-            // Action Taken: Inventory is Restocked, the alert is gone.
+            // Action Taken: Inventory is Restocked, then the alert is gone.
             if (LowStockAlert != null && Quantity > LowStockAlert.Threshold)
-                LowStockAlert = null;
+                ResetLowStockAlert();
 
 
 
@@ -151,7 +151,7 @@ namespace IMS.Domain.Inventories
             LowStockThreshold = newLowStockThreshold;
 
 
-            LowStockAlert = null;
+            ResetLowStockAlert();
 
             if (Quantity <= LowStockThreshold)
             {
@@ -168,6 +168,10 @@ namespace IMS.Domain.Inventories
             }
         }
 
+        public void ResetLowStockAlert()
+        {
+            this.LowStockAlert = null;
+        }
 
     }
 
