@@ -3,6 +3,7 @@ using IMS.Domain.Abstractions;
 using IMS.Domain.Core.Primitives;
 using IMS.Domain.Products;
 using IMS.Domain.Categories;
+using IMS.Domain.Inventories;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,7 @@ namespace IMS.Infrastructure.Persistence.Repositories
 
         public IProductRepository Products { get; private set; }
         public ICategoryRepository Categories { get; private set; }
+        public IInventoryRepository Inventories { get; private set; }
         protected ApplicationDbContext dbContext;
         private readonly ICurrentUser _currentUser;
         private readonly IDateTime _dateTime;
@@ -23,7 +25,8 @@ namespace IMS.Infrastructure.Persistence.Repositories
             IDateTime dateTime,
             IMediator mediator,
             IProductRepository productRepository,
-            ICategoryRepository categoryRepository) // Inject the repository
+            ICategoryRepository categoryRepository,
+            IInventoryRepository inventoryRepository) // Inject the repository
         {
 
             this.dbContext = dbContext;
@@ -32,6 +35,7 @@ namespace IMS.Infrastructure.Persistence.Repositories
             _mediator = mediator;
             Products = productRepository;
             Categories = categoryRepository;
+            Inventories = inventoryRepository;
         }
 
         public async Task<int> Complete(CancellationToken cancellationToken)
