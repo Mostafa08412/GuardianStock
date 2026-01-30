@@ -6,6 +6,7 @@ using IMS.Domain.Inventories;
 using IMS.Domain.Products;
 using IMS.Domain.Transactions;
 using IMS.Infrastructure.Authentication;
+using IMS.Infrastructure.Common;
 using IMS.Infrastructure.Email_Services;
 using IMS.Infrastructure.Email_Services.Options;
 using IMS.Infrastructure.Persistence;
@@ -176,7 +177,7 @@ namespace IMS.Infrastructure
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<IEmailService, EmailService>();
-
+            services.AddSingleton<ISkuGenerator, SkuGenerator>();
             services.AddSingleton<IDateTime, DateProvider>();
             services.AddScoped<ApplicationDbContextInitializer>();
             services.AddTransient<ITokenService, TokenService>();

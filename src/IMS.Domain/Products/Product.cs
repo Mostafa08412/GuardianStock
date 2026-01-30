@@ -151,6 +151,7 @@ namespace IMS.Domain.Products
 
             public static class ProductErrors
             {
+                public static Error ProductNotFound = new Error("Product.NotFound", "Product not found!", ErrorType.NotFound);
                 public static Error NameIsRequired => new Error("Product.NameIsRequired", "Product name is required", ErrorType.Validation);
                 public static Error DescriptionIsRequired => new Error("Product.DescriptionIsRequired", "Product description is required", ErrorType.Validation);
                 public static Error SkuIsRequired => new Error("Product.SkuIsRequired", "Product sku is required", ErrorType.Validation);
