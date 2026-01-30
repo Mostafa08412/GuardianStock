@@ -1,6 +1,8 @@
 using IMS.Application.Common.Interfaces;
 using IMS.Domain.Categories;
+using IMS.Domain.Inventories;
 using IMS.Domain.Products;
+using IMS.Domain.Transactions;
 using IMS.Domain.Users;
 using IMS.Infrastructure.Persistence.Identity;
 using IMS.Infrastructure.Tokens;
@@ -18,6 +20,9 @@ namespace IMS.Infrastructure.Persistence
         public DbSet<RefreshToken> RefreshTokens { get; private set; }
         public DbSet<Product> Products { get; private set; }
         public DbSet<Category> Categories { get; private set; }
+        public DbSet<Inventory> Inventories { get; private set; }
+        public DbSet<Transaction> Transactions { get; private set; }
+
 
 
 
