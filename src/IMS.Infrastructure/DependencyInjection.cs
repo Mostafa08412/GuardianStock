@@ -4,6 +4,7 @@ using IMS.Domain.Categories;
 using IMS.Domain.Core.Primitives;
 using IMS.Domain.Inventories;
 using IMS.Domain.Products;
+using IMS.Domain.Transactions;
 using IMS.Infrastructure.Authentication;
 using IMS.Infrastructure.Email_Services;
 using IMS.Infrastructure.Email_Services.Options;
@@ -162,6 +163,7 @@ namespace IMS.Infrastructure
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IInventoryRepository, InventoryRepository>();
+            services.AddScoped<ITransactionRepository, TransactionRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 
