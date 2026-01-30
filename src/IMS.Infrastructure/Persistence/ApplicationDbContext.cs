@@ -1,4 +1,6 @@
-﻿using IMS.Application.Common.Interfaces;
+using IMS.Application.Common.Interfaces;
+using IMS.Domain.Categories;
+using IMS.Domain.Products;
 using IMS.Domain.Users;
 using IMS.Infrastructure.Persistence.Identity;
 using IMS.Infrastructure.Tokens;
@@ -14,6 +16,10 @@ namespace IMS.Infrastructure.Persistence
 
         public DbSet<User> BusinessUsers { get; private set; }
         public DbSet<RefreshToken> RefreshTokens { get; private set; }
+        public DbSet<Product> Products { get; private set; }
+        public DbSet<Category> Categories { get; private set; }
+
+
 
         public ApplicationDbContext(DbContextOptions options) : base(options)
         {
