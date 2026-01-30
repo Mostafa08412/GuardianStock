@@ -1,7 +1,8 @@
 ﻿using IMS.Application.Common.Interfaces;
 using IMS.Domain.Abstractions;
-using IMS.Domain.Core.Errors;
+using IMS.Domain.Categories;
 using IMS.Domain.Core.Primitives;
+using IMS.Domain.Products;
 using IMS.Infrastructure.Authentication;
 using IMS.Infrastructure.Email_Services;
 using IMS.Infrastructure.Email_Services.Options;
@@ -10,7 +11,6 @@ using IMS.Infrastructure.Persistence.Identity;
 using IMS.Infrastructure.Persistence.Repositories;
 using IMS.Infrastructure.Tokens;
 using IMS.Infrastructure.Tokens.Options;
-using Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -102,19 +102,19 @@ namespace IMS.Infrastructure
                             else if (context.AuthenticateFailure is SecurityTokenInvalidSignatureException)
                             {
                                 context.HandleResponse();
-                                return WriteProblemDetailsAsync(context.HttpContext, StatusCodes.Status401Unauthorized, Errors.Identity.InvalidToken);
+                                return WriteProblemDetailsAsync(context.HttpContext, StatusCodes.Status401Unauthorized, Domain.Core.Errors.Errors.Identity.InvalidToken);
                             }
 
                             else if (context.AuthenticateFailure is SecurityTokenExpiredException)
                             {
                                 context.HandleResponse();
-                                return WriteProblemDetailsAsync(context.HttpContext, StatusCodes.Status401Unauthorized, Errors.Identity.ExpiredToken);
+                                return WriteProblemDetailsAsync(context.HttpContext, StatusCodes.Status401Unauthorized, Domain.Core.Errors.Errors.Identity.ExpiredToken);
                             }
 
                             else if (!context.Request.Headers.ContainsKey("Authorization"))
                             {
                                 context.HandleResponse();
-                                return WriteProblemDetailsAsync(context.HttpContext, StatusCodes.Status401Unauthorized, Errors.Identity.MissingToken);
+                                return WriteProblemDetailsAsync(context.HttpContext, StatusCodes.Status401Unauthorized, Domain.Core.Errors.Errors.Identity.MissingToken);
 
                             }
                             else
@@ -156,10 +156,10 @@ namespace IMS.Infrastructure
 
         public static IServiceCollection RegisterRepositoriesAndUnitOfWork(this IServiceCollection services)
         {
-            // Register Repositories here....
-
-
             services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
+            // Register Repositories here....
+            services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 
