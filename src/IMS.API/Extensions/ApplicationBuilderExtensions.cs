@@ -1,4 +1,6 @@
-﻿using Serilog;
+﻿
+using IMS.Infrastructure.Persistence;
+using Serilog;
 namespace IMS.API.Extensions
 {
     public static class ApplicationBuilderExtensions
@@ -13,7 +15,7 @@ namespace IMS.API.Extensions
 
             if (app.Environment.IsDevelopment())
             {
-                //app.RegisterInitializer();
+                app.RegisterInitializer();
                 app.UseSwagger();
                 app.UseSwaggerUI(options =>
                 {
