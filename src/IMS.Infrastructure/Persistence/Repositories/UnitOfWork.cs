@@ -1,6 +1,7 @@
 ﻿using IMS.Application.Common.Interfaces;
 using IMS.Domain.Abstractions;
 using IMS.Domain.Core.Primitives;
+using IMS.Domain.Products;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,19 +10,24 @@ namespace IMS.Infrastructure.Persistence.Repositories
     public class UnitOfWork : IUnitOfWork
     {
 
-
+        public IProductRepository Products { get; private set; }
         protected ApplicationDbContext dbContext;
         private readonly ICurrentUser _currentUser;
         private readonly IDateTime _dateTime;
         private readonly IMediator _mediator;
 
-        public UnitOfWork(ApplicationDbContext dbContext, ICurrentUser currentUser, IDateTime dateTime, IMediator mediator)
+        public UnitOfWork(ApplicationDbContext dbContext,
+            ICurrentUser currentUser,
+            IDateTime dateTime,
+            IMediator mediator,
+            IProductRepository productRepository) // Inject the repository
         {
 
             this.dbContext = dbContext;
             _currentUser = currentUser;
             _dateTime = dateTime;
             _mediator = mediator;
+            Products = productRepository;
         }
 
         public async Task<int> Complete(CancellationToken cancellationToken)
