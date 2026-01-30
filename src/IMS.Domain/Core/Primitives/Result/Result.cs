@@ -23,6 +23,7 @@
         public bool IsFailure => !IsSuccess;
         public string Message { get; init; } = string.Empty;
 
+        public Error? Error => Errors.FirstOrDefault();
         public IReadOnlyCollection<Error> Errors { get; }
 
         public static Result Success()

@@ -36,9 +36,9 @@ namespace IMS.Infrastructure
 
 
             services.AddOptions<TokenSettings>()
-               .Bind(configuration.GetSection(TokenSettings.SectionName))
-               .ValidateDataAnnotations()
-               .ValidateOnStart();
+               .Bind(configuration.GetSection(TokenSettings.SectionName));
+
+
 
 
             var section = configuration.GetSection("TokenSettings");

@@ -173,21 +173,21 @@ namespace Infrastructure.Data
             adminIdentityUser.LastName,
             adminIdentityUser.UserName!,
             adminIdentityUser.Email!
-        ),
+        ).Value!,
         User.Create(
             managerIdentityUser.Id,
             managerIdentityUser.FirstName,
             managerIdentityUser.LastName,
             managerIdentityUser.UserName!,
             managerIdentityUser.Email!
-        ),
+        ).Value!,
         User.Create(
             staffIdentityUser.Id,
             staffIdentityUser.FirstName,
             staffIdentityUser.LastName,
             staffIdentityUser.UserName!,
             staffIdentityUser.Email!
-        )
+        ).Value!
     };
 
             // =========================
