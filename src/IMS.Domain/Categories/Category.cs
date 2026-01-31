@@ -84,6 +84,7 @@ namespace IMS.Domain.Categories
         {
             public static Error NameIsRequired => new Error("Category.NameIsRequired", "Category name is required", ErrorType.Validation);
             public static Error DescriptionIsRequired => new Error("Category.DescriptionIsRequired", "Category description is required", ErrorType.Validation);
+            public static Error NotFound => new Error("Category.NotFound", "Category not found!", ErrorType.NotFound);
 
         }
 
