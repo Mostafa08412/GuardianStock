@@ -18,6 +18,7 @@ namespace IMS.Application
 
             });
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UowTransactionBehavior<,>));
             return services;
 
         }
