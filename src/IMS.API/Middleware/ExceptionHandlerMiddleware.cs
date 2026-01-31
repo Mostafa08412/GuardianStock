@@ -3,11 +3,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMS.API.Middleware
 {
+
+    public static class ExceptionHandlerMiddlewareDI
+    {
+
+        public static void UseGloabalExceptionHandler(this IApplicationBuilder builder)
+        {
+            builder.UseMiddleware<ExceptionHandlerMiddleware>();
+        }
+    }
     public class ExceptionHandlerMiddleware
     {
 
         private readonly RequestDelegate _next;
         private readonly ILogger<ExceptionHandlerMiddleware> _logger;
+
+
 
         public ExceptionHandlerMiddleware(RequestDelegate next, ILogger<ExceptionHandlerMiddleware> logger)
         {

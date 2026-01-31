@@ -1,4 +1,5 @@
 ﻿
+using IMS.API.Middleware;
 using IMS.Infrastructure.Persistence;
 using Serilog;
 namespace IMS.API.Extensions
@@ -9,7 +10,7 @@ namespace IMS.API.Extensions
 
         public static void ConfigureMiddlewarePipeline(this WebApplication app)
         {
-
+            app.UseGloabalExceptionHandler();
 
             app.UseSerilogRequestLogging();
 
