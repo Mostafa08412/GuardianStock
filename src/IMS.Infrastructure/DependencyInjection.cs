@@ -7,6 +7,7 @@ using IMS.Domain.Products;
 using IMS.Domain.Transactions;
 using IMS.Infrastructure.Authentication;
 using IMS.Infrastructure.Common;
+using IMS.Infrastructure.CsvFileReader.Products;
 using IMS.Infrastructure.Email_Services;
 using IMS.Infrastructure.Email_Services.Options;
 using IMS.Infrastructure.Persistence;
@@ -173,7 +174,7 @@ namespace IMS.Infrastructure
         public static IServiceCollection RegisterServices(this IServiceCollection services)
         {
             //Register any additonal services here...
-
+            services.AddSingleton<IProductCsvReader, ProductCsvReader>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<IEmailService, EmailService>();
