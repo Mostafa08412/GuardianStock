@@ -2,7 +2,7 @@
 
 namespace IMS.Domain.Core.Errors
 {
-    public static class Errors
+    public static partial class Errors
     {
         public static class Identity
         {
