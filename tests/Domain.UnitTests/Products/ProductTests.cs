@@ -1,5 +1,6 @@
 using Domain.UnitTests.Builders;
 using IMS.Domain.Products;
+using Errors = IMS.Domain.Core.Errors.Errors;
 
 namespace Domain.UnitTests.Products;
 
@@ -65,7 +66,7 @@ public class ProductTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(Product.Errors.ProductErrors.NameIsRequired);
+        result.Error.Should().Be(Errors.ProductErrors.NameIsRequired);
     }
 
     [Theory]
@@ -81,7 +82,7 @@ public class ProductTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(Product.Errors.ProductErrors.SkuIsRequired);
+        result.Error.Should().Be(Errors.ProductErrors.SkuIsRequired);
     }
 
     [Theory]
@@ -97,7 +98,7 @@ public class ProductTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(Product.Errors.ProductErrors.DescriptionIsRequired);
+        result.Error.Should().Be(Errors.ProductErrors.DescriptionIsRequired);
     }
 
     [Theory]
@@ -113,7 +114,7 @@ public class ProductTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(Product.Errors.ProductErrors.InvalidPrice);
+        result.Error.Should().Be(Errors.ProductErrors.InvalidPrice);
     }
 
     [Theory]
@@ -129,7 +130,7 @@ public class ProductTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(Product.Errors.ProductErrors.SupplierIsRequired);
+        result.Error.Should().Be(Errors.ProductErrors.SupplierIsRequired);
     }
 
     [Fact]
@@ -142,7 +143,7 @@ public class ProductTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(Product.Errors.ProductErrors.CategoryIsRequired);
+        result.Error.Should().Be(Errors.ProductErrors.CategoryIsRequired);
     }
 
     #endregion
@@ -179,7 +180,7 @@ public class ProductTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(Product.Errors.ProductErrors.NameIsRequired);
+        result.Error.Should().Be(Errors.ProductErrors.NameIsRequired);
         product.Name.Should().Be(originalName); // Name should not change
     }
 
@@ -217,7 +218,7 @@ public class ProductTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(Product.Errors.ProductErrors.DescriptionIsRequired);
+        result.Error.Should().Be(Errors.ProductErrors.DescriptionIsRequired);
         product.Description.Should().Be(originalDescription);
     }
 
@@ -259,7 +260,7 @@ public class ProductTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(Product.Errors.ProductErrors.InvalidPrice);
+        result.Error.Should().Be(Errors.ProductErrors.InvalidPrice);
         product.Price.Should().Be(originalPrice);
     }
 
@@ -297,7 +298,7 @@ public class ProductTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(Product.Errors.ProductErrors.SupplierIsRequired);
+        result.Error.Should().Be(Errors.ProductErrors.SupplierIsRequired);
         product.Supplier.Should().Be(originalSupplier);
     }
 
@@ -332,7 +333,7 @@ public class ProductTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(Product.Errors.ProductErrors.CategoryIsRequired);
+        result.Error.Should().Be(Errors.ProductErrors.CategoryIsRequired);
         product.CategoryId.Should().Be(originalCategoryId);
     }
 

@@ -1,5 +1,6 @@
 using Domain.UnitTests.Builders;
 using IMS.Domain.Transactions;
+using Errors = IMS.Domain.Core.Errors.Errors;
 
 namespace Domain.UnitTests.Transactions;
 
