@@ -1,6 +1,6 @@
 namespace IMS.Application.Common.Models;
 
-public class PaginatedList<T>
+public class PaginatedList<T> : IPaginationMetadata
 {
     public List<T> Items { get; init; } = [];
     public int PageNumber { get; init; }
@@ -22,4 +22,15 @@ public class PaginatedList<T>
     {
         return new PaginatedList<T>(items, count, pageNumber, pageSize);
     }
+}
+
+public interface IPaginationMetadata
+{
+
+    int PageNumber { get; }
+    int PageSize { get; }
+    int TotalCount { get; }
+    int TotalPages { get; }
+    bool HasPrevious { get; }
+    bool HasNext { get; }
 }

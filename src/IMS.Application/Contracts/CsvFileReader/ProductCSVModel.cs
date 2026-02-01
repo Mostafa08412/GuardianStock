@@ -6,11 +6,11 @@
 
         public string? Description { get; init; }
 
-        public decimal Price { get; init; }
+        public string? Price { get; init; }
 
-        public int InitialQuantity { get; init; }
+        public string? InitialQuantity { get; init; }
 
-        public int LowStockAlertThreshold { get; init; }
+        public string? LowStockAlertThreshold { get; init; }
 
         public string? Category { get; init; }
 

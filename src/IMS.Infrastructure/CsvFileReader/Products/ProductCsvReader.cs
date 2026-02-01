@@ -14,12 +14,15 @@ namespace IMS.Infrastructure.CsvFileReader.Products
         public async Task<Result<List<ProductCSVModel>>> ReadProductCSVFile(IFormFile file)
         {
             if (file is null)
-                return Result<List<ProductCSVModel>>.Failure(new Domain.Core.Primitives.Error("CSV.FileIsRequired", "The csv file is required.", Domain.Core.Primitives.ErrorType.Validation));
+                return Result<List<ProductCSVModel>>.Failure(ApplicationErrors.CsvReader.FileIsRequired);
 
             if (Path.GetExtension(file.FileName).ToLower() != ".csv")
-                return Result<List<ProductCSVModel>>.Failure(new Domain.Core.Primitives.Error("CSV.InvalidFormat", "Invalid uploaded file format. only supporting csv file format", Domain.Core.Primitives.ErrorType.Validation));
+                return Result<List<ProductCSVModel>>.Failure(ApplicationErrors.CsvReader.InvalidFormat);
 
             var list = new List<ProductCSVModel>();
+
+
+
             using (Stream stream = file.OpenReadStream())
             {
                 using (StreamReader streamReader = new StreamReader(stream, System.Text.Encoding.UTF8))
@@ -35,20 +38,23 @@ namespace IMS.Infrastructure.CsvFileReader.Products
 
                         try
                         {
+
+
                             list.Add(new ProductCSVModel
                             {
                                 Name = csvReader.GetField<string>("Name"),
                                 Description = csvReader.GetField<string>("Description"),
-                                Price = csvReader.GetField<decimal>("Price"),
-                                InitialQuantity = csvReader.GetField<int>("InitialQuantity"),
+                                Price = csvReader.GetField<string>("Price"),
+                                InitialQuantity = csvReader.GetField<string>("InitialQuantity"),
                                 Category = csvReader.GetField<string>("Category"),
                                 Supplier = csvReader.GetField<string>("Supplier"),
+                                LowStockAlertThreshold = csvReader.GetField<string>("LowStockAlertThreshold")
                             });
 
                         }
                         catch (Exception)
                         {
-                            return Result<List<ProductCSVModel>>.Failure(ApplicationErrors.CSVFileReaderErrors.ProductCsvFileParsingError(csvReader.Context.Parser.Row));
+                            return Result<List<ProductCSVModel>>.Failure(ApplicationErrors.CsvReader.MissingHeaders);
 
                         }
 
