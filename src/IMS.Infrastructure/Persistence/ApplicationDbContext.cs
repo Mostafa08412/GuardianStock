@@ -8,6 +8,7 @@ using IMS.Infrastructure.Persistence.Identity;
 using IMS.Infrastructure.Tokens;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using System.Reflection;
 
 namespace IMS.Infrastructure.Persistence
@@ -23,12 +24,12 @@ namespace IMS.Infrastructure.Persistence
         public DbSet<Inventory> Inventories { get; private set; }
         public DbSet<Transaction> Transactions { get; private set; }
 
-
+        public DatabaseFacade DB { get; private set; }
 
 
         public ApplicationDbContext(DbContextOptions options) : base(options)
         {
-
+            this.DB = this.Database;
         }
 
         protected override void OnModelCreating(ModelBuilder builder)

@@ -39,6 +39,15 @@ namespace IMS.Domain.Transactions
 
         public string UpdatedBy { get; private set; }
 
+        // For seeding with fake datetime.
+        public Transaction(Guid productId, int quantity, decimal unitPrice, DateTime date, int type)
+        {
+            this.CreatedOnUTC = date;
+            this.ProductId = productId;
+            this.UnitPrice = unitPrice;
+            this.Quantity = quantity;
+            this.Type = type == 0 ? TransactionType.Sale : TransactionType.Purchase;
+        }
 
         public static Result<Transaction> RecordSale(Guid productId, int quantity, decimal unitPrice)
         {

@@ -4,6 +4,7 @@ using IMS.Domain.Products;
 using IMS.Domain.Transactions;
 using IMS.Domain.Users;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace IMS.Application.Common.Interfaces
 {
@@ -15,5 +16,6 @@ namespace IMS.Application.Common.Interfaces
         public DbSet<Transaction> Transactions { get; }
         public DbSet<Inventory> Inventories { get; }
 
+        public DatabaseFacade DB { get; }
     }
 }

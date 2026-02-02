@@ -1,13 +1,24 @@
+using System.Text.Json.Serialization;
+
 namespace IMS.Application.Common.Models;
 
 public class PaginatedList<T> : IPaginationMetadata
 {
     public List<T> Items { get; init; } = [];
+    [JsonIgnore]
     public int PageNumber { get; init; }
+    [JsonIgnore]
     public int PageSize { get; init; }
+    [JsonIgnore]
     public int TotalCount { get; init; }
+
+    [JsonIgnore]
     public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
+
+    [JsonIgnore]
     public bool HasPrevious => PageNumber > 1;
+
+    [JsonIgnore]
     public bool HasNext => PageNumber < TotalPages;
 
     public PaginatedList(List<T> items, int count, int pageNumber, int pageSize)

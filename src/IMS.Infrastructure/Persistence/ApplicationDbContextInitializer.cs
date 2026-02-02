@@ -132,6 +132,14 @@ namespace IMS.Infrastructure.Persistence
             // Ensure we have categories in the list to reference
             if (!categories.Any()) return;
 
+            for (int i = 0; i < 100; i++)
+            {
+                products.Add(Product.Create($"Product {i + 1}", $"TECH-LAP-{i + 1}", "High-performance laptop", Random.Shared.Next(1200, 40000), "TechGiants Inc.", categories[0].Id).Value!);
+                products.Add(Product.Create($"Iphone {i + 1}", $"TECH-APPL-{i + 1}", "High-performance IPhone", Random.Shared.Next(1200, 40000), "Apple Inc.", categories[1].Id).Value!);
+                products.Add(Product.Create($"Samsung Odyessy G{i + 1}", $"TECH-SAM-{i + 1}", "High-performance Samsung Monitor", Random.Shared.Next(1200, 60000), "Samsung Inc.", categories[2].Id).Value!);
+
+            }
+
             products.Add(Product.Create("Laptop Pro X", "TECH-LAP-001", "High-performance laptop", 1500.00m, "TechGiants Inc.", categories[0].Id).Value!);
             products.Add(Product.Create("Ergonomic Chair", "FURN-CHR-001", "Comfortable office chair", 250.00m, "ComfortSeating", categories[1].Id).Value!);
             products.Add(Product.Create("Ballpoint Pens", "STAT-PEN-001", "Box of 12", 5.99m, "StationerySupplies", categories[2].Id).Value!);
@@ -152,22 +160,46 @@ namespace IMS.Infrastructure.Persistence
         {
             if (await _context.Transactions.AnyAsync()) return;
 
+            DateTime currentTime = new DateTime(2026, 12, 1);
+
             foreach (var product in products)
             {
 
-                var productStock = inventories.First(X => X.ProductId == product.Id).Quantity;
+
+                int dayGap = Random.Shared.Next(5, 64);
+                int dayGap2 = Random.Shared.Next(3, 64);
+                var currentTime1 = currentTime.AddDays(dayGap)
+                                          .AddHours(Random.Shared.Next(0, 24))
+                                          .AddMinutes(Random.Shared.Next(0, 60))
+                                          .AddMicroseconds(124 * 2300);
+                var currentTime2 = currentTime.AddDays(dayGap2)
+                                      .AddHours(Random.Shared.Next(0, 24))
+                                      .AddMinutes(Random.Shared.Next(0, 60))
+                                      .AddMicroseconds(1234 * 2000);
+
+
+                var productStock = inventories.First(x => x.ProductId == product.Id).Quantity;
                 var randomQuantity = Random.Shared.Next(1, productStock);
-                if (randomQuantity <= productStock)
-                {
-                    var saleTransaction = Transaction.RecordSale(product.Id, randomQuantity, product.Price).Value!;
-                    transactions.Add(saleTransaction);
-                }
+
+                var saleTransaction = new Transaction(product.Id, randomQuantity, product.Price, currentTime1, 0);
+                transactions.Add(saleTransaction);
+
+                var relatedTransactionTime = currentTime.AddHours(2);
+                var newt = new Transaction(product.Id, randomQuantity, product.Price, currentTime2, 1);
+                // transactions.Add(newt);
 
 
-
-                var purchaseTransaction = Transaction.RecordPurchase(product.Id, Random.Shared.Next(1, 101), product.Price).Value!;
-                transactions.Add(purchaseTransaction);
+                transactions.Add(new Transaction(product.Id, randomQuantity, randomQuantity, new DateTime(2026, 1, 1).AddMilliseconds(841 * 1), 1));
+                transactions.Add(new Transaction(product.Id, randomQuantity, randomQuantity, new DateTime(2026, 1, 5).AddMilliseconds(841 * 2), 1));
+                transactions.Add(new Transaction(product.Id, randomQuantity, randomQuantity, new DateTime(2026, 1, 12).AddMilliseconds(841 * 3), 1));
+                transactions.Add(new Transaction(product.Id, randomQuantity, randomQuantity, new DateTime(2026, 1, 14).AddMilliseconds(841 * 74), 1));
+                transactions.Add(new Transaction(product.Id, randomQuantity, randomQuantity, new DateTime(2026, 1, 21).AddMilliseconds(841 * 5), 1));
+                transactions.Add(new Transaction(product.Id, randomQuantity, randomQuantity, new DateTime(2026, 1, 25).AddMilliseconds(841 * 6), 1));
+                transactions.Add(new Transaction(product.Id, randomQuantity, randomQuantity, new DateTime(2026, 1, 26).AddMilliseconds(841 * 8), 1));
             }
+
+
+
         }
 
         private async Task SeedDataAsync()
