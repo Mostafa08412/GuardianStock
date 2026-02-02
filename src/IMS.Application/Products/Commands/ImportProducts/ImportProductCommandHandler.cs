@@ -1,0 +1,119 @@
+﻿using IMS.Application.Common.Errors;
+using IMS.Application.Common.Interfaces;
+using IMS.Application.Contracts.CsvFileReader;
+using IMS.Application.Products.Commands.ImportProducts.Dtos;
+using IMS.Domain.Abstractions;
+using IMS.Domain.Core.Primitives.Result;
+using IMS.Domain.Products;
+using MediatR;
+using static IMS.Domain.Core.Errors.Errors;
+
+namespace IMS.Application.Products.Commands.ImportProducts
+{
+    public class ImportProductCommandHandler : IRequestHandler<ImportProductsCommand, Result<ImportProductsReport>>
+    {
+        private readonly IProductCsvReader productCsvReader;
+        private readonly IUnitOfWork unitOfWork;
+        private readonly ISkuGenerator skuGenerator;
+        public ImportProductCommandHandler(IProductCsvReader productCsvReader, IUnitOfWork unitOfWork, ISkuGenerator skuGenerator)
+        {
+            this.productCsvReader = productCsvReader;
+            this.unitOfWork = unitOfWork;
+            this.skuGenerator = skuGenerator;
+        }
+        public async Task<Result<ImportProductsReport>> Handle(ImportProductsCommand request, CancellationToken cancellationToken)
+        {
+            var productCsvModelListResult = await productCsvReader.ReadProductCSVFile(request.file!);
+
+            if (productCsvModelListResult.IsFailure)
+                return Result<ImportProductsReport>.Failure(productCsvModelListResult.Error!);
+
+            var result = new ImportProductsReport();
+            var discoveredProduct = new HashSet<(string, string)>();
+            IEnumerable<(Guid Id, string Name)> categories = await unitOfWork.Categories.GetAllCategoriesNamesWithIdsAsync(cancellationToken);
+            var categoriesDict = categories.ToDictionary(x => x.Name.ToLower(), x => x.Id);
+
+            for (int i = 0; i < productCsvModelListResult.Value!.Count; i++)
+            {
+                var p = productCsvModelListResult.Value[i];
+                int rowNumber = i + 2;
+                var validationErrors = ValidateDomainRules(p);
+
+                bool enteredCategoryNameIsExisting = categoriesDict.TryGetValue(p.Category.ToLower(), out Guid categoryId);
+
+                if (!enteredCategoryNameIsExisting)
+                    validationErrors.Add(ApplicationErrors.CsvReader.Product.InvalidCategory.Description);
+
+
+
+                if (validationErrors.Any())
+                {
+                    result.importProductsRowResults.Add(ImportProductsRowResult.CreateFailure(p, rowNumber, validationErrors));
+                    continue;
+                }
+
+
+
+
+                // 3. Domain Object Creation
+                var createResult = Product.Create(p.Name, skuGenerator.GenerateSKU(p.Supplier), p.Description, Decimal.Parse(p.Price!), p.Supplier, categoryId);
+
+                if (createResult.IsFailure)
+                {
+                    result.importProductsRowResults.Add(ImportProductsRowResult.CreateFailure(p, rowNumber, createResult.Error!.Description));
+                }
+                else
+                {
+                    discoveredProduct.Add((p.Name.ToLower(), p.Category.ToLower()));
+                    result.importProductsRowResults.Add(ImportProductsRowResult.CreateSuccess(p, rowNumber));
+                }
+            }
+
+            return Result<ImportProductsReport>.Success(result);
+        }
+        public List<string> ValidateDomainRules(ProductCSVModel p)
+        {
+            var errors = new List<string>();
+
+            // 1. Name Validation
+            if (string.IsNullOrWhiteSpace(p.Name))
+                errors.Add(ProductErrors.NameIsRequired.Description);
+
+            // 2. Description Validation
+            if (string.IsNullOrWhiteSpace(p.Description))
+                errors.Add(ProductErrors.DescriptionIsRequired.Description);
+
+            // 3. Supplier Validation
+            if (string.IsNullOrWhiteSpace(p.Supplier))
+                errors.Add(ProductErrors.SupplierIsRequired.Description);
+
+            // 4. Price Validation (Parsing + Domain Rule)
+            if (!decimal.TryParse(p.Price, out decimal pPrice))
+            {
+                errors.Add(ApplicationErrors.CsvReader.Product.InvalidPrice.Description);
+            }
+            else if (pPrice <= 0)
+            {
+                errors.Add(ProductErrors.InvalidPrice.Description);
+            }
+
+            // 5. Initial Quantity Validation (Parsing)
+            if (!int.TryParse(p.InitialQuantity, out _))
+            {
+                errors.Add(ApplicationErrors.CsvReader.Product.InvalidInitialStock.Description);
+            }
+
+            // 6. Low Stock Threshold Validation (Parsing + Business Rule)
+            if (!int.TryParse(p.LowStockAlertThreshold, out int pLowStockThreshold))
+            {
+                errors.Add(ApplicationErrors.CsvReader.Product.InvalidLowStockFormat.Description);
+            }
+            else if (pLowStockThreshold < 10)
+            {
+                errors.Add(ApplicationErrors.CsvReader.Product.LowStockTooLow(10).Description);
+            }
+
+            return errors;
+        }
+    }
+}

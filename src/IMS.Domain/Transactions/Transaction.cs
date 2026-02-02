@@ -2,6 +2,7 @@
 using IMS.Domain.Core.Primitives;
 using IMS.Domain.Core.Primitives.Result;
 
+
 namespace IMS.Domain.Transactions
 {
     public class Transaction : Aggregate, IAuditable
@@ -38,6 +39,15 @@ namespace IMS.Domain.Transactions
 
         public string UpdatedBy { get; private set; }
 
+        // For seeding with fake datetime.
+        public Transaction(Guid productId, int quantity, decimal unitPrice, DateTime date, int type)
+        {
+            this.CreatedOnUTC = date;
+            this.ProductId = productId;
+            this.UnitPrice = unitPrice;
+            this.Quantity = quantity;
+            this.Type = type == 0 ? TransactionType.Sale : TransactionType.Purchase;
+        }
 
         public static Result<Transaction> RecordSale(Guid productId, int quantity, decimal unitPrice)
         {
@@ -90,36 +100,5 @@ namespace IMS.Domain.Transactions
 
             return Result<Transaction>.Success(transaction);
         }
-    }
-
-    public static class Errors
-    {
-        public static class TransactionErrors
-        {
-            public static Error InvalidProductId => new Error("Transaction.InvalidProductId", "Product ID is required", ErrorType.Validation);
-            public static Error InvalidQuantity => new Error("Transaction.InvalidQuantity", "Quantity must be greater than zero", ErrorType.Validation);
-            public static Error InvalidUnitPrice => new Error("Transaction.InvalidUnitPrice", "Unit price must be greater than zero", ErrorType.Validation);
-        }
-    }
-
-    public record TransactionCreatedDomainEvent : IDomainEvent
-    {
-        public TransactionCreatedDomainEvent(Guid transactionId, Guid productId, decimal unitPrice, int quantity, TransactionType type)
-        {
-            TransactionId = transactionId;
-            ProductId = productId;
-            UnitPrice = unitPrice;
-            Quantity = quantity;
-            Type = type;
-        }
-
-        public Guid TransactionId { get; init; }
-        public Guid ProductId { get; init; }
-
-        public decimal UnitPrice { get; init; }
-        public int Quantity { get; init; }
-        public decimal TotalAmount => UnitPrice * Quantity;
-
-        public TransactionType Type { get; init; }
     }
 }

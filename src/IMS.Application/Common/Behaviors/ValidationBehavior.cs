@@ -31,7 +31,7 @@ namespace IMS.Application.Common.Behaviors
                     {
 
                         var Errors = validationResult.Errors.Select(
-                            X => new Error(X.PropertyName, X.ErrorMessage, ErrorType.Validation)
+                            X => new Error(X.PropertyName.ToLower(), X.ErrorMessage, ErrorType.Validation)
                             );
 
 

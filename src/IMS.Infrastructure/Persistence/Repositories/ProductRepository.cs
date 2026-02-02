@@ -1,5 +1,4 @@
 using IMS.Domain.Products;
-using IMS.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace IMS.Infrastructure.Persistence.Repositories
@@ -19,5 +18,7 @@ namespace IMS.Infrastructure.Persistence.Repositories
         {
             return !await _entity.AnyAsync(x => x.Sku == sku, cancellationToken);
         }
+
+
     }
 }

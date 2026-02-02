@@ -1,1 +1,1 @@
-﻿global using IMS.Domain.Enums;
+﻿global using IMS.Domain.Core.Errors;

@@ -2,7 +2,7 @@
 
 namespace IMS.Domain.Core.Errors
 {
-    public static class Errors
+    public static partial class Errors
     {
         public static class Identity
         {
@@ -23,10 +23,10 @@ namespace IMS.Domain.Core.Errors
 
             // ----- Credentials -----
             public static Error InvalidCredentials =>
-                new("Identity.InvalidCredentials", "The provided credentials are invalid.", ErrorType.AccessDenied);
+                new("Identity.InvalidCredentials", "The provided credentials are invalid.", ErrorType.IdentityError);
 
             public static Error InvalidPassword =>
-            new("Identity.InvalidPassword", "The provided password is invalid.", ErrorType.AccessDenied);
+            new("Identity.InvalidPassword", "The provided password is invalid.", ErrorType.IdentityError);
 
             // ----- User Already Exists -----
             public static Error UserAlreadyExists(string email) =>
@@ -77,19 +77,19 @@ namespace IMS.Domain.Core.Errors
             public static Error MissingToken => new(
                 "Identity.MissingToken",
                 "Token is missing. Authorization header is required.",
-                ErrorType.AccessDenied
+                ErrorType.IdentityError
             );
 
             public static Error InvalidToken => new(
                 "Identity.InvalidToken",
                 "Token is invalid or malformed.",
-                ErrorType.AccessDenied
+                ErrorType.IdentityError
             );
 
             public static Error ExpiredToken => new(
                 "Identity.ExpiredToken",
                 "Token has expired. Please refresh or login again.",
-                ErrorType.AccessDenied
+                ErrorType.IdentityError
             );
 
             public static Error ForbiddenAccess => new(

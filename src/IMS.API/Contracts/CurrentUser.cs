@@ -14,6 +14,24 @@ namespace IMS.API.Contracts
             this.httpContext = httpContextAccessor!.HttpContext!;
         }
 
-        public string UserId => httpContext!.User.Claims.FirstOrDefault(X => X.Type == ClaimTypes.NameIdentifier)!.Value ?? string.Empty;
+        public string UserId
+        {
+            get
+            {
+
+                ClaimsPrincipal user = httpContext!.User;
+                bool IsAuthenticated = user.Identity.IsAuthenticated;
+
+                if (!IsAuthenticated)
+                    return "Unkown";
+
+                else
+                    return httpContext!.User.Claims.FirstOrDefault(X => X.Type == ClaimTypes.NameIdentifier)!.Value;
+
+            }
+
+        }
+
+
     }
 }

@@ -1,6 +1,6 @@
 ﻿using Domain.UnitTests.Builders;
 using IMS.Domain.Inventories;
-using static IMS.Domain.Inventories.Errors;
+using static IMS.Domain.Core.Errors.Errors;
 
 namespace Domain.UnitTests.Inventories
 {

@@ -1,12 +1,13 @@
 ﻿using IMS.Application.Common.Interfaces;
 using IMS.Domain.Abstractions;
-using IMS.Domain.Core.Primitives;
-using IMS.Domain.Products;
 using IMS.Domain.Categories;
+using IMS.Domain.Core.Primitives;
 using IMS.Domain.Inventories;
+using IMS.Domain.Products;
 using IMS.Domain.Transactions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace IMS.Infrastructure.Persistence.Repositories
 {
@@ -17,7 +18,11 @@ namespace IMS.Infrastructure.Persistence.Repositories
         public ICategoryRepository Categories { get; private set; }
         public IInventoryRepository Inventories { get; private set; }
         public ITransactionRepository Transactions { get; private set; }
+
+        protected IDbContextTransaction _currentTransaction { get; private set; }
+
         protected ApplicationDbContext dbContext;
+
         private readonly ICurrentUser _currentUser;
         private readonly IDateTime _dateTime;
         private readonly IMediator _mediator;
@@ -100,6 +105,22 @@ namespace IMS.Infrastructure.Persistence.Repositories
                 entityWithDomainEvents.ClearDomainEvents();
             }
 
+        }
+
+        public async Task BeginTransactionAsync(CancellationToken cancellationToken)
+        {
+
+            _currentTransaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        }
+
+        public async Task CommitTransactionAsync(CancellationToken cancellationToken)
+        {
+            await _currentTransaction.CommitAsync(cancellationToken);
+        }
+
+        public async Task RollBackAsync(CancellationToken cancellationToken)
+        {
+            await _currentTransaction.RollbackAsync(cancellationToken);
         }
     }
 

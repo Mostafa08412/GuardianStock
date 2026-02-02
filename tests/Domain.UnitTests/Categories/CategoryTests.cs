@@ -1,6 +1,6 @@
 using Domain.UnitTests.Builders;
 using IMS.Domain.Categories;
-
+using Errors = IMS.Domain.Core.Errors.Errors;
 namespace Domain.UnitTests.Categories;
 
 /// <summary>
