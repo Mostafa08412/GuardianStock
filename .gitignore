@@ -364,3 +364,5 @@ FodyWeavers.xsd
 
 .agent
 frontend
+/src/IMS.API/appsettings.json
+/src/IMS.API/dotnet-tools.json
