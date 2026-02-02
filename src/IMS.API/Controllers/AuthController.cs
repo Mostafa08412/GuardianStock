@@ -1,11 +1,10 @@
 ﻿using IMS.API.Contracts;
-using IMS.API.Extensions;
 using IMS.API.Infrastructure;
 using IMS.Application.Auth.ChangePassword;
 using IMS.Application.Auth.Common;
 using IMS.Application.Auth.Logout;
 using IMS.Application.Auth.RefreshToken;
-using IMS.Application.Auth.SendEmail;
+using IMS.Domain.Core.Primitives.Result;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,16 +24,12 @@ namespace IMS.API.Controllers
 
         [AllowAnonymous]
         [HttpPost(ApiRoutes.Authentication.Login)]
+        [ProducesResponseType((int)ApplicationStatusCodes.Ok, Type = typeof(ApiResponse<AuthenticationResponse>))]
+        [ProducesResponseType((int)ApplicationStatusCodes.Unauthorized, Type = typeof(ApiResponse<AuthenticationResponse>))]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var result = await _sender.Send(request);
-
-            return result.Map(
-                onSuccess: success =>
-                    Ok(new OkApiResponse<AuthenticationResponse>(success.Value!)),
-                onFailure: failure =>
-                    MapResultFailureToActionResult(failure)
-            );
+            Result<AuthenticationResponse> result = await _sender.Send(request);
+            return HandleResult(result, ApplicationStatusCodes.Ok);
         }
 
         [AllowAnonymous]
@@ -43,12 +38,8 @@ namespace IMS.API.Controllers
         {
             var result = await _sender.Send(request);
 
-            return result.Map(
-                onSuccess: _ =>
-                    NoContent(),
-                onFailure: failure =>
-                    MapResultFailureToActionResult(failure)
-            );
+            return HandleResult(result, ApplicationStatusCodes.Ok);
+
         }
 
         [Authorize]
@@ -57,12 +48,7 @@ namespace IMS.API.Controllers
         {
             var result = await _sender.Send(request);
 
-            return result.Map(
-                onSuccess: _ =>
-                    NoContent(),
-                onFailure: failure =>
-                    MapResultFailureToActionResult(failure)
-            );
+            return HandleResult(result, ApplicationStatusCodes.Ok);
         }
 
         [Authorize]
@@ -71,12 +57,7 @@ namespace IMS.API.Controllers
         {
             var result = await _sender.Send(request);
 
-            return result.Map(
-                onSuccess: _ =>
-                    NoContent(),
-                onFailure: failure =>
-                    MapResultFailureToActionResult(failure)
-            );
+            return HandleResult(result, ApplicationStatusCodes.Ok);
         }
 
         [AllowAnonymous]
@@ -85,27 +66,8 @@ namespace IMS.API.Controllers
         {
             var result = await _sender.Send(request);
 
-            return result.Map(
-                onSuccess: success =>
-                    Ok(new OkApiResponse<AuthenticationResponse>(success.Value!)),
-                onFailure: failure =>
-                    MapResultFailureToActionResult(failure)
-            );
-        }
 
-
-        [AllowAnonymous]
-        [HttpPost("send-email")]
-        public async Task<IActionResult> SendEmail([FromBody] SendEmailCommand request)
-        {
-            var result = await _sender.Send(request);
-
-            return result.Map(
-                onSuccess: success =>
-                   NoContent(),
-                onFailure: failure =>
-                    MapResultFailureToActionResult(failure)
-            );
+            return HandleResult(result, ApplicationStatusCodes.Ok);
         }
     }
 }
