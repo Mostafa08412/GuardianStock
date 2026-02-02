@@ -1,7 +1,7 @@
 ﻿using IMS.Application.Common.Interfaces;
 using IMS.Domain.Abstractions;
 using IMS.Domain.Categories;
-using IMS.Domain.Core.Primitives;
+using IMS.Domain.Core.Errors;
 using IMS.Domain.Inventories;
 using IMS.Domain.Products;
 using IMS.Domain.Transactions;
@@ -16,9 +16,7 @@ using IMS.Infrastructure.Persistence.Repositories;
 using IMS.Infrastructure.Tokens;
 using IMS.Infrastructure.Tokens.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
@@ -82,21 +80,6 @@ namespace IMS.Infrastructure
 
                     options.Events = new JwtBearerEvents
                     {
-                        OnMessageReceived = context =>
-                        {
-                            return Task.CompletedTask;
-                        },
-
-                        OnTokenValidated = context =>
-                        {
-                            var claims = context.Principal?.Claims.Select(c => $"{c.Type}: {c.Value}");
-
-                            // Log the Role claim specifically
-                            var roles = context.Principal?.FindAll(System.Security.Claims.ClaimTypes.Role);
-
-
-                            return Task.CompletedTask;
-                        },
 
                         OnChallenge = context =>
                         {
@@ -105,21 +88,23 @@ namespace IMS.Infrastructure
 
                             else if (context.AuthenticateFailure is SecurityTokenInvalidSignatureException)
                             {
+                                context.Response.Headers.Add("Auth-Fail-Type", Errors.Identity.InvalidToken.Code);
                                 context.HandleResponse();
-                                return WriteProblemDetailsAsync(context.HttpContext, StatusCodes.Status401Unauthorized, Domain.Core.Errors.Errors.Identity.InvalidToken);
+                                return Task.CompletedTask;
                             }
 
                             else if (context.AuthenticateFailure is SecurityTokenExpiredException)
                             {
+                                context.Response.Headers.Add("Auth-Fail-Type", Errors.Identity.ExpiredToken.Code);
                                 context.HandleResponse();
-                                return WriteProblemDetailsAsync(context.HttpContext, StatusCodes.Status401Unauthorized, Domain.Core.Errors.Errors.Identity.ExpiredToken);
+                                return Task.CompletedTask;
                             }
 
                             else if (!context.Request.Headers.ContainsKey("Authorization"))
                             {
+                                context.Response.Headers.Add("Auth-Fail-Type", Errors.Identity.MissingToken.Code);
                                 context.HandleResponse();
-                                return WriteProblemDetailsAsync(context.HttpContext, StatusCodes.Status401Unauthorized, Domain.Core.Errors.Errors.Identity.MissingToken);
-
+                                return Task.CompletedTask;
                             }
                             else
                             {
@@ -135,28 +120,6 @@ namespace IMS.Infrastructure
             return services;
         }
 
-        private static Task WriteProblemDetailsAsync(HttpContext context, int statusCode, Error error)
-        {
-
-            var problemDetails = new ProblemDetails
-            {
-                Status = statusCode,
-                Title = error.Code,
-                Detail = error.Description,
-                Type = "https://tools.ietf.org/html/rfc7235#section-3.1"
-            };
-            context.Response.OnStarting(() =>
-            {
-                context.Response.StatusCode = statusCode;
-                context.Response.ContentType = "application/json";
-
-
-                context.Response.WriteAsJsonAsync(problemDetails);
-                return Task.CompletedTask;
-            });
-            return Task.CompletedTask;
-
-        }
 
         public static IServiceCollection RegisterRepositoriesAndUnitOfWork(this IServiceCollection services)
         {

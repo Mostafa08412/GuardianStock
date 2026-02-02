@@ -95,7 +95,8 @@ namespace IMS.API.Infrastructure
 
                 // Extract "Items" from the PaginatedList<T>
                 // We use dynamic to access 'Items' since we know it exists on PaginatedList<T>
-                data = ((dynamic)result.Value!).Items;
+                data = ((dynamic)result.Value!);
+
             }
 
             var response = new ApiResponse<T>(
