@@ -17,8 +17,6 @@ namespace IMS.Domain.Transactions
             UnitPrice = unitPrice;
             ProductId = productId;
             Type = type;
-            CreatedOnUTC = DateTime.UtcNow;
-            // TotalAmount is calculated property, no need to set
         }
 
         public int Quantity { get; private set; }

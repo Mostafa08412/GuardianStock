@@ -60,7 +60,7 @@ namespace IMS.Infrastructure.Persistence.Repositories
             var result = await dbContext.SaveChangesAsync(cancellationToken);
 
 
-            PublishAggregatesDomainEvents(aggregateEntitiesWithDomainEvents, cancellationToken);
+            await PublishAggregatesDomainEvents(aggregateEntitiesWithDomainEvents, cancellationToken);
 
 
             return await dbContext.SaveChangesAsync(cancellationToken);
@@ -93,14 +93,15 @@ namespace IMS.Infrastructure.Persistence.Repositories
             }
         }
 
-        private void PublishAggregatesDomainEvents(List<Aggregate> aggregates, CancellationToken cancellationToken)
+        private async Task PublishAggregatesDomainEvents(List<Aggregate> aggregates, CancellationToken cancellationToken)
         {
+
 
             foreach (var entityWithDomainEvents in aggregates)
             {
                 foreach (var domainEVent in entityWithDomainEvents.DomainEvents)
                 {
-                    _mediator.Publish(domainEVent, cancellationToken);
+                    await _mediator.Publish(domainEVent, cancellationToken);
                 }
                 entityWithDomainEvents.ClearDomainEvents();
             }

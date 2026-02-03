@@ -88,6 +88,14 @@ namespace IMS.Infrastructure.Persistence
                 await SeedTransactions();
 
                 await SeedDataAsync();
+
+                applicationUsers = null;
+                users = null;
+                products = null;
+                inventories = null;
+                transactions = null;
+                categories = null;
+
             }
             catch (Exception ex)
             {
@@ -160,42 +168,45 @@ namespace IMS.Infrastructure.Persistence
         {
             if (await _context.Transactions.AnyAsync()) return;
 
-            DateTime currentTime = new DateTime(2026, 12, 1);
+            DateTime currentTime = new DateTime(2025, 11, 1);
 
             foreach (var product in products)
             {
 
+                var productStock = inventories.First(x => x.ProductId == product.Id).Quantity;
+                var randomQuantity = Random.Shared.Next(1, productStock);
 
-                int dayGap = Random.Shared.Next(5, 64);
-                int dayGap2 = Random.Shared.Next(3, 64);
-                var currentTime1 = currentTime.AddDays(dayGap)
+                int dayGapForSale = Random.Shared.Next(5, 64);
+                var DateForSale = currentTime
+                                          .AddDays(dayGapForSale)
                                           .AddHours(Random.Shared.Next(0, 24))
                                           .AddMinutes(Random.Shared.Next(0, 60))
                                           .AddMicroseconds(124 * 2300);
-                var currentTime2 = currentTime.AddDays(dayGap2)
+
+
+                int dayGapForPurchase = Random.Shared.Next(3, 64);
+
+
+                var DateForPurchase = currentTime.AddDays(dayGapForPurchase)
                                       .AddHours(Random.Shared.Next(0, 24))
                                       .AddMinutes(Random.Shared.Next(0, 60))
                                       .AddMicroseconds(1234 * 2000);
 
 
-                var productStock = inventories.First(x => x.ProductId == product.Id).Quantity;
-                var randomQuantity = Random.Shared.Next(1, productStock);
 
-                var saleTransaction = new Transaction(product.Id, randomQuantity, product.Price, currentTime1, 0);
+                var saleTransaction = new Transaction(product.Id, randomQuantity, product.Price, DateForSale, 0);
+                var purchaseTransaction = new Transaction(product.Id, randomQuantity, product.Price, DateForPurchase, 1);
                 transactions.Add(saleTransaction);
-
-                var relatedTransactionTime = currentTime.AddHours(2);
-                var newt = new Transaction(product.Id, randomQuantity, product.Price, currentTime2, 1);
-                // transactions.Add(newt);
+                transactions.Add(purchaseTransaction);
 
 
-                transactions.Add(new Transaction(product.Id, randomQuantity, randomQuantity, new DateTime(2026, 1, 1).AddMilliseconds(841 * 1), 1));
-                transactions.Add(new Transaction(product.Id, randomQuantity, randomQuantity, new DateTime(2026, 1, 5).AddMilliseconds(841 * 2), 1));
-                transactions.Add(new Transaction(product.Id, randomQuantity, randomQuantity, new DateTime(2026, 1, 12).AddMilliseconds(841 * 3), 1));
-                transactions.Add(new Transaction(product.Id, randomQuantity, randomQuantity, new DateTime(2026, 1, 14).AddMilliseconds(841 * 74), 1));
-                transactions.Add(new Transaction(product.Id, randomQuantity, randomQuantity, new DateTime(2026, 1, 21).AddMilliseconds(841 * 5), 1));
-                transactions.Add(new Transaction(product.Id, randomQuantity, randomQuantity, new DateTime(2026, 1, 25).AddMilliseconds(841 * 6), 1));
-                transactions.Add(new Transaction(product.Id, randomQuantity, randomQuantity, new DateTime(2026, 1, 26).AddMilliseconds(841 * 8), 1));
+                transactions.Add(new Transaction(product.Id, randomQuantity, product.Price, new DateTime(2026, 1, 1).AddMilliseconds(841 * 1), 1));
+                transactions.Add(new Transaction(product.Id, randomQuantity, product.Price, new DateTime(2026, 1, 5).AddMilliseconds(841 * 2), 1));
+                transactions.Add(new Transaction(product.Id, randomQuantity, product.Price, new DateTime(2026, 1, 12).AddMilliseconds(841 * 3), 1));
+                transactions.Add(new Transaction(product.Id, randomQuantity, product.Price, new DateTime(2026, 1, 14).AddMilliseconds(841 * 74), 1));
+                transactions.Add(new Transaction(product.Id, randomQuantity, product.Price, new DateTime(2026, 1, 21).AddMilliseconds(841 * 5), 1));
+                transactions.Add(new Transaction(product.Id, randomQuantity, product.Price, new DateTime(2026, 1, 25).AddMilliseconds(841 * 6), 1));
+                transactions.Add(new Transaction(product.Id, randomQuantity, product.Price, new DateTime(2026, 1, 26).AddMilliseconds(841 * 8), 1));
             }
 
 
@@ -253,24 +264,23 @@ namespace IMS.Infrastructure.Persistence
         private void AuditAddedAndModfiedEntriesInSeedMode()
         {
             var seedDateTime = _dateTime.UTCNow;
-            var seedCreatedOrUpdatedBy = "SeedUser";
+            var seedCreatedOrUpdatedBy = users[0].Id;
 
             foreach (var entry in _context.ChangeTracker.Entries<IAuditable>())
             {
-                if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+                entry.Property(X => X.UpdatedBy).CurrentValue =
+                    entry.Entity.UpdatedBy == default ? seedCreatedOrUpdatedBy : entry.Entity.UpdatedBy;
+
+                entry.Property(X => X.UpdatedOnUTC).CurrentValue = seedDateTime;
+
+
+                if (entry.State == EntityState.Added)
                 {
-                    entry.Property(X => X.UpdatedOnUTC).CurrentValue = seedDateTime;
-                    entry.Property(X => X.UpdatedBy).CurrentValue = seedCreatedOrUpdatedBy;
+                    entry.Property(X => X.CreatedBy).CurrentValue =
+                        entry.Entity.CreatedBy == default ? seedCreatedOrUpdatedBy : entry.Entity.CreatedBy;
 
-                    if (entry.State == EntityState.Added)
-                    {
-                        var currentValueOfCreatedOnUTC = entry.Property(X => X.CreatedOnUTC).CurrentValue;
-
-                        if (currentValueOfCreatedOnUTC == default)
-                            entry.Property(X => X.CreatedOnUTC).CurrentValue = seedDateTime;
-
-                        entry.Property(X => X.CreatedBy).CurrentValue = seedCreatedOrUpdatedBy;
-                    }
+                    entry.Property(X => X.CreatedOnUTC).CurrentValue =
+                        entry.Entity.CreatedOnUTC == default ? seedDateTime : entry.Entity.CreatedOnUTC;
                 }
             }
         }

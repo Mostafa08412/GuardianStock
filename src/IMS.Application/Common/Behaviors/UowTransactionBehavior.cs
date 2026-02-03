@@ -1,5 +1,4 @@
-﻿using IMS.Application.Common.Interfaces;
-using IMS.Domain.Abstractions;
+﻿using IMS.Domain.Abstractions;
 using MediatR;
 
 namespace IMS.Application.Common.Behaviors
@@ -19,7 +18,7 @@ namespace IMS.Application.Common.Behaviors
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
 
-            if (request is not ICommandRequest)
+            if (!request.GetType().Name.EndsWith("Command"))
                 return await next.Invoke();
 
             await _unitOfWork.BeginTransactionAsync(cancellationToken);

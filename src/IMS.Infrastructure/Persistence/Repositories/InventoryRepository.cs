@@ -14,6 +14,9 @@ namespace IMS.Infrastructure.Persistence.Repositories
             return await _entity.FirstOrDefaultAsync(i => i.ProductId == productId, ct);
         }
 
-
+        public async Task<bool> IsAvailableStockAsync(Guid productId, int quantity, CancellationToken ct)
+        {
+            return (await _entity.FirstOrDefaultAsync(x => x.ProductId == productId, ct))!.Quantity >= quantity;
+        }
     }
 }

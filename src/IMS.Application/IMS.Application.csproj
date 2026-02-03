@@ -24,7 +24,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Common\EventHandlers\" />
 		<Folder Include="Common\Exceptions\" />
 	</ItemGroup>
 
