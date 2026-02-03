@@ -2,7 +2,7 @@
 using IMS.Domain.Core.Primitives.Result;
 using MediatR;
 
-namespace IMS.Application.Transactions.Queries.RecordSale
+namespace IMS.Application.Transactions.Commands.RecordSale
 {
     public record RecordSaleCommand : IRequest<Result>, ICommandRequest
     {

@@ -5,7 +5,7 @@ using IMS.Domain.Core.Primitives.Result;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace IMS.Application.Transactions.Queries.ListTranactions
+namespace IMS.Application.Transactions.Queries.ListTransactions
 {
     public class ListTransactionsQueryHandler : IRequestHandler<ListTransactionsQuery, Result<PaginatedList<TransactionDto>>>
     {

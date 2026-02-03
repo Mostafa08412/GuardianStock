@@ -4,7 +4,7 @@ using IMS.Domain.Core.Primitives.Result;
 using IMS.Domain.Transactions;
 using MediatR;
 
-namespace IMS.Application.Transactions.Queries.RecordPurchase
+namespace IMS.Application.Transactions.Commands.RecordPurchase
 {
     public class RecordPurchaseCommandHandler : IRequestHandler<RecordPurchaseCommand, Result>
     {

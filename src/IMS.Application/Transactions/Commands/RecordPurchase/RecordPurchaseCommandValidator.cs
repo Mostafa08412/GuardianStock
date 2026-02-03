@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace IMS.Application.Transactions.Queries.RecordPurchase
+namespace IMS.Application.Transactions.Commands.RecordPurchase
 {
     public class RecordPurchaseCommandValidator : AbstractValidator<RecordPurchaseCommand>
     {
