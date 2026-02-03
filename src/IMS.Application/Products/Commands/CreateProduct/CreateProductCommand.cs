@@ -1,4 +1,3 @@
-using IMS.Application.Common.Interfaces;
 using IMS.Domain.Core.Primitives.Result;
 using MediatR;
 
@@ -11,4 +10,4 @@ public record CreateProductCommand(
     string Supplier,
     Guid CategoryId,
     int InitialQuantity,
-    int LowStockThreshold) : IRequest<Result<Guid>>, ICommandRequest;
+    int LowStockThreshold) : IRequest<Result<Guid>>;
