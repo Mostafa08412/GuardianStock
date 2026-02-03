@@ -1,4 +1,4 @@
-﻿namespace IMS.Application.Transactions.Queries.ListTranactions
+﻿namespace IMS.Application.Transactions.Queries.ListTransactions
 {
     public record TransactionDto(
         Guid Id,
