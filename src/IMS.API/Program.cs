@@ -16,13 +16,15 @@ namespace IMS.API
                 var builder = WebApplication.CreateBuilder(args);
 
                 builder.ConfigureSerilog();
-                builder.Services.RegisterApplicationServices(builder.Configuration);
+
+                builder.Services.RegisterAllServices(builder.Configuration);
 
                 var app = builder.Build();
 
-                app.ConfigureMiddlewarePipeline();
+                app.ConfigureMiddlewarePipeline(builder.Configuration);
 
                 Log.Information("IMS API started successfully");
+
                 app.Run();
             }
             catch (Exception ex)

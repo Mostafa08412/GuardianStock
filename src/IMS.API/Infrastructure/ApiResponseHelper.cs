@@ -51,7 +51,10 @@ namespace IMS.API.Infrastructure
             // Map validation errors
             var validationTypeErrors = result.Errors.Where(x => x.ErrorType == ErrorType.Validation);
             if (validationTypeErrors.Any())
+            {
+                errorCode = "VALIDATION_ERROR";
                 message = "One or more validation error has been occured.";
+            }
             foreach (var error in validationTypeErrors)
             {
                 // Use TryAdd to prevent crashes if the same error code appears twice

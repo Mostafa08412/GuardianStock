@@ -1,12 +1,13 @@
-﻿using IMS.API.Middleware;
+﻿using Hangfire;
+using IMS.API.Middleware;
+using IMS.Infrastructure.HubServices;
 using Serilog;
 namespace IMS.API.Extensions
 {
     public static class MiddlewarePipeline
     {
-        private const string CorsPolicyName = "Frontend-Application-Origin";
 
-        public static void ConfigureMiddlewarePipeline(this WebApplication app)
+        public static void ConfigureMiddlewarePipeline(this WebApplication app, IConfiguration configuration)
         {
 
 
@@ -25,8 +26,9 @@ namespace IMS.API.Extensions
                     options.DisplayRequestDuration();
                 });
             }
-
-            app.UseCors(CorsPolicyName);
+            app.MapHub<ImportHub>(configuration.GetSection("HubSettings:ImportProducts:Status").Get<string>());
+            app.UseHangfireDashboard();
+            app.UseCors(configuration.GetSection("CorsSettings:PolicyName").Get<string>());
             app.UseRouting();
             app.UseMiddleware<HandleAuthenticationErrorMiddleware>();
             app.UseAuthentication();
