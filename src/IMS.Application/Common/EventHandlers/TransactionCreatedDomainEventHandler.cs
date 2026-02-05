@@ -20,17 +20,36 @@ namespace IMS.Application.Common.EventHandlers
         {
             var inventory = await unitOfWork.Inventories.GetByProductIdAsync(notification.ProductId, cancellationToken);
 
+            if (inventory == null)
+            {
+                logger.LogCritical("Inventory record missing for ProductId: {ProductId}. Critical sync issue between transactions and inventory.",
+                    notification.ProductId);
+                return;
+            }
+
+            var previousStock = inventory.Quantity;
+
             if (notification.Type == TransactionType.Sale)
             {
-                inventory!.Ship(notification.Quantity);
-                logger.LogInformation("Inventory stock of product with id {productId} reduced by {quantity} current stock is {currentStock} ", notification.ProductId, notification.Quantity, inventory.Quantity);
+                inventory.Ship(notification.Quantity);
+
+                logger.LogInformation(
+                    "Inventory Reduced: Product {ProductId} | Sold: {Quantity} | Stock: {PreviousStock} -> {CurrentStock}",
+                    notification.ProductId, notification.Quantity, previousStock, inventory.Quantity);
             }
             else
             {
-                inventory!.Restock(notification.Quantity);
-                logger.LogInformation("Inventory stock of product with id {productId} increased by {quantity} current stock is {currentStock} ", notification.ProductId, notification.Quantity, inventory.Quantity);
+                inventory.Restock(notification.Quantity);
+
+                logger.LogInformation(
+                    "Inventory Restocked: Product {ProductId} | Added: {Quantity} | Stock: {PreviousStock} -> {CurrentStock}",
+                    notification.ProductId, notification.Quantity, previousStock, inventory.Quantity);
+            }
 
 
+            if (inventory.Quantity <= 0)
+            {
+                logger.LogWarning("Product {ProductId} is now OUT OF STOCK.", notification.ProductId);
             }
         }
     }

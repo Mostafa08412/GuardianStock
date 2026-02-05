@@ -52,15 +52,20 @@ namespace IMS.Infrastructure.Persistence.Repositories
 
             AuditAddedAndModfiedEntries();
 
-            var aggregateEntitiesWithDomainEvents =
-                dbContext.ChangeTracker.Entries<Aggregate>()
-                .Select(X => X.Entity)
-                .Where(X => X.DomainEvents.Any()).ToList();
-
             var result = await dbContext.SaveChangesAsync(cancellationToken);
 
+            while (true)
+            {
+                var aggregateEntitiesWithDomainEvents =
+                   dbContext.ChangeTracker.Entries<Aggregate>()
+                   .Select(X => X.Entity)
+                   .Where(X => X.DomainEvents.Any()).ToList();
 
-            await PublishAggregatesDomainEvents(aggregateEntitiesWithDomainEvents, cancellationToken);
+                if (!aggregateEntitiesWithDomainEvents.Any()) break;
+
+                await PublishAggregatesDomainEvents(aggregateEntitiesWithDomainEvents, cancellationToken);
+            }
+
 
 
             return await dbContext.SaveChangesAsync(cancellationToken);

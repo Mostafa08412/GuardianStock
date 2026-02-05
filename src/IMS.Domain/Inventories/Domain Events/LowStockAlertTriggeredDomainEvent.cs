@@ -4,15 +4,16 @@ namespace IMS.Domain.Inventories
 {
     public record LowStockAlertTriggeredDomainEvent : IDomainEvent
     {
-        public LowStockAlertTriggeredDomainEvent(Guid productId, Guid inventoryId, DateTime triggeredAtUTC, int lowStockThreshold, int quantity)
+        public LowStockAlertTriggeredDomainEvent(Guid productId, Guid inventoryId, DateTime triggeredAtUTC, int lowStockThreshold, int quantity, Inventory inventory)
         {
             ProductId = productId;
             InventoryId = inventoryId;
             TriggeredAtUTC = triggeredAtUTC;
             Threshold = lowStockThreshold;
             CurrentQuantity = quantity;
+            Inventory = inventory;
         }
-
+        public Inventory Inventory { get; init; }
         public Guid ProductId { get; init; }
 
         public Guid InventoryId { get; init; }
