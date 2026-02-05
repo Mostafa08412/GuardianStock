@@ -1,0 +1,46 @@
+@model IMS.Infrastructure.EmailServices.EmailTemplates.LowStockEmailModel
+
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+        .container { width: 90%; max-width: 600px; margin: 20px auto; border: 1px solid #eee; border-top: 6px solid #d32f2f; padding: 25px; border-radius: 8px; }
+        .header { text-align: center; color: #d32f2f; }
+        .product-card { background-color: #fff5f5; border: 1px solid #feb2b2; padding: 15px; border-radius: 6px; margin: 20px 0; }
+        .label { font-weight: bold; color: #555; }
+        .value { color: #000; font-weight: 600; }
+        .critical { color: #c53030; font-weight: bold; font-size: 1.1em; }
+        .button { display: inline-block; padding: 12px 25px; background-color: #d32f2f; color: #ffffff !important; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 15px; }
+        .footer { font-size: 0.8em; color: #888; margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>⚠️ Low Stock Alert</h2>
+        </div>
+        
+        <p>Hello Team,</p>
+        <p>This is an automated notification to inform you that a product has dropped below its minimum stock threshold.</p>
+
+        <div class="product-card">
+            <p><span class="label">Product:</span> <span class="value">@Model.ProductName</span></p>
+            <p><span class="label">SKU:</span> <span class="value">@Model.Sku</span></p>
+            <p><span class="label">Current Stock:</span> <span class="critical">@Model.CurrentQuantity</span></p>
+            <p><span class="label">Reorder Threshold:</span> <span class="value">@Model.Threshold</span></p>
+        </div>
+
+        <p>Please review the inventory and restock as soon as possible to avoid fulfillment delays.</p>
+
+        <div style="text-align: center;">
+            <a href="@Model.DashboardUrl" class="button">Manage Inventory</a>
+        </div>
+
+        <div class="footer">
+            <p>Alert generated at: @Model.AlertTime.ToString("MMMM dd, yyyy HH:mm") UTC</p>
+            <p>Inventory Management System</p>
+        </div>
+    </div>
+</body>
+</html>
