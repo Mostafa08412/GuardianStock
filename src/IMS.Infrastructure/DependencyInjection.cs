@@ -11,6 +11,7 @@ using IMS.Infrastructure.Common;
 using IMS.Infrastructure.CsvFileReader.Products;
 using IMS.Infrastructure.Email_Services;
 using IMS.Infrastructure.Email_Services.Options;
+using IMS.Infrastructure.HubServices;
 using IMS.Infrastructure.Persistence;
 using IMS.Infrastructure.Persistence.BackgroundJobs;
 using IMS.Infrastructure.Persistence.Identity;
@@ -24,6 +25,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using MyNewApplication.Infrastructure.Services.FileImageManager;
 using System.Net;
 using System.Net.Mail;
 using System.Reflection;
@@ -154,6 +156,8 @@ namespace IMS.Infrastructure
             services.AddSingleton<IDateTime, DateProvider>();
             services.AddScoped<ApplicationDbContextInitializer>();
             services.AddTransient<ITokenService, TokenService>();
+            services.AddScoped<IFileManager, FileManager>();
+            services.AddScoped<ISignalService, SignalService>();
 
 
             return services;

@@ -1,9 +1,9 @@
 using IMS.Application.Common.Interfaces;
 using IMS.Application.Common.Models;
 using IMS.Domain.Core.Primitives.Result;
+using LinqKit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-
 namespace IMS.Application.LowStockAlerts.Queries.GetLowStockAlerts;
 
 public class GetLowStockAlertsQueryHandler : IRequestHandler<GetLowStockAlertsQuery, Result<PaginatedList<LowStockAlertDto>>>
@@ -80,13 +80,16 @@ public class GetLowStockAlertsQueryHandler : IRequestHandler<GetLowStockAlertsQu
             _ => request.SortDescending ? query.OrderByDescending(x => x.AlertTriggeredAt) : query.OrderBy(x => x.AlertTriggeredAt)
         };
 
-        var projectedQuery = query.Select(x => new LowStockAlertDto(
+
+        var projectedQuery = query.AsExpandable().Select(x => new LowStockAlertDto(
             x.Id,
             x.ProductId,
             x.ProductName,
             x.ProductSku,
             x.CurrentStock,
             x.LowStockThreshold,
+            ((decimal)x.CurrentStock / x.LowStockThreshold) <= 0.3m ? "critical" :
+                      ((decimal)x.CurrentStock / x.LowStockThreshold) < 1.0m ? "low" : "normal",
             x.IsNotificationSent,
             x.AlertTriggeredAt.ToLocalTime()));
 
@@ -99,4 +102,6 @@ public class GetLowStockAlertsQueryHandler : IRequestHandler<GetLowStockAlertsQu
 
         return Result<PaginatedList<LowStockAlertDto>>.Success(new PaginatedList<LowStockAlertDto>(alerts, totalCount, request.Page, request.PageSize));
     }
+
+
 }

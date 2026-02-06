@@ -7,5 +7,6 @@ public record LowStockAlertDto(
     string Sku,
     int CurrentStock,
     int Threshold,
+    string status,
     bool IsNotificationSent,
     DateTime TriggeredOn);

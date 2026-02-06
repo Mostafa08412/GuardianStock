@@ -1,6 +1,7 @@
 ﻿using Hangfire;
 using IMS.Application.Common.Interfaces;
 using IMS.Application.LowStockAlerts.Commands.SendLowStockEmail;
+using IMS.Application.Products.Commands.GeneratePreview;
 using MediatR;
 
 namespace IMS.Infrastructure.Persistence.BackgroundJobs
@@ -29,6 +30,12 @@ namespace IMS.Infrastructure.Persistence.BackgroundJobs
         public void EnqueueSendLowStockEmailJob(SendLowStockEmailCommand request)
         {
             var jobId = BackgroundJob.Schedule<BackgroundJobBridge>(bridge => bridge.SendRequestAsync(request), TimeSpan.FromSeconds(10));
+
+        }
+
+        public void EnqueueGeneratePreviewJob(GeneratePreviewCommand request)
+        {
+            var jobId = BackgroundJob.Schedule<BackgroundJobBridge>(bridge => bridge.SendRequestAsync(request), TimeSpan.FromSeconds(5));
 
         }
     }
