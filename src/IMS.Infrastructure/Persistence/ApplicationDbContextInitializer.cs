@@ -247,6 +247,23 @@ namespace IMS.Infrastructure.Persistence
 
             await CreateIdentityUserAsync(admin, "Admin@123", Roles.Admin);
             await CreateIdentityUserAsync(manager, "Manager@123", Roles.Manager);
+
+            var admin1 = new ApplicationUser { UserName = "Admin1", Email = "Admin1@localhost", FirstName = "System", LastName = "Admin", EmailConfirmed = true };
+            var admin2 = new ApplicationUser { UserName = "Admin2", Email = "Admin2@localhost", FirstName = "System", LastName = "Admin", EmailConfirmed = true };
+            var admin3 = new ApplicationUser { UserName = "Admin3", Email = "Admin3@localhost", FirstName = "System", LastName = "Admin", EmailConfirmed = true };
+            var admin4 = new ApplicationUser { UserName = "Admin4", Email = "Admin4@localhost", FirstName = "System", LastName = "Admin", EmailConfirmed = true };
+            var admin5 = new ApplicationUser { UserName = "Admin5", Email = "Admin5@localhost", FirstName = "System", LastName = "Admin", EmailConfirmed = true };
+            var admin6 = new ApplicationUser { UserName = "Admin6", Email = "Admin6@localhost", FirstName = "System", LastName = "Admin", EmailConfirmed = true };
+            var admin7 = new ApplicationUser { UserName = "Admin7", Email = "Admin7@localhost", FirstName = "System", LastName = "Admin", EmailConfirmed = true };
+
+            await CreateIdentityUserAsync(admin1, "Admin@123", Roles.Admin);
+            await CreateIdentityUserAsync(admin2, "Admin@123", Roles.Admin);
+            await CreateIdentityUserAsync(admin3, "Admin@123", Roles.Admin);
+            await CreateIdentityUserAsync(admin4, "Admin@123", Roles.Admin);
+            await CreateIdentityUserAsync(admin5, "Admin@123", Roles.Admin);
+            await CreateIdentityUserAsync(admin6, "Admin@123", Roles.Admin);
+            await CreateIdentityUserAsync(admin7, "Admin@123", Roles.Admin);
+
         }
 
         private async Task CreateIdentityUserAsync(ApplicationUser user, string password, string role)

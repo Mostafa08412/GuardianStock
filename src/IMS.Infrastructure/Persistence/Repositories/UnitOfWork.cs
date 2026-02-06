@@ -50,24 +50,29 @@ namespace IMS.Infrastructure.Persistence.Repositories
         public async Task<int> Complete(CancellationToken cancellationToken)
         {
 
-            AuditAddedAndModfiedEntries();
-
-            var aggregateEntitiesWithDomainEvents =
-                dbContext.ChangeTracker.Entries<Aggregate>()
-                .Select(X => X.Entity)
-                .Where(X => X.DomainEvents.Any()).ToList();
+            AuditAddedAndModifiedEntries();
 
             var result = await dbContext.SaveChangesAsync(cancellationToken);
 
+            while (true)
+            {
+                var aggregateEntitiesWithDomainEvents =
+                   dbContext.ChangeTracker.Entries<Aggregate>()
+                   .Select(X => X.Entity)
+                   .Where(X => X.DomainEvents.Any()).ToList();
 
-            await PublishAggregatesDomainEvents(aggregateEntitiesWithDomainEvents, cancellationToken);
+                if (!aggregateEntitiesWithDomainEvents.Any()) break;
+
+                await PublishAggregatesDomainEvents(aggregateEntitiesWithDomainEvents, cancellationToken);
+            }
+
 
 
             return await dbContext.SaveChangesAsync(cancellationToken);
         }
 
 
-        private void AuditAddedAndModfiedEntries()
+        private void AuditAddedAndModifiedEntries()
         {
             //Search for all added entities 
             foreach (var entry in dbContext.ChangeTracker.Entries<IAuditable>())

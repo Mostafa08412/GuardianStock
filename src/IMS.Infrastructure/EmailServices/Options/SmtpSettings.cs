@@ -1,6 +1,6 @@
 ﻿namespace IMS.Infrastructure.Email_Services.Options
 {
-    internal class SmtpSettings
+    public class SmtpSettings
     {
 
         public static string SectionName => "SmtpSettings";
@@ -12,6 +12,8 @@
         public string SmtpHost { get; init; }
 
         public string Password { get; init; }
+
+        public bool UseSSL { get; init; }
 
     }
 }

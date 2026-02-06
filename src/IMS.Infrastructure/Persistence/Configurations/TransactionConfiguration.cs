@@ -15,6 +15,9 @@ namespace IMS.Infrastructure.Persistence.Configurations
                 .HasIndex(X => new { X.ProductId, X.CreatedOnUTC })
                 .IsUnique();
 
+            builder.
+                 Property(X => X.UnitPrice).HasPrecision(18, 2);
+
             builder
                  .HasOne<Product>().WithMany()
                  .HasForeignKey(X => X.ProductId);

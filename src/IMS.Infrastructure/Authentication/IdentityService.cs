@@ -378,6 +378,18 @@ namespace IMS.Infrastructure.Authentication
 
         }
 
+        public async Task<IEnumerable<string>> GetUsersEmailsByRoleAsync(string role, CancellationToken cancellationToken = default)
+        {
+            var r = await _context.Roles.FirstOrDefaultAsync(X => X.NormalizedName == role.ToUpper(), cancellationToken);
 
+
+            var userEmails = await (from user in _context.Users.AsNoTracking()
+                                    where user.EmailConfirmed
+                                    join userRole in _context.UserRoles.AsNoTracking().Where(X => X.RoleId == r!.Id)
+                                    on user.Id equals userRole.UserId
+                                    select user.Email).ToListAsync(cancellationToken);
+
+            return userEmails.ToArray();
+        }
     }
 }

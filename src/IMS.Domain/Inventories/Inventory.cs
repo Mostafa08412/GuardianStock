@@ -131,7 +131,7 @@ namespace IMS.Domain.Inventories
                 {
                     TriggerLowStockAlert(LowStockThreshold);
                     //Trigger a LowStockAlertTriggered Domain Event
-                    AddDomainEvent(new LowStockAlertTriggeredDomainEvent(ProductId, Id, LowStockAlert.TriggeredAtUTC, LowStockThreshold, Quantity));
+                    AddDomainEvent(new LowStockAlertTriggeredDomainEvent(ProductId, Id, LowStockAlert.TriggeredAtUTC, LowStockThreshold, Quantity, this));
                 }
                 // Case 2: Means the alert is triggered but still not being sent.. (awaiting notification send confirmation)
                 else if (!LowStockAlert.IsNotificationSent)
@@ -168,7 +168,7 @@ namespace IMS.Domain.Inventories
             if (Quantity <= LowStockThreshold)
             {
                 TriggerLowStockAlert(newLowStockThreshold);
-                AddDomainEvent(new LowStockAlertTriggeredDomainEvent(ProductId, Id, LowStockAlert.TriggeredAtUTC, LowStockThreshold, Quantity));
+                AddDomainEvent(new LowStockAlertTriggeredDomainEvent(ProductId, Id, LowStockAlert.TriggeredAtUTC, LowStockThreshold, Quantity, this));
 
             }
 

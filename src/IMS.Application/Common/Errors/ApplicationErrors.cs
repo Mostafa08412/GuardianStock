@@ -17,10 +17,25 @@ public static class ApplicationErrors
             "The CSV file is required.",
             ErrorType.Validation);
 
+        public static Error FileNotFound => new(
+         "CSV.FileNotFound",
+         "The CSV file is not found.",
+         ErrorType.NotFound);
+
         public static Error MissingHeaders => new(
             "CSV.MissingHeaders",
             $"The uploaded file is missing required columns.",
             ErrorType.Failure);
+
+        public static Error UnexpectedError => new(
+        "CSV.UnexpectedError",
+        $"Unexpected error has occurred during reading CSV file.",
+        ErrorType.Failure);
+
+        public static readonly Error PreviewExpired = new(
+            "CsvReader.PreviewExpired",
+            "The preview data has expired or is no longer available. Please upload the file again.",
+            ErrorType.NotFound);
 
         // Product-Specific Row Validation Errors
         public static class Product

@@ -24,6 +24,10 @@ public interface IIdentityService
         string email,
         CancellationToken cancellationToken = default);
 
+    Task<IEnumerable<string>> GetUsersEmailsByRoleAsync(
+    string role,
+    CancellationToken cancellationToken = default);
+
     Task<Result<IEnumerable<string>>> GetUserRolesByUserIdAsync(
         string userId,
         CancellationToken cancellationToken = default);

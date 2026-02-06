@@ -1,4 +1,5 @@
-﻿using IMS.Application.Common.Interfaces;
+﻿using Hangfire;
+using IMS.Application.Common.Interfaces;
 using IMS.Domain.Abstractions;
 using IMS.Domain.Categories;
 using IMS.Domain.Core.Errors;
@@ -10,7 +11,10 @@ using IMS.Infrastructure.Common;
 using IMS.Infrastructure.CsvFileReader.Products;
 using IMS.Infrastructure.Email_Services;
 using IMS.Infrastructure.Email_Services.Options;
+using IMS.Infrastructure.FileService;
+using IMS.Infrastructure.HubServices;
 using IMS.Infrastructure.Persistence;
+using IMS.Infrastructure.Persistence.BackgroundJobs;
 using IMS.Infrastructure.Persistence.Identity;
 using IMS.Infrastructure.Persistence.Repositories;
 using IMS.Infrastructure.Tokens;
@@ -22,6 +26,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+
 using System.Net;
 using System.Net.Mail;
 using System.Reflection;
@@ -30,21 +35,28 @@ namespace IMS.Infrastructure
 {
     public static class DependencyInjection
     {
+        public static IServiceCollection AddHangFireBackgroundJobWorker(this IServiceCollection services, IConfiguration configuration)
+        {
+
+            services.AddHangfire(X => X.UseSqlServerStorage(configuration.GetConnectionString("DefaultConnection")));
+            services.AddHangfireServer();
+
+            services.AddScoped<BackgroundJobBridge>();
+
+            services.AddScoped<IBackgroundJobWorker, BackgroundJobWorker>();
+
+            return services;
+        }
+
 
         public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
 
             services.AddAuthorizationBuilder();
 
+            services.AddOptions<TokenSettings>().Bind(configuration.GetSection(TokenSettings.SectionName));
 
-            services.AddOptions<TokenSettings>()
-               .Bind(configuration.GetSection(TokenSettings.SectionName));
-
-
-
-
-            var section = configuration.GetSection("TokenSettings");
-            services.Configure<TokenSettings>(section);
+            var section = configuration.GetSection(TokenSettings.SectionName);
 
             var tokenSettings = section.Get<TokenSettings>() ?? throw new ArgumentNullException(nameof(section), "TokenSettings section is missing.");
 
@@ -138,13 +150,14 @@ namespace IMS.Infrastructure
         {
             //Register any additonal services here...
             services.AddSingleton<IProductCsvReader, ProductCsvReader>();
-            services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IIdentityService, IdentityService>();
-            services.AddScoped<IEmailService, EmailService>();
+            services.AddTransient<IEmailService, EmailService>();
             services.AddSingleton<ISkuGenerator, SkuGenerator>();
             services.AddSingleton<IDateTime, DateProvider>();
             services.AddScoped<ApplicationDbContextInitializer>();
             services.AddTransient<ITokenService, TokenService>();
+            services.AddScoped<IFileManager, FileManager>();
+            services.AddScoped<ISignalService, SignalService>();
 
 
             return services;
@@ -177,18 +190,20 @@ namespace IMS.Infrastructure
         public static IServiceCollection RegisterFluentEmail(this IServiceCollection services, IConfiguration configuration)
         {
 
-            var smtpSettings = configuration.GetSection("SmtpSettings").Get<SmtpSettings>();
+            services.AddOptions<SmtpSettings>().Bind(configuration.GetSection(SmtpSettings.SectionName));
 
-            services
-             .AddFluentEmail(smtpSettings!.FromEmail)
-             .AddSmtpSender(new SmtpClient(smtpSettings.SmtpHost, smtpSettings.SmtpPort)
-             {
-                 Credentials = new NetworkCredential(
-                     smtpSettings.FromEmail,
-                     smtpSettings.Password // App Password
-                 ),
-                 EnableSsl = true
-             });
+            var smtpSettings = configuration.GetSection(SmtpSettings.SectionName).Get<SmtpSettings>();
+
+            services.AddFluentEmail(smtpSettings!.FromEmail)
+                    .AddRazorRenderer()
+                    .AddSmtpSender(() => new SmtpClient(smtpSettings.SmtpHost, smtpSettings.SmtpPort)
+                    {
+                        EnableSsl = smtpSettings.UseSSL,
+                        UseDefaultCredentials = false,
+                        DeliveryMethod = SmtpDeliveryMethod.Network,
+                        Credentials = smtpSettings.UseSSL ? new NetworkCredential(smtpSettings.FromEmail, smtpSettings.Password) : null
+                    });
+
 
             return services;
 
@@ -197,6 +212,25 @@ namespace IMS.Infrastructure
 
         }
 
+        public static IServiceCollection RegisterHybridCache(this IServiceCollection services)
+        {
+            services.AddHybridCache((o) =>
+            {
+                o.MaximumPayloadBytes = 1024 * 1024;
+                o.DefaultEntryOptions = new Microsoft.Extensions.Caching.Hybrid.HybridCacheEntryOptions
+                {
+                    LocalCacheExpiration = TimeSpan.FromSeconds(60),
+                    Expiration = TimeSpan.FromMinutes(60)
+                };
+            });
+
+            return services;
+        }
+        public static IServiceCollection RegisterSignalR(this IServiceCollection services)
+        {
+            services.AddSignalR();
+            return services;
+        }
         public static IServiceCollection RegisterIdentity(this IServiceCollection services)
         {
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -220,17 +254,20 @@ namespace IMS.Infrastructure
 
             return services;
         }
-        public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
 
 
-            services.RegisterDbContext(configuration);
-            services.RegisterFluentEmail(configuration);
-            services.RegisterAutoMapper();
-            services.RegisterRepositoriesAndUnitOfWork();
-            services.RegisterServices();
-            services.RegisterIdentity();
-            services.AddJwtAuthentication(configuration);
+            services.RegisterDbContext(configuration)
+                    .RegisterFluentEmail(configuration)
+                    .RegisterAutoMapper()
+                    .RegisterRepositoriesAndUnitOfWork()
+                    .RegisterServices()
+                    .RegisterIdentity()
+                    .AddJwtAuthentication(configuration)
+                    .AddHangFireBackgroundJobWorker(configuration)
+                    .RegisterSignalR()
+                    .RegisterHybridCache();
 
             return services;
         }

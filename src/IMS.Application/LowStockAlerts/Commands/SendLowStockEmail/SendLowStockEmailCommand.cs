@@ -1,0 +1,12 @@
+﻿using MediatR;
+
+namespace IMS.Application.LowStockAlerts.Commands.SendLowStockEmail
+{
+
+    //NOTE: This command is triggered by a background job.
+    public record SendLowStockEmailCommand : IRequest
+    {
+        public Guid ProductId { get; init; }
+    }
+
+}

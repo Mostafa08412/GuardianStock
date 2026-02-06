@@ -1,6 +1,6 @@
 ﻿using IMS.Application.Contracts.CsvFileReader;
 
-namespace IMS.Application.Products.Commands.ImportProducts.Dtos
+namespace IMS.Application.Products.Commands.GeneratePreview.Dtos
 {
     public class ImportProductsReport
     {
@@ -20,17 +20,16 @@ namespace IMS.Application.Products.Commands.ImportProducts.Dtos
 
         public string Description { get; init; }
 
+        public string Category { get; init; }
+
         public string Price { get; init; }
 
         public string InitialQuantity { get; init; }
 
-        public string LowStockAlertThreshold { get; init; }
-
-        public string Category { get; init; }
-
         public string Supplier { get; init; }
 
         public bool IsValid { get; init; }
+        public string LowStockAlertThreshold { get; init; }
 
         public List<string> Errors { get; init; } = new();
 

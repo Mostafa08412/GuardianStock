@@ -1,37 +1,54 @@
 ﻿using IMS.Application.Common.Errors;
 using IMS.Application.Common.Interfaces;
 using IMS.Application.Contracts.CsvFileReader;
-using IMS.Application.Products.Commands.ImportProducts.Dtos;
+using IMS.Application.Products.Commands.GeneratePreview.Dtos;
 using IMS.Domain.Abstractions;
-using IMS.Domain.Core.Primitives.Result;
+using IMS.Domain.Inventories;
 using IMS.Domain.Products;
 using MediatR;
+using Microsoft.Extensions.Caching.Hybrid;
 using static IMS.Domain.Core.Errors.Errors;
 
-namespace IMS.Application.Products.Commands.ImportProducts
+namespace IMS.Application.Products.Commands.GeneratePreview
 {
-    public class ImportProductCommandHandler : IRequestHandler<ImportProductsCommand, Result<ImportProductsReport>>
+    public class GeneratePreviewCommandHandler : IRequestHandler<GeneratePreviewCommand>
     {
         private readonly IProductCsvReader productCsvReader;
         private readonly IUnitOfWork unitOfWork;
         private readonly ISkuGenerator skuGenerator;
-        public ImportProductCommandHandler(IProductCsvReader productCsvReader, IUnitOfWork unitOfWork, ISkuGenerator skuGenerator)
+        private readonly HybridCache hybridCache;
+        private readonly ISignalService signalService;
+
+        public GeneratePreviewCommandHandler(IProductCsvReader productCsvReader, IUnitOfWork unitOfWork, ISkuGenerator skuGenerator, HybridCache hybridCache, ISignalService signalService)
         {
             this.productCsvReader = productCsvReader;
             this.unitOfWork = unitOfWork;
             this.skuGenerator = skuGenerator;
+            this.hybridCache = hybridCache;
+            this.signalService = signalService;
         }
-        public async Task<Result<ImportProductsReport>> Handle(ImportProductsCommand request, CancellationToken cancellationToken)
+
+        public async Task Handle(GeneratePreviewCommand request, CancellationToken cancellationToken)
         {
-            var productCsvModelListResult = await productCsvReader.ReadProductCSVFile(request.file!);
+
+            await signalService.SendOnProgress(request.previewId, 0, "Preprocessing csv...", cancellationToken);
+
+
+            var productCsvModelListResult = await productCsvReader.ReadProductCSVFile(request.filePath);
 
             if (productCsvModelListResult.IsFailure)
-                return Result<ImportProductsReport>.Failure(productCsvModelListResult.Error!);
+                await signalService.OnJobFailed(request.previewId, productCsvModelListResult.Error.Code, cancellationToken);
 
             var result = new ImportProductsReport();
+
             var discoveredProduct = new HashSet<(string, string)>();
+
             IEnumerable<(Guid Id, string Name)> categories = await unitOfWork.Categories.GetAllCategoriesNamesWithIdsAsync(cancellationToken);
+
             var categoriesDict = categories.ToDictionary(x => x.Name.ToLower(), x => x.Id);
+
+            decimal totalProgress = 0.2m;
+            decimal progressUnit = (0.8m) / productCsvModelListResult.Value.Count();
 
             for (int i = 0; i < productCsvModelListResult.Value!.Count; i++)
             {
@@ -67,11 +84,23 @@ namespace IMS.Application.Products.Commands.ImportProducts
                     discoveredProduct.Add((p.Name.ToLower(), p.Category.ToLower()));
                     result.importProductsRowResults.Add(ImportProductsRowResult.CreateSuccess(p, rowNumber));
                 }
+                totalProgress = totalProgress + progressUnit;
+
+                await signalService.SendOnProgress(request.previewId, totalProgress * 100, "Parsing file...", cancellationToken);
+
             }
 
-            return Result<ImportProductsReport>.Success(result);
+            await signalService.SendOnProgress(request.previewId, 99.0m, "Preview is ready", cancellationToken);
+
+
+
+
+            await hybridCache.SetAsync(request.previewId, result);
+
+            await signalService.SendOnPreviewReadySignal(request.previewId, result, cancellationToken);
+
         }
-        public List<string> ValidateDomainRules(ProductCSVModel p)
+        private List<string> ValidateDomainRules(ProductCSVModel p)
         {
             var errors = new List<string>();
 
@@ -108,9 +137,9 @@ namespace IMS.Application.Products.Commands.ImportProducts
             {
                 errors.Add(ApplicationErrors.CsvReader.Product.InvalidLowStockFormat.Description);
             }
-            else if (pLowStockThreshold < 10)
+            else if (pLowStockThreshold < Inventory.MinimumLowStockThreshold)
             {
-                errors.Add(ApplicationErrors.CsvReader.Product.LowStockTooLow(10).Description);
+                errors.Add(ApplicationErrors.CsvReader.Product.LowStockTooLow(Inventory.MinimumLowStockThreshold).Description);
             }
 
             return errors;
