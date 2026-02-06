@@ -1,7 +1,6 @@
 using IMS.Application.Common.Interfaces;
 using IMS.Application.Common.Models;
 using IMS.Domain.Core.Primitives.Result;
-using LinqKit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 namespace IMS.Application.LowStockAlerts.Queries.GetLowStockAlerts;
@@ -81,7 +80,7 @@ public class GetLowStockAlertsQueryHandler : IRequestHandler<GetLowStockAlertsQu
         };
 
 
-        var projectedQuery = query.AsExpandable().Select(x => new LowStockAlertDto(
+        var projectedQuery = query.Select(x => new LowStockAlertDto(
             x.Id,
             x.ProductId,
             x.ProductName,
