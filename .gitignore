@@ -366,5 +366,5 @@ FodyWeavers.xsd
 frontend
 /src/IMS.API/appsettings.json
 /src/IMS.API/dotnet-tools.json
-/src/IMS.API/temp/preview
-/src/IMS.API/wwwroot/temp/preview
+/src/IMS.API/temp
+/src/IMS.API/wwwroot/temp
