@@ -9,8 +9,8 @@ using IMS.Domain.Transactions;
 using IMS.Infrastructure.Authentication;
 using IMS.Infrastructure.Common;
 using IMS.Infrastructure.CsvFileReader.Products;
-using IMS.Infrastructure.Email_Services;
-using IMS.Infrastructure.Email_Services.Options;
+using IMS.Infrastructure.EmailServices;
+using IMS.Infrastructure.EmailServices.Options;
 using IMS.Infrastructure.FileService;
 using IMS.Infrastructure.HubServices;
 using IMS.Infrastructure.Persistence;
@@ -149,15 +149,15 @@ namespace IMS.Infrastructure
         public static IServiceCollection RegisterServices(this IServiceCollection services)
         {
             //Register any additonal services here...
+            services.AddTransient<ITokenService, TokenService>();
             services.AddSingleton<IProductCsvReader, ProductCsvReader>();
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddTransient<IEmailService, EmailService>();
             services.AddSingleton<ISkuGenerator, SkuGenerator>();
             services.AddSingleton<IDateTime, DateProvider>();
-            services.AddScoped<ApplicationDbContextInitializer>();
-            services.AddTransient<ITokenService, TokenService>();
             services.AddScoped<IFileManager, FileManager>();
             services.AddScoped<ISignalService, SignalService>();
+            services.AddScoped<ApplicationDbContextInitializer>();
 
 
             return services;

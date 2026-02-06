@@ -2,12 +2,13 @@
 using IMS.Application.Common.Interfaces;
 using IMS.Domain.Core.Primitives;
 using IMS.Domain.Core.Primitives.Result;
-using IMS.Infrastructure.Email_Services.Options;
 using IMS.Infrastructure.EmailServices.EmailTemplates;
+using IMS.Infrastructure.EmailServices.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Net;
 
-namespace IMS.Infrastructure.Email_Services
+namespace IMS.Infrastructure.EmailServices
 {
     public class EmailService : IEmailService
     {
@@ -15,10 +16,10 @@ namespace IMS.Infrastructure.Email_Services
         private readonly SmtpSettings smtpSettings;
         private readonly ILogger<EmailService> logger;
 
-        public EmailService(IFluentEmail fluentEmail, SmtpSettings smtpSettings, ILogger<EmailService> logger)
+        public EmailService(IFluentEmail fluentEmail, IOptions<SmtpSettings> smtpSettings, ILogger<EmailService> logger)
         {
             this.fluentEmail = fluentEmail;
-            this.smtpSettings = smtpSettings;
+            this.smtpSettings = smtpSettings.Value;
             this.logger = logger;
         }
 

@@ -1,4 +1,4 @@
-﻿namespace IMS.Infrastructure.Email_Services.Options
+﻿namespace IMS.Infrastructure.EmailServices.Options
 {
     public class SmtpSettings
     {

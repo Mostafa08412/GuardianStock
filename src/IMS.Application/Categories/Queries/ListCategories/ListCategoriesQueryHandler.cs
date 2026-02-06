@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMS.Application.Categories.Queries.ListCategories;
 
-public class ListCategoriesQueryHandler : IRequestHandler<ListCategoriesQuery, Result<PaginatedList<CategoryDto>>>
+public class ListCategoriesQueryHandler : IRequestHandler<ListCategoriesQuery, Result<PaginatedList<CategoryListItemDto>>>
 {
     private readonly IApplicationDbContext _context;
 
@@ -15,7 +15,7 @@ public class ListCategoriesQueryHandler : IRequestHandler<ListCategoriesQuery, R
         _context = context;
     }
 
-    public async Task<Result<PaginatedList<CategoryDto>>> Handle(ListCategoriesQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PaginatedList<CategoryListItemDto>>> Handle(ListCategoriesQuery request, CancellationToken cancellationToken)
     {
         var query = _context.Categories.AsNoTracking().AsQueryable();
 
@@ -41,13 +41,13 @@ public class ListCategoriesQueryHandler : IRequestHandler<ListCategoriesQuery, R
         var items = await query
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
-            .Select(c => new CategoryDto(
+            .Select(c => new CategoryListItemDto(
                 c.Id,
                 c.Name,
                 c.Description,
                 _context.Products.Count(p => p.CategoryId == c.Id)))
             .ToListAsync(cancellationToken);
 
-        return Result<PaginatedList<CategoryDto>>.Success(new PaginatedList<CategoryDto>(items, totalCount, request.Page, request.PageSize));
+        return Result<PaginatedList<CategoryListItemDto>>.Success(new PaginatedList<CategoryListItemDto>(items, totalCount, request.Page, request.PageSize));
     }
 }
