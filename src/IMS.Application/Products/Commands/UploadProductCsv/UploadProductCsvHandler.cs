@@ -29,11 +29,11 @@ namespace IMS.Application.Products.Commands.UploadProductCsv
         {
             var previewId = Guid.NewGuid().ToString();
 
-            _signalService.SendOnProgress(previewId, 0, "Uploading file...", cancellationToken);
+            await _signalService.SendOnProgress(previewId, 0, "Uploading file...", cancellationToken);
 
             var result = await _fileManager.UploadFileAsync(request.File, "temp/preview", previewId, cancellationToken);
 
-            _signalService.SendOnProgress(previewId, 20, "File uploaded...", cancellationToken);
+            await _signalService.SendOnProgress(previewId, 20, "File uploaded...", cancellationToken);
 
 
             var command = new GeneratePreviewCommand

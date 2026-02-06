@@ -11,6 +11,7 @@ using IMS.Infrastructure.Common;
 using IMS.Infrastructure.CsvFileReader.Products;
 using IMS.Infrastructure.Email_Services;
 using IMS.Infrastructure.Email_Services.Options;
+using IMS.Infrastructure.FileService;
 using IMS.Infrastructure.HubServices;
 using IMS.Infrastructure.Persistence;
 using IMS.Infrastructure.Persistence.BackgroundJobs;
@@ -25,7 +26,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using MyNewApplication.Infrastructure.Services.FileImageManager;
+
 using System.Net;
 using System.Net.Mail;
 using System.Reflection;
@@ -149,7 +150,6 @@ namespace IMS.Infrastructure
         {
             //Register any additonal services here...
             services.AddSingleton<IProductCsvReader, ProductCsvReader>();
-            services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddTransient<IEmailService, EmailService>();
             services.AddSingleton<ISkuGenerator, SkuGenerator>();
@@ -212,7 +212,7 @@ namespace IMS.Infrastructure
 
         }
 
-        public static IServiceCollection RegisterHybirdCache(this IServiceCollection services)
+        public static IServiceCollection RegisterHybridCache(this IServiceCollection services)
         {
             services.AddHybridCache((o) =>
             {
@@ -267,7 +267,7 @@ namespace IMS.Infrastructure
                     .AddJwtAuthentication(configuration)
                     .AddHangFireBackgroundJobWorker(configuration)
                     .RegisterSignalR()
-                    .RegisterHybirdCache();
+                    .RegisterHybridCache();
 
             return services;
         }

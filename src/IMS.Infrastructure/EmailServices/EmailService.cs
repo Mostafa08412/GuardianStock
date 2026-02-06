@@ -1,8 +1,10 @@
 ﻿using FluentEmail.Core;
 using IMS.Application.Common.Interfaces;
+using IMS.Domain.Core.Primitives;
+using IMS.Domain.Core.Primitives.Result;
 using IMS.Infrastructure.Email_Services.Options;
 using IMS.Infrastructure.EmailServices.EmailTemplates;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 using System.Net;
 
 namespace IMS.Infrastructure.Email_Services
@@ -11,11 +13,13 @@ namespace IMS.Infrastructure.Email_Services
     {
         private readonly IFluentEmail fluentEmail;
         private readonly SmtpSettings smtpSettings;
+        private readonly ILogger<EmailService> logger;
 
-        public EmailService(IFluentEmail fluentEmail, IOptions<SmtpSettings> smtpSettings)
+        public EmailService(IFluentEmail fluentEmail, SmtpSettings smtpSettings, ILogger<EmailService> logger)
         {
             this.fluentEmail = fluentEmail;
-            this.smtpSettings = smtpSettings.Value;
+            this.smtpSettings = smtpSettings;
+            this.logger = logger;
         }
 
         public async Task SendEmailAsync(string to, string subject, string body)
@@ -23,7 +27,7 @@ namespace IMS.Infrastructure.Email_Services
             await fluentEmail.To(to).Body(body).Subject(subject).SendAsync();
         }
 
-        public async Task SendLowStockEmailAsync(
+        public async Task<Result> SendLowStockEmailAsync(
          IEnumerable<string> to,
          string productName,
          string sku,
@@ -53,6 +57,16 @@ namespace IMS.Infrastructure.Email_Services
                  .Subject($"URGENT: Low Stock - {productName}")
                  .UsingTemplateFromEmbedded(templatePath, emailModel, typeof(EmailService).Assembly)
                  .SendAsync(cancellationToken);
+
+            if (!result.Successful)
+            {
+                var errorMessage = string.Join(',', result.ErrorMessages);
+                logger.LogWarning("Sending Low Stock Email Failed: Reason {reason}", errorMessage);
+                return Result.Failure(new Error("Email.SendFialed", errorMessage, ErrorType.Failure));
+            }
+            logger.LogWarning("Sending Low Stock Email Succeeded");
+
+            return Result.Success();
         }
     }
 }

@@ -7,11 +7,6 @@ namespace IMS.Infrastructure.HubServices
     public class ImportHub : Hub
     {
 
-        async Task SendSignalAsyncWithMessage(string channel, string message, CancellationToken cancellationToken)
-        {
-            await Clients.All.SendAsync(channel, message, cancellationToken);
-        }
-
     }
 
 
@@ -42,13 +37,6 @@ namespace IMS.Infrastructure.HubServices
 
         }
 
-
-
-        async Task SendOnPreviewReadySignal(string jobId, CancellationToken cancellationToken)
-        {
-            await hubContext.Clients.All.SendAsync("OnPreviewReady", new { jobId }, cancellationToken);
-
-        }
     }
 
 }

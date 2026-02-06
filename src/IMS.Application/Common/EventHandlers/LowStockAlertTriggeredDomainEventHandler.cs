@@ -8,15 +8,15 @@ namespace IMS.Application.Common.EventHandlers
 {
     internal class LowStockAlertTriggeredDomainEventHandler : INotificationHandler<LowStockAlertTriggeredDomainEvent>
     {
-        private IEmailService emailService;
+        private readonly IEmailService emailService;
 
-        private IIdentityService identityService;
+        private readonly IIdentityService identityService;
 
-        private IApplicationDbContext applicationDbContext;
+        private readonly IApplicationDbContext applicationDbContext;
 
-        private ILogger<LowStockAlertTriggeredDomainEventHandler> logger;
+        private readonly ILogger<LowStockAlertTriggeredDomainEventHandler> logger;
 
-        private IBackgroundJobWorker backgroundJobWorker;
+        private readonly IBackgroundJobWorker backgroundJobWorker;
 
         public LowStockAlertTriggeredDomainEventHandler(IEmailService emailService, IIdentityService identityService, IApplicationDbContext applicationDbContext, ILogger<LowStockAlertTriggeredDomainEventHandler> logger, IBackgroundJobWorker backgroundJobWorker)
         {

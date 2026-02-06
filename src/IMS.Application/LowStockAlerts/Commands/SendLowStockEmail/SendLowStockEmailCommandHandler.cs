@@ -12,7 +12,7 @@ namespace IMS.Application.LowStockAlerts.Commands.SendLowStockEmail
 
         private readonly IEmailService _emailService;
 
-        private IIdentityService _identityService;
+        private readonly IIdentityService _identityService;
 
         private readonly ILogger<SendLowStockEmailCommandHandler> _logger;
 

@@ -53,7 +53,7 @@ namespace IMS.API.Infrastructure
             if (validationTypeErrors.Any())
             {
                 errorCode = "VALIDATION_ERROR";
-                message = "One or more validation error has been occured.";
+                message = "One or more validation errors have occurred.";
             }
             foreach (var error in validationTypeErrors)
             {

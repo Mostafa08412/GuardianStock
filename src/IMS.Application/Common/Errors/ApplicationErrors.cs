@@ -29,7 +29,7 @@ public static class ApplicationErrors
 
         public static Error UnexpectedError => new(
         "CSV.UnexpectedError",
-        $"Unexpected error has been occured during reading csv file.",
+        $"Unexpected error has occurred during reading CSV file.",
         ErrorType.Failure);
 
         public static readonly Error PreviewExpired = new(

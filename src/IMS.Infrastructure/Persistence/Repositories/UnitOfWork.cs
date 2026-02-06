@@ -50,7 +50,7 @@ namespace IMS.Infrastructure.Persistence.Repositories
         public async Task<int> Complete(CancellationToken cancellationToken)
         {
 
-            AuditAddedAndModfiedEntries();
+            AuditAddedAndModifiedEntries();
 
             var result = await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -72,7 +72,7 @@ namespace IMS.Infrastructure.Persistence.Repositories
         }
 
 
-        private void AuditAddedAndModfiedEntries()
+        private void AuditAddedAndModifiedEntries()
         {
             //Search for all added entities 
             foreach (var entry in dbContext.ChangeTracker.Entries<IAuditable>())

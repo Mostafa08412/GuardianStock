@@ -1,8 +1,9 @@
-﻿using IMS.Application.Common.Interfaces;
+﻿
+using IMS.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 
-namespace MyNewApplication.Infrastructure.Services.FileImageManager;
+namespace IMS.Infrastructure.FileService;
 
 public class FileManager : IFileManager
 {
@@ -33,7 +34,7 @@ public class FileManager : IFileManager
 
     public async Task<(string, long)> GetFileExtensionAndSizeInMbAsync(IFormFile file, CancellationToken cancellationToken)
     {
-        var fileExtension = GetExtensionIfVald(file.FileName);
+        var fileExtension = GetExtensionIfValid(file.FileName);
 
         var fileSizeinMb = (long)(await ConvertFileToBytesAsync(file, cancellationToken)).Length / (1024 * 1024);
 
@@ -42,7 +43,7 @@ public class FileManager : IFileManager
 
     public async Task<string> UploadFileAsync(IFormFile file, string directory, string fileName, CancellationToken cancellationToken = default)
     {
-        var fileExtension = GetExtensionIfVald(file.FileName);
+        var fileExtension = GetExtensionIfValid(file.FileName);
 
         var path = Path.Combine(hostEnvironment.WebRootPath, directory);
 
@@ -58,7 +59,7 @@ public class FileManager : IFileManager
         return filePath;
     }
 
-    private string GetExtensionIfVald(string fileName)
+    private string GetExtensionIfValid(string fileName)
     {
         //return csv
         //dot in not included in the return.
