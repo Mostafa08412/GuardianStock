@@ -73,7 +73,9 @@ public class GetProductQueryHandler : IRequestHandler<GetProductQuery, Result<Pr
             .Select(X => new StockActivity
             {
                 Date = X.CreatedOnUTC,
-                Type = X.Type
+                Type = X.Type,
+                Quantity = X.Quantity
+
             })
             .ToListAsync(cancellationToken);
 
@@ -90,6 +92,26 @@ public class GetProductQueryHandler : IRequestHandler<GetProductQuery, Result<Pr
             from CTE;
 
           ").ToListAsync(cancellationToken)).First();
+
+        var stockHistory = from inventory in context.Inventories.AsNoTracking()
+                           join historyItem in context.StockHistories.AsNoTracking()
+                           on inventory.Id equals historyItem.InventoryId
+                           select new
+                           {
+                               Quantity = historyItem.CurrentStock,
+                               Date = historyItem.TimestampUTC
+                           };
+
+
+        var stockhistoryList = await stockHistory
+            .GroupBy(X => new { X.Date.Year, X.Date.Month })
+            .Select(X => new StockHistoryDTO
+            {
+                Year = X.Key.Year,
+                Month = X.Key.Month,
+                Quantity = X.OrderByDescending(X => X.Date).FirstOrDefault().Quantity
+
+            }).ToListAsync(cancellationToken);
 
         var result = new ProductDto
         {
@@ -109,7 +131,8 @@ public class GetProductQueryHandler : IRequestHandler<GetProductQuery, Result<Pr
             CurrentMonthSales = curentMonthSales,
             LastMonthSales = prevMonthSales,
             TwoMonthsAgoSales = twoMonthsAgoSales,
-            LastRestocked = lastRestock
+            LastRestocked = lastRestock,
+            StockHistory = stockhistoryList
         };
         return Result<ProductDto>.Success(result);
     }

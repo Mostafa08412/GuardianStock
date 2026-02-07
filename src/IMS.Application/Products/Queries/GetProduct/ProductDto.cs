@@ -47,14 +47,25 @@ public class ProductDto
     public DateTime? LastRestocked { get; init; }
 
     public List<StockActivity> RecentActivities { get; init; } = new();
+    public List<StockHistoryDTO> StockHistory { get; init; } = new();
 
 }
 public class StockActivity
 {
     public TransactionType Type { get; init; }
 
-
+    public int Quantity { get; init; }
     public DateTime Date { get; init; }
+
+
+}
+
+public class StockHistoryDTO
+{
+    public int Quantity { get; init; }
+    public int Month { get; init; }
+
+    public int Year { get; init; }
 
 
 }
