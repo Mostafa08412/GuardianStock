@@ -1,4 +1,6 @@
-﻿using IMS.Domain.Abstractions;
+﻿using IMS.Application.Common.Interfaces;
+using IMS.Domain.Abstractions;
+using IMS.Domain.StockHistories;
 using IMS.Domain.Transactions;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -8,11 +10,13 @@ namespace IMS.Application.Common.EventHandlers
     internal class TransactionCreatedDomainEventHandler : INotificationHandler<TransactionCreatedDomainEvent>
     {
         private readonly IUnitOfWork unitOfWork;
+        private readonly IDateTime dateTime;
         private readonly ILogger<TransactionCreatedDomainEventHandler> logger;
 
-        public TransactionCreatedDomainEventHandler(IUnitOfWork unitOfWork, ILogger<TransactionCreatedDomainEventHandler> logger)
+        public TransactionCreatedDomainEventHandler(IUnitOfWork unitOfWork, IDateTime dateTime, ILogger<TransactionCreatedDomainEventHandler> logger)
         {
             this.unitOfWork = unitOfWork;
+            this.dateTime = dateTime;
             this.logger = logger;
         }
 
@@ -33,6 +37,7 @@ namespace IMS.Application.Common.EventHandlers
             {
                 inventory.Ship(notification.Quantity);
 
+
                 logger.LogInformation(
                     "Inventory Reduced: Product {ProductId} | Sold: {Quantity} | Stock: {PreviousStock} -> {CurrentStock}",
                     notification.ProductId, notification.Quantity, previousStock, inventory.Quantity);
@@ -51,6 +56,9 @@ namespace IMS.Application.Common.EventHandlers
             {
                 logger.LogWarning("Product {ProductId} is now OUT OF STOCK.", notification.ProductId);
             }
+
+            unitOfWork.StockHistories.Add(StockHistory.Create(inventory.Id, null, dateTime.UTCNow, inventory.Quantity));
+
         }
     }
 

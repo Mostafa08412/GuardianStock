@@ -1,6 +1,7 @@
 ﻿using IMS.Domain.Abstractions;
 using IMS.Domain.Core.Primitives;
 using IMS.Domain.Core.Primitives.Result;
+using IMS.Domain.Inventories.Domain_Events;
 
 namespace IMS.Domain.Inventories
 {
@@ -87,6 +88,8 @@ namespace IMS.Domain.Inventories
             }
 
             var newInventory = new Inventory(newId, quantity, lowStockThreshold, productId);
+
+            newInventory.AddDomainEvent(new InventoryCreatedDomainEvent(newInventory.Id, newInventory.Quantity));
 
             return Result<Inventory>.Success(newInventory);
         }

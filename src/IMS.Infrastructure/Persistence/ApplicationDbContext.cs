@@ -2,6 +2,7 @@ using IMS.Application.Common.Interfaces;
 using IMS.Domain.Categories;
 using IMS.Domain.Inventories;
 using IMS.Domain.Products;
+using IMS.Domain.StockHistories;
 using IMS.Domain.Transactions;
 using IMS.Domain.Users;
 using IMS.Infrastructure.Persistence.Identity;
@@ -24,6 +25,7 @@ namespace IMS.Infrastructure.Persistence
         public DbSet<Inventory> Inventories { get; private set; }
         public DbSet<Transaction> Transactions { get; private set; }
 
+        public DbSet<StockHistory> StockHistories { get; private set; }
         public DatabaseFacade DB { get; private set; }
 
 

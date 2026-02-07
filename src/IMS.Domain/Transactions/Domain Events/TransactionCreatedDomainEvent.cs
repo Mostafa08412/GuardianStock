@@ -13,14 +13,11 @@ namespace IMS.Domain.Transactions
             Quantity = quantity;
             Type = type;
         }
-
+        public Guid InventoryId { get; init; }
         public Guid TransactionId { get; init; }
         public Guid ProductId { get; init; }
-
         public decimal UnitPrice { get; init; }
         public int Quantity { get; init; }
-        public decimal TotalAmount => UnitPrice * Quantity;
-
         public TransactionType Type { get; init; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using IMS.Domain.Categories;
 using IMS.Domain.Inventories;
 using IMS.Domain.Products;
+using IMS.Domain.StockHistories;
 using IMS.Domain.Transactions;
 using IMS.Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ namespace IMS.Application.Common.Interfaces
         public DbSet<Category> Categories { get; }
         public DbSet<Transaction> Transactions { get; }
         public DbSet<Inventory> Inventories { get; }
+        public DbSet<StockHistory> StockHistories { get; }
 
         public DatabaseFacade DB { get; }
     }

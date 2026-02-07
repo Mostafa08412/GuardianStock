@@ -9,4 +9,4 @@ public record ListCategoriesQuery(
     string? SortBy,
     bool SortDescending = false,
     int Page = 1,
-    int PageSize = 10) : IRequest<Result<PaginatedList<CategoryDto>>>;
+    int PageSize = 10) : IRequest<Result<PaginatedList<CategoryListItemDto>>>;
