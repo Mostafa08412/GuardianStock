@@ -12,6 +12,8 @@ namespace IMS.Infrastructure.Persistence.Identity
 
         public string LastName { get; set; }
 
+        public DateTime? LastLoginDate { get; set; }
+
         public List<RefreshToken> RefreshTokens { get; set; } = new();
     }
 

@@ -1,4 +1,6 @@
-﻿using IMS.Application.Contracts.Identity;
+﻿using IMS.Application.Common.Models;
+using IMS.Application.Contracts.Identity;
+using IMS.Application.Users.Queries;
 using IMS.Domain.Core.Primitives.Result;
 
 public interface IIdentityService
@@ -71,5 +73,26 @@ public interface IIdentityService
 
     Task<Result> UnlockUser(
         string userId,
+        CancellationToken cancellationToken = default);
+
+    // User Management Extensions
+    Task<PaginatedList<UserListItemDto>> ListUsersAsync(
+        string? searchTerm,
+        string? role,
+        bool? isActive,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<UserDto>> GetUserDetailsAsync(
+        string userId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> UpdateUserAsync(
+        string userId,
+        string firstName,
+        string lastName,
+        string email,
+        string role,
         CancellationToken cancellationToken = default);
 }
