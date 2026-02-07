@@ -1,6 +1,7 @@
 ﻿using IMS.Domain.Categories;
 using IMS.Domain.Inventories;
 using IMS.Domain.Products;
+using IMS.Domain.StockHistories;
 using IMS.Domain.Transactions;
 
 namespace IMS.Domain.Abstractions
@@ -11,6 +12,7 @@ namespace IMS.Domain.Abstractions
         public ICategoryRepository Categories { get; }
         public IInventoryRepository Inventories { get; }
         public ITransactionRepository Transactions { get; }
+        public IStockHistoryRepository StockHistories { get; }
 
         public Task<int> Complete(CancellationToken cancellationToken);
 

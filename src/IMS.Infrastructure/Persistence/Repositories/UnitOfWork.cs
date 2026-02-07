@@ -4,6 +4,7 @@ using IMS.Domain.Categories;
 using IMS.Domain.Core.Primitives;
 using IMS.Domain.Inventories;
 using IMS.Domain.Products;
+using IMS.Domain.StockHistories;
 using IMS.Domain.Transactions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -21,35 +22,29 @@ namespace IMS.Infrastructure.Persistence.Repositories
 
         protected IDbContextTransaction _currentTransaction { get; private set; }
 
+        public IStockHistoryRepository StockHistories { get; private set; }
+
         protected ApplicationDbContext dbContext;
 
         private readonly ICurrentUser _currentUser;
         private readonly IDateTime _dateTime;
         private readonly IMediator _mediator;
 
-        public UnitOfWork(ApplicationDbContext dbContext,
-            ICurrentUser currentUser,
-            IDateTime dateTime,
-            IMediator mediator,
-            IProductRepository productRepository,
-            ICategoryRepository categoryRepository,
-            IInventoryRepository inventoryRepository,
-            ITransactionRepository transactionRepository) // Inject the repository
+        public UnitOfWork(IProductRepository products, ICategoryRepository categories, IInventoryRepository inventories, ITransactionRepository transactions, IStockHistoryRepository stockHistories, ApplicationDbContext dbContext, ICurrentUser currentUser, IDateTime dateTime, IMediator mediator)
         {
-
+            Products = products;
+            Categories = categories;
+            Inventories = inventories;
+            Transactions = transactions;
+            StockHistories = stockHistories;
             this.dbContext = dbContext;
             _currentUser = currentUser;
             _dateTime = dateTime;
             _mediator = mediator;
-            Products = productRepository;
-            Categories = categoryRepository;
-            Inventories = inventoryRepository;
-            Transactions = transactionRepository;
         }
 
         public async Task<int> Complete(CancellationToken cancellationToken)
         {
-
             AuditAddedAndModifiedEntries();
 
             var result = await dbContext.SaveChangesAsync(cancellationToken);
@@ -75,28 +70,29 @@ namespace IMS.Infrastructure.Persistence.Repositories
         private void AuditAddedAndModifiedEntries()
         {
             //Search for all added entities 
+            var seedCreatedOrUpdatedBy = Guid.CreateVersion7().ToString();
+
             foreach (var entry in dbContext.ChangeTracker.Entries<IAuditable>())
             {
-                if (entry.State == EntityState.Modified)
-                {
-                    entry.Property(X => X.UpdatedOnUTC).CurrentValue = _dateTime.UTCNow;
-                    entry.Property(X => X.UpdatedBy).CurrentValue = _currentUser.UserId;
 
-                }
+                entry.Property(X => X.UpdatedBy).CurrentValue =
+                    entry.Entity.UpdatedBy == default ? seedCreatedOrUpdatedBy : entry.Entity.UpdatedBy;
+
+                entry.Property(X => X.UpdatedOnUTC).CurrentValue =
+                 entry.Entity.UpdatedOnUTC == default ? _dateTime.UTCNow : entry.Entity.UpdatedOnUTC;
+
 
                 if (entry.State == EntityState.Added)
                 {
+                    entry.Property(X => X.CreatedBy).CurrentValue =
+                        entry.Entity.CreatedBy == default ? seedCreatedOrUpdatedBy : entry.Entity.CreatedBy;
+
                     entry.Property(X => X.CreatedOnUTC).CurrentValue = _dateTime.UTCNow;
-                    entry.Property(X => X.CreatedBy).CurrentValue = _currentUser.UserId;
-
-
-                    entry.Property(X => X.UpdatedOnUTC).CurrentValue = _dateTime.UTCNow;
-                    entry.Property(X => X.UpdatedBy).CurrentValue = _currentUser.UserId;
-
 
                 }
             }
         }
+
 
         private async Task PublishAggregatesDomainEvents(List<Aggregate> aggregates, CancellationToken cancellationToken)
         {

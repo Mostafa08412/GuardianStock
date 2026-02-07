@@ -5,6 +5,7 @@ using IMS.Domain.Categories;
 using IMS.Domain.Core.Errors;
 using IMS.Domain.Inventories;
 using IMS.Domain.Products;
+using IMS.Domain.StockHistories;
 using IMS.Domain.Transactions;
 using IMS.Infrastructure.Authentication;
 using IMS.Infrastructure.Common;
@@ -140,6 +141,7 @@ namespace IMS.Infrastructure
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IInventoryRepository, InventoryRepository>();
+            services.AddScoped<IStockHistoryRepository, StockHistoriesRepository>();
             services.AddScoped<ITransactionRepository, TransactionRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -154,7 +156,7 @@ namespace IMS.Infrastructure
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddTransient<IEmailService, EmailService>();
             services.AddSingleton<ISkuGenerator, SkuGenerator>();
-            services.AddSingleton<IDateTime, DateProvider>();
+            services.AddTransient<IDateTime, SettableDateProvider>();
             services.AddScoped<IFileManager, FileManager>();
             services.AddScoped<ISignalService, SignalService>();
             services.AddScoped<ApplicationDbContextInitializer>();

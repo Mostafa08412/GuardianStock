@@ -4,6 +4,7 @@ using IMS.Domain.Categories;
 using IMS.Domain.Enums;
 using IMS.Domain.Inventories;
 using IMS.Domain.Products;
+using IMS.Domain.StockHistories;
 using IMS.Domain.Transactions;
 using IMS.Domain.Users;
 using IMS.Infrastructure.Persistence.Identity;
@@ -41,19 +42,22 @@ namespace IMS.Infrastructure.Persistence
         private List<Inventory> inventories = new();
         private List<Transaction> transactions = new();
 
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ILogger<ApplicationDbContextInitializer> _logger;
         private readonly IDateTime _dateTime;
 
-        public ApplicationDbContextInitializer(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ILogger<ApplicationDbContextInitializer> logger, IDateTime dateTime)
+        public ApplicationDbContextInitializer(IUnitOfWork unitOfWork, ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ILogger<ApplicationDbContextInitializer> logger, IDateTime dateTime)
         {
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
             _logger = logger;
             _dateTime = dateTime;
+            _unitOfWork = unitOfWork;
+
         }
 
         public async Task InitializeDatabase()
@@ -76,7 +80,6 @@ namespace IMS.Infrastructure.Persistence
             _logger.LogInformation("Seeding database...");
             try
             {
-                // Identity Seeding (Kept as per your original structure)
                 await SeedRoles();
                 await SeedApplicationUsers();
 
@@ -85,9 +88,12 @@ namespace IMS.Infrastructure.Persistence
                 await SeedCategoriesAsync();
                 await SeedProductsAsync();
                 await SeedInventoriesAsync();
-                await SeedTransactions();
+                //(_dateTime as SettableDateProvider).UTCNow = new DateTime(2025, 5, 1);
+                // await SeedTransactions();
+                // (_dateTime as SettableDateProvider).UTCNow = new DateTime(2025, 5, 1);
 
                 await SeedDataAsync();
+                //(_dateTime as SettableDateProvider).UTCNow = DateTime.UtcNow;
 
                 applicationUsers = null;
                 users = null;
@@ -156,11 +162,15 @@ namespace IMS.Infrastructure.Persistence
         private async Task SeedInventoriesAsync()
         {
             if (await _context.Inventories.AnyAsync()) return;
-
+            var clock = _dateTime as SettableDateProvider;
+            if (clock == null) return;
             foreach (var product in products)
             {
                 var inventory = Inventory.Create(Random.Shared.Next(90, 150), Random.Shared.Next(10, 30), product.Id).Value!;
+
                 inventories.Add(inventory);
+                _context.StockHistories.Add(StockHistory.Create(inventory.Id, null, clock.UTCNow, inventory.Quantity));
+
             }
         }
 
@@ -168,51 +178,74 @@ namespace IMS.Infrastructure.Persistence
         {
             if (await _context.Transactions.AnyAsync()) return;
 
-            DateTime currentTime = new DateTime(2025, 11, 1);
+            var clock = _dateTime as SettableDateProvider;
+            if (clock == null) return;
+
+            // بداية تاريخ العمليات
+            DateTime startDate = new DateTime(2024, 8, 1, 9, 0, 0);
 
             foreach (var product in products)
             {
+                var inventory = inventories.First(x => x.ProductId == product.Id);
 
-                var productStock = inventories.First(x => x.ProductId == product.Id).Quantity;
-                var randomQuantity = Random.Shared.Next(1, productStock);
+                // نقطة انطلاق زمنية لكل منتج لضمان عدم تداخل التواريخ
+                DateTime productCursorDate = startDate.AddMinutes(Random.Shared.Next(0, 1440));
 
-                int dayGapForSale = Random.Shared.Next(5, 64);
-                var DateForSale = currentTime
-                                          .AddDays(dayGapForSale)
-                                          .AddHours(Random.Shared.Next(0, 24))
-                                          .AddMinutes(Random.Shared.Next(0, 60))
-                                          .AddMicroseconds(124 * 2300);
+                for (int monthOffset = 0; monthOffset < 4; monthOffset++)
+                {
+                    int transactionsInMonth = Random.Shared.Next(8, 15);
 
+                    for (int i = 0; i < transactionsInMonth; i++)
+                    {
+                        // نباعد بين العمليات زمنياً (مثلاً كل عملية بعد 18 إلى 36 ساعة من السابقة)
+                        productCursorDate = productCursorDate.AddHours(Random.Shared.Next(18, 36));
+                        clock.UTCNow = productCursorDate;
 
-                int dayGapForPurchase = Random.Shared.Next(3, 64);
+                        // تحديد نوع العملية بناءً على حالة المخزون الحالية
+                        bool isSale = inventory.Quantity > 10 && Random.Shared.Next(0, 100) > 40;
 
+                        if (isSale)
+                        {
+                            int qty = Random.Shared.Next(1, 5);
 
-                var DateForPurchase = currentTime.AddDays(dayGapForPurchase)
-                                      .AddHours(Random.Shared.Next(0, 24))
-                                      .AddMinutes(Random.Shared.Next(0, 60))
-                                      .AddMicroseconds(1234 * 2000);
+                            // استخدام الـ Domain Method
+                            inventory.Ship(qty);
 
+                            // تسجيل العملية في الـ History بنفس التاريخ
+                            var sale = Transaction.RecordSale(product.Id, qty, product.Price).Value!;
 
+                            // نضمن أن تاريخ العملية هو نفس تاريخ الـ clock تماماً
+                            ForceSetCreatedDate(sale, productCursorDate);
+                            transactions.Add(sale);
+                        }
+                        else
+                        {
+                            int qty = Random.Shared.Next(20, 50);
 
-                var saleTransaction = new Transaction(product.Id, randomQuantity, product.Price, DateForSale, 0);
-                var purchaseTransaction = new Transaction(product.Id, randomQuantity, product.Price, DateForPurchase, 1);
-                transactions.Add(saleTransaction);
-                transactions.Add(purchaseTransaction);
+                            // استخدام الـ Domain Method
+                            inventory.Restock(qty);
 
+                            var purchase = Transaction.RecordPurchase(product.Id, qty, product.Price).Value!;
 
-                transactions.Add(new Transaction(product.Id, randomQuantity, product.Price, new DateTime(2026, 1, 1).AddMilliseconds(841 * 1), 1));
-                transactions.Add(new Transaction(product.Id, randomQuantity, product.Price, new DateTime(2026, 1, 5).AddMilliseconds(841 * 2), 1));
-                transactions.Add(new Transaction(product.Id, randomQuantity, product.Price, new DateTime(2026, 1, 12).AddMilliseconds(841 * 3), 1));
-                transactions.Add(new Transaction(product.Id, randomQuantity, product.Price, new DateTime(2026, 1, 14).AddMilliseconds(841 * 74), 1));
-                transactions.Add(new Transaction(product.Id, randomQuantity, product.Price, new DateTime(2026, 1, 21).AddMilliseconds(841 * 5), 1));
-                transactions.Add(new Transaction(product.Id, randomQuantity, product.Price, new DateTime(2026, 1, 25).AddMilliseconds(841 * 6), 1));
-                transactions.Add(new Transaction(product.Id, randomQuantity, product.Price, new DateTime(2026, 1, 26).AddMilliseconds(841 * 8), 1));
+                            ForceSetCreatedDate(purchase, productCursorDate);
+                            transactions.Add(purchase);
+                        }
+
+                        _context.StockHistories.Add(StockHistory.Create(inventory.Id, null, clock.UTCNow, inventory.Quantity));
+                    }
+                }
             }
-
-
-
         }
-
+        private void ForceSetCreatedDate(Transaction trans, DateTime date)
+        {
+            var prop = typeof(Transaction).GetProperty("CreatedOnUTC");
+            var prop2 = typeof(Transaction).GetProperty("UpdatedOnUTC");
+            if (prop != null)
+            {
+                prop.SetValue(trans, date);
+                prop2.SetValue(trans, date);
+            }
+        }
         private async Task SeedDataAsync()
         {
             // Add all collected lists to the context
@@ -222,9 +255,11 @@ namespace IMS.Infrastructure.Persistence
             if (inventories.Any()) _context.Inventories.AddRange(inventories);
             if (transactions.Any()) _context.Transactions.AddRange(transactions);
 
-            AuditAddedAndModfiedEntriesInSeedMode();
 
-            await _context.SaveChangesAsync();
+
+            await _unitOfWork.Complete(default);
+
+
         }
 
         // --- Identity Methods  ---
@@ -278,28 +313,6 @@ namespace IMS.Infrastructure.Persistence
                 await _roleManager.CreateAsync(new IdentityRole(role));
         }
 
-        private void AuditAddedAndModfiedEntriesInSeedMode()
-        {
-            var seedDateTime = _dateTime.UTCNow;
-            var seedCreatedOrUpdatedBy = users[0].Id;
 
-            foreach (var entry in _context.ChangeTracker.Entries<IAuditable>())
-            {
-                entry.Property(X => X.UpdatedBy).CurrentValue =
-                    entry.Entity.UpdatedBy == default ? seedCreatedOrUpdatedBy : entry.Entity.UpdatedBy;
-
-                entry.Property(X => X.UpdatedOnUTC).CurrentValue = seedDateTime;
-
-
-                if (entry.State == EntityState.Added)
-                {
-                    entry.Property(X => X.CreatedBy).CurrentValue =
-                        entry.Entity.CreatedBy == default ? seedCreatedOrUpdatedBy : entry.Entity.CreatedBy;
-
-                    entry.Property(X => X.CreatedOnUTC).CurrentValue =
-                        entry.Entity.CreatedOnUTC == default ? seedDateTime : entry.Entity.CreatedOnUTC;
-                }
-            }
-        }
     }
 }
