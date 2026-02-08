@@ -1,5 +1,7 @@
 ﻿using IMS.Application.Common.Interfaces;
+using IMS.Application.Common.Models;
 using IMS.Application.Contracts.Identity;
+using IMS.Application.Users.Queries;
 using IMS.Domain.Core.Errors;
 using IMS.Domain.Core.Primitives.Result;
 using IMS.Infrastructure.Extensions;
@@ -257,6 +259,8 @@ namespace IMS.Infrastructure.Authentication
             var accessToken = _tokenService.GenerateAccessToken(user, userRoles);
 
 
+            user.LastLoginDate = _dateTime.UTCNow;
+            await _userManager.UpdateAsync(user);
 
             RefreshToken refreshToken = null;
 
@@ -272,7 +276,6 @@ namespace IMS.Infrastructure.Authentication
                 refreshToken = user.RefreshTokens.First(X => X.IsActive);
             }
 
-
             var authResult = new AuthenticationResult
             {
                 UserId = user.Id,
@@ -286,6 +289,7 @@ namespace IMS.Infrastructure.Authentication
                 RefreshToken = refreshToken.Token,
                 RefreshTokenExpiresAt = refreshToken.ExpiresAtUTC
             };
+
 
             return Result<AuthenticationResult>.Success(authResult);
 
@@ -390,6 +394,168 @@ namespace IMS.Infrastructure.Authentication
                                     select user.Email).ToListAsync(cancellationToken);
 
             return userEmails.ToArray();
+        }
+
+        public async Task<PaginatedList<UserListItemDto>> ListUsersAsync(
+            string? searchTerm,
+            string? role,
+            bool? isActive,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var usersQuery = _userManager.Users.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.ToLower();
+                usersQuery = usersQuery.Where(u =>
+                    u.FirstName.ToLower().Contains(term) ||
+                    u.LastName.ToLower().Contains(term) ||
+                    u.Email!.ToLower().Contains(term) ||
+                    u.UserName!.ToLower().Contains(term));
+            }
+
+            if (isActive.HasValue)
+            {
+                usersQuery = usersQuery.Where(u =>
+                    isActive.Value ? !u.LockoutEnd.HasValue || u.LockoutEnd <= DateTimeOffset.UtcNow
+                                   : u.LockoutEnd.HasValue && u.LockoutEnd > DateTimeOffset.UtcNow);
+            }
+
+            var users = await usersQuery
+                .OrderBy(u => u.FirstName)
+                .ThenBy(u => u.LastName)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            var userDtos = new List<UserListItemDto>();
+
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var userRole = roles.FirstOrDefault() ?? "Staff";
+
+                if (!string.IsNullOrWhiteSpace(role) &&
+                    !userRole.Equals(role, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var userIsActive = !user.LockoutEnd.HasValue || user.LockoutEnd <= DateTimeOffset.UtcNow;
+
+                userDtos.Add(new UserListItemDto(
+                    user.Id,
+                    user.FirstName,
+                    user.LastName,
+                    user.Email!,
+                    userRole,
+                    userIsActive,
+                    user.LastLoginDate));
+            }
+
+            var totalCount = await usersQuery.CountAsync(cancellationToken);
+
+            return new PaginatedList<UserListItemDto>(
+                userDtos,
+                totalCount,
+                pageNumber,
+                pageSize);
+        }
+
+        public async Task<Result<UserDto>> GetUserDetailsAsync(string userId, CancellationToken cancellationToken = default)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user is null)
+            {
+                return Result<UserDto>.Failure(Errors.Identity.UserNotFoundById(userId));
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault() ?? "Staff";
+
+            var isActive = !user.LockoutEnd.HasValue || user.LockoutEnd <= DateTimeOffset.UtcNow;
+
+            var userDto = new UserDto(
+                user.Id,
+                user.FirstName,
+                user.LastName,
+                user.Email!,
+                user.UserName!,
+                role,
+                isActive,
+                user.EmailConfirmed,
+                user.LastLoginDate,
+                user.LockoutEnd?.DateTime);
+
+            return Result<UserDto>.Success(userDto);
+        }
+
+        public async Task<Result> UpdateUserAsync(
+            string userId,
+            string firstName,
+            string lastName,
+            string email,
+            string role,
+            CancellationToken cancellationToken = default)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user is null)
+            {
+                return Result.Failure(Errors.Identity.UserNotFoundById(userId));
+            }
+
+            user.FirstName = firstName;
+            user.LastName = lastName;
+            role = role.ToUpper();
+
+            if (user.Email != email)
+            {
+                var emailExists = await _userManager.FindByEmailAsync(email);
+                if (emailExists != null && emailExists.Id != user.Id)
+                {
+                    return Result.Failure(Errors.Identity.EmailAlreadyExists);
+                }
+
+                user.Email = email;
+                user.UserName = email;
+            }
+
+            var updateResult = await _userManager.UpdateAsync(user);
+
+            if (!updateResult.Succeeded)
+            {
+                return updateResult.ToResult();
+            }
+
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            var currentRole = currentRoles.FirstOrDefault();
+
+            if (currentRole != role)
+            {
+                if (currentRole != null)
+                {
+                    await _userManager.RemoveFromRoleAsync(user, currentRole);
+                }
+
+                var roleExists = await _roleManager.RoleExistsAsync(role);
+                if (!roleExists)
+                {
+                    return Result.Failure(Errors.Identity.RoleNotFound(role));
+                }
+
+                var addRoleResult = await _userManager.AddToRoleAsync(user, role);
+
+                if (!addRoleResult.Succeeded)
+                {
+                    return addRoleResult.ToResult();
+                }
+            }
+
+            return Result.Success();
         }
     }
 }

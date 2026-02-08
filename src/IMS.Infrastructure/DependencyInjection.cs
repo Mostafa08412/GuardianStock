@@ -12,7 +12,7 @@ using IMS.Infrastructure.Common;
 using IMS.Infrastructure.CsvFileReader.Products;
 using IMS.Infrastructure.EmailServices;
 using IMS.Infrastructure.EmailServices.Options;
-using IMS.Infrastructure.FileService;
+using IMS.Infrastructure.FileManager;
 using IMS.Infrastructure.HubServices;
 using IMS.Infrastructure.Persistence;
 using IMS.Infrastructure.Persistence.BackgroundJobs;
@@ -157,7 +157,7 @@ namespace IMS.Infrastructure
             services.AddTransient<IEmailService, EmailService>();
             services.AddSingleton<ISkuGenerator, SkuGenerator>();
             services.AddTransient<IDateTime, SettableDateProvider>();
-            services.AddScoped<IFileManager, FileManager>();
+            services.AddScoped<IFileManagerService, FileManagerService>();
             services.AddScoped<ISignalService, SignalService>();
             services.AddScoped<ApplicationDbContextInitializer>();
 

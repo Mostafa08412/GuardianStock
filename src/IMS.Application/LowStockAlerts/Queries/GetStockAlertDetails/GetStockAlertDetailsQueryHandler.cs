@@ -17,7 +17,7 @@ public class GetStockAlertDetailsQueryHandler : IRequestHandler<GetStockAlertDet
 
     public async Task<Result<StockAlertDetailsDto>> Handle(GetStockAlertDetailsQuery request, CancellationToken cancellationToken)
     {
-        var result = await (from inventory in _context.Inventories.AsNoTracking()
+        var result = await (from inventory in _context.Inventories.AsNoTracking().Where(X => X.Id == request.InventoryId)
                             join product in _context.Products.AsNoTracking() on inventory.ProductId equals product.Id
                             where inventory.Id == request.InventoryId
                             select new
@@ -41,7 +41,7 @@ public class GetStockAlertDetailsQueryHandler : IRequestHandler<GetStockAlertDet
             .Take(5)
             .Select(t => new StockTransactionDto(
                 t.Id,
-                t.Type.ToString(), // Assuming TransactionType has a decent ToString or I might need to format it
+                t.Type.ToString(),
                 t.Quantity,
                 t.CreatedOnUTC.ToLocalTime(),
                 t.TotalAmount
@@ -49,13 +49,12 @@ public class GetStockAlertDetailsQueryHandler : IRequestHandler<GetStockAlertDet
             .ToListAsync(cancellationToken);
 
         decimal stockValue = inventoryEntity.Quantity * productEntity.Price;
+
         int shortageQuantity = inventoryEntity.LowStockThreshold - inventoryEntity.Quantity > 0
             ? inventoryEntity.LowStockThreshold - inventoryEntity.Quantity
             : 0;
 
-        // Determine status string similar to logic in AlertDetails.tsx or Domain
-        // Domain has InventoryStatus enum: Critical, Low, Healthy
-        // UI shows "Low Stock" badge.
+
         string status = inventoryEntity.Status.ToString();
 
         var dto = new StockAlertDetailsDto(

@@ -8,13 +8,13 @@ namespace IMS.Application.Products.Commands.UploadProductCsv
 {
     public class UploadProductCsvHandler : IRequestHandler<UploadProductCsvCommand, Result<UploadProductCsvResult>>
     {
-        private readonly IFileManager _fileManager;
+        private readonly IFileManagerService _fileManager;
         private readonly ISignalService _signalService;
         private readonly IBackgroundJobWorker _backgroundJobWorker;
         private readonly ILogger<UploadProductCsvHandler> _logger;
 
         public UploadProductCsvHandler(
-            IFileManager fileManager,
+            IFileManagerService fileManager,
             ISignalService signalService,
             IBackgroundJobWorker backgroundJobWorker,
             ILogger<UploadProductCsvHandler> logger)
