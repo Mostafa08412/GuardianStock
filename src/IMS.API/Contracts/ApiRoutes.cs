@@ -12,7 +12,6 @@
             public const string Login = $"login";
             public const string Logout = $"logout";
             public const string RefreshToken = $"refresh-token";
-
             public const string ChangePassword = $"change-password";
         }
 
@@ -58,6 +57,16 @@
             public const string GetById = "{transactionId}";
             public const string RecordSale = "sale";
             public const string RecordPurchase = "purchase";
+        }
+
+        public static class Alerts
+        {
+            public const string Base = Root + $"/alerts";
+            public const string GetAll = "";
+            public const string GetDetails = "{inventoryId}";
+            public const string GetSummary = "summary";
+            public const string AdjustThreshold = "adjust-threshold";
+            public const string Dismiss = "dismiss/{productId}";
         }
     }
 }
