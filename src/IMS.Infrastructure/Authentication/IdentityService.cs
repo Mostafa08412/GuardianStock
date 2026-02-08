@@ -510,6 +510,7 @@ namespace IMS.Infrastructure.Authentication
 
             user.FirstName = firstName;
             user.LastName = lastName;
+            role = role.ToUpper();
 
             if (user.Email != email)
             {

@@ -3,13 +3,13 @@ using IMS.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 
-namespace IMS.Infrastructure.FileService;
+namespace IMS.Infrastructure.FileManager;
 
-public class FileManager : IFileManager
+public class FileManagerService : IFileManagerService
 {
     private readonly IWebHostEnvironment hostEnvironment;
 
-    public FileManager(IWebHostEnvironment hostEnvironment)
+    public FileManagerService(IWebHostEnvironment hostEnvironment)
     {
         this.hostEnvironment = hostEnvironment;
     }

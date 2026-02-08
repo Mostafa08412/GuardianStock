@@ -2,7 +2,7 @@
 
 namespace IMS.Application.Common.Interfaces
 {
-    public interface IFileManager
+    public interface IFileManagerService
     {
         void DeleteFileIfExists(string fileName, string directory, string extension);
         Task<(string, long)> GetFileExtensionAndSizeInMbAsync(IFormFile file, CancellationToken cancellationToken);
