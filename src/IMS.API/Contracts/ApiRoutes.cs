@@ -50,5 +50,14 @@
             public const string Base = Root + $"/dashboard";
             public const string GetStats = "";
         }
+
+        public static class Transactions
+        {
+            public const string Base = Root + $"/transactions";
+            public const string GetAll = "";
+            public const string GetById = "{transactionId}";
+            public const string RecordSale = "sale";
+            public const string RecordPurchase = "purchase";
+        }
     }
 }

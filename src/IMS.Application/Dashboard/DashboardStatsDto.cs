@@ -6,6 +6,6 @@
         public decimal TotalStockValue { get; set; }
         public decimal TotalSales { get; set; }
         public int LowStockCount { get; set; }
-        public List<TransactionDto> RecentTransactions { get; set; } = new();
+        public List<RecentTransactionDto> RecentTransactions { get; set; } = new();
     }
 }

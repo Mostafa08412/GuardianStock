@@ -107,7 +107,7 @@ namespace IMS.Application.Dashboard.GetDashboardStats
                                             on transaction.ProductId equals inventory.ProductId
                                             join user in context.BusinessUsers.AsNoTracking().DefaultIfEmpty()
                                             on transaction.CreatedBy equals user.Id
-                                            select new TransactionDto
+                                            select new RecentTransactionDto
                                             {
 
                                                 Id = transaction.Id.ToString(),
@@ -124,7 +124,7 @@ namespace IMS.Application.Dashboard.GetDashboardStats
 
                 ).Take(5).ToListAsync(cancellationToken));
 
-            dashboard.Stats.RecentTransactions = recentTransaction.Select(X => new TransactionDto
+            dashboard.Stats.RecentTransactions = recentTransaction.Select(X => new RecentTransactionDto
             {
                 Date = X.Date.ToLocalTime(),
                 Id = X.Id,
