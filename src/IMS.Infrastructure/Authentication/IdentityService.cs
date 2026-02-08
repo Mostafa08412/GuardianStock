@@ -209,7 +209,7 @@ namespace IMS.Infrastructure.Authentication
             if (!userResult.IsSuccess)
                 return Result.Failure(userResult.Errors);
 
-            var setResult = await _userManager.SetLockoutEndDateAsync(userResult.Value!, _dateTime.UTCNow.AddDays(120));
+            var setResult = await _userManager.SetLockoutEndDateAsync(userResult.Value!, _dateTime.UTCNow.AddYears(2));
 
             if (!setResult.Succeeded)
                 return Result.Failure(userResult.Errors);

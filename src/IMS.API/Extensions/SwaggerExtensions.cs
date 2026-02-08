@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using IMS.API.Contracts.Examples;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
 using Swashbuckle.AspNetCore.SwaggerGen;
 namespace IMS.API.Extensions
 {
@@ -7,14 +9,27 @@ namespace IMS.API.Extensions
     {
         public static void AddSwaggerDocumentation(this IServiceCollection services)
         {
+            services.AddSwaggerExamplesFromAssemblyOf<ApiResponseExample>();
+
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
-                    Title = "My Application",
-                    Version = "v1"
+                    Title = "Inventory Management System",
+                    Version = "The First Version",
+                    Description = "This is documentation for Inventory Management System Api Version 1.0"
                 });
 
+                c.SwaggerDoc("v2", new OpenApiInfo
+                {
+                    Title = "Inventory Management System",
+                    Version = "The Second Version",
+                    Description = "This is documentation for Inventory Management System Api Version 2.0"
+                });
+
+                c.EnableAnnotations();
+                c.ExampleFilters();
                 c.AddJwtSecurityDefinition();
             });
         }

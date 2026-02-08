@@ -1,6 +1,6 @@
 ﻿namespace IMS.Application.Dashboard
 {
-    public class TransactionDto
+    public class RecentTransactionDto
     {
         public string Id { get; set; }
         public string ProductName { get; set; }

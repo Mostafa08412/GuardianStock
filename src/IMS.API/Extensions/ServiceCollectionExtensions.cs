@@ -1,4 +1,5 @@
-﻿using IMS.API.Contracts;
+﻿using Asp.Versioning;
+using IMS.API.Contracts;
 using IMS.Application;
 using IMS.Application.Common.Interfaces;
 using IMS.Infrastructure;
@@ -25,6 +26,7 @@ namespace IMS.API.Extensions
             services.AddCorsPolicy(configuration);
             services.AddControllers();
             services.AddSwaggerDocumentation();
+            services.AddVersioning();
             return services;
         }
 
@@ -48,6 +50,24 @@ namespace IMS.API.Extensions
         }
 
 
-
+        private static void AddVersioning(this IServiceCollection services)
+        {
+            services.AddApiVersioning(op =>
+            {
+                op.DefaultApiVersion = new Asp.Versioning.ApiVersion(1);
+                op.AssumeDefaultVersionWhenUnspecified = true;
+                op.ReportApiVersions = true;
+                op.ApiVersionReader = new UrlSegmentApiVersionReader();
+            })
+                .AddMvc()
+                .AddApiExplorer(op =>
+                {
+                    op.DefaultApiVersion = new ApiVersion(1);
+                    op.AssumeDefaultVersionWhenUnspecified = true;
+                    op.GroupNameFormat = "'v'VVV";
+                    op.SubstituteApiVersionInUrl = true;
+                })
+              ;
+        }
     }
 }
