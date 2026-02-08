@@ -87,7 +87,9 @@ namespace IMS.Infrastructure.Persistence.Repositories
                     entry.Property(X => X.CreatedBy).CurrentValue =
                         entry.Entity.CreatedBy == default ? seedCreatedOrUpdatedBy : entry.Entity.CreatedBy;
 
-                    entry.Property(X => X.CreatedOnUTC).CurrentValue = _dateTime.UTCNow;
+                    entry.Property(X => X.CreatedOnUTC).CurrentValue =
+                       entry.Entity.CreatedOnUTC == default ? _dateTime.UTCNow : entry.Entity.CreatedOnUTC;
+
 
                 }
             }
