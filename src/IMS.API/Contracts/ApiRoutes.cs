@@ -44,5 +44,11 @@
             public const string Update = "{productId}";
             public const string Delete = "{productId}";
         }
+
+        public static class Dashboard
+        {
+            public const string Base = Root + $"/dashboard";
+            public const string GetStats = "";
+        }
     }
 }
