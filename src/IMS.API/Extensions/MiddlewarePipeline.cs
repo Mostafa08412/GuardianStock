@@ -22,7 +22,8 @@ namespace IMS.API.Extensions
                 app.UseSwagger();
                 app.UseSwaggerUI(options =>
                 {
-                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Version 1");
+                    options.SwaggerEndpoint("/swagger/v2/swagger.json", "Version 2");
                     options.DisplayRequestDuration();
                 });
             }

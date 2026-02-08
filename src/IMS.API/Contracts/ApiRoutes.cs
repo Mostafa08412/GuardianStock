@@ -2,9 +2,11 @@
 {
     public static class ApiRoutes
     {
+
+        public const string Root = "api/v{version:apiVersion}";
         public static class Authentication
         {
-            public const string Base = $"auth";
+            public const string Base = Root + $"/auth";
 
             public const string Register = $"register";
             public const string Login = $"login";
@@ -16,12 +18,31 @@
 
         public static class Users
         {
-            public const string Base = "users";
+            public const string Base = Root + $"/users";
             public const string GetById = "{userId}";
             public const string Update = "{userId}";
             public const string Activate = "{userId}/activate";
             public const string Deactivate = "{userId}/deactivate";
         }
 
+
+        public static class Categories
+        {
+            public const string Base = Root + $"/categories";
+            public const string GetAll = "";
+            public const string Create = "";
+            public const string GetById = "{categoryId}";
+            public const string Update = "{categoryId}";
+            public const string Delete = "{categoryId}";
+        }
+        public static class Products
+        {
+            public const string Base = Root + $"/products";
+            public const string GetAll = "";
+            public const string Create = "";
+            public const string GetById = "{productId}";
+            public const string Update = "{productId}";
+            public const string Delete = "{productId}";
+        }
     }
 }
