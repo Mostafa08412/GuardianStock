@@ -19,8 +19,9 @@ namespace IMS.API.Contracts
             get
             {
 
-                ClaimsPrincipal user = httpContext!.User;
-                bool IsAuthenticated = user.Identity.IsAuthenticated;
+                ClaimsPrincipal user = httpContext?.User;
+
+                bool IsAuthenticated = user?.Identity?.IsAuthenticated ?? false;
 
                 if (!IsAuthenticated)
                     return "Unkown";

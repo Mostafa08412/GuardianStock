@@ -40,8 +40,11 @@
             public const string GetAll = "";
             public const string Create = "";
             public const string GetById = "{productId}";
+            public const string GetBySku = "{productSku}";
             public const string Update = "{productId}";
             public const string Delete = "{productId}";
+            public const string Upload = "import-preview";
+            public const string ConfirmImport = "confirm-import";
         }
 
         public static class Dashboard

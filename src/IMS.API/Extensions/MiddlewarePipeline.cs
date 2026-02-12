@@ -1,6 +1,7 @@
 ﻿using Hangfire;
 using IMS.API.Middleware;
 using IMS.Infrastructure.HubServices;
+using IMS.Infrastructure.Persistence;
 using Serilog;
 namespace IMS.API.Extensions
 {
@@ -9,7 +10,7 @@ namespace IMS.API.Extensions
 
         public static void ConfigureMiddlewarePipeline(this WebApplication app, IConfiguration configuration)
         {
-
+            var useSeedData = configuration.GetSection("Seeding:UseSeedData").Get<bool>();
 
             app.UseGloabalExceptionHandler();
 
@@ -18,7 +19,6 @@ namespace IMS.API.Extensions
             if (app.Environment.IsDevelopment())
             {
 
-                // app.RegisterInitializer();
                 app.UseSwagger();
                 app.UseSwaggerUI(options =>
                 {
@@ -27,6 +27,10 @@ namespace IMS.API.Extensions
                     options.DisplayRequestDuration();
                 });
             }
+            if (useSeedData)
+                app.RegisterInitializer();
+
+
             app.MapHub<ImportHub>(configuration.GetSection("HubSettings:ImportProducts:Status").Get<string>());
             app.UseHangfireDashboard();
             app.UseCors(configuration.GetSection("CorsSettings:PolicyName").Get<string>());

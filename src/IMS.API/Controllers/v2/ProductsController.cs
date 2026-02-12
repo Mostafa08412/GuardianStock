@@ -3,15 +3,18 @@ using IMS.API.Contracts;
 using IMS.API.Contracts.Examples;
 using IMS.API.Infrastructure;
 using IMS.Application.Common.Models;
+using IMS.Application.Products.Commands.ConfirmImport;
 using IMS.Application.Products.Commands.CreateProduct;
 using IMS.Application.Products.Commands.DeleteProduct;
 using IMS.Application.Products.Commands.UpdateProduct;
-using IMS.Application.Products.Queries.GetProduct;
+using IMS.Application.Products.Commands.UploadProductCsv;
+using IMS.Application.Products.Queries.GetProductDetails;
 using IMS.Application.Products.Queries.ListProducts;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
+
 using Swashbuckle.AspNetCore.Filters;
 using Roles = IMS.Domain.Enums.Roles;
 
@@ -20,7 +23,7 @@ namespace IMS.API.Controllers.v2
     [ApiController]
     [ApiVersion(2.0)]
     [Route(ApiRoutes.Products.Base)]
-    [Authorize(Roles = Roles.Admin)]
+    [Authorize(Roles = $"{Roles.Admin},{Roles.Manager}")]
     [SwaggerResponse((int)ApplicationStatusCodes.Unauthorized, "The request is missing a valid authentication token.", typeof(ApiResponse))]
     [SwaggerResponse((int)ApplicationStatusCodes.Forbidden, "The authenticated user does not have the 'Admin' role required for this resource.", typeof(ApiResponse))]
     [SwaggerResponse((int)ApplicationStatusCodes.BadRequest, "The request payload is invalid or malformed.", typeof(ApiResponse))]
@@ -76,6 +79,8 @@ namespace IMS.API.Controllers.v2
             return HandleResult(result, ApplicationStatusCodes.Ok);
         }
 
+
+
         /// <summary>
         /// Creates a new product in the system.
         /// </summary>
@@ -120,7 +125,7 @@ namespace IMS.API.Controllers.v2
 
             var result = await _sender.Send(command);
 
-            return HandleResult(result, ApplicationStatusCodes.NoContent);
+            return HandleResult(result, ApplicationStatusCodes.Ok);
         }
 
         /// <summary>
@@ -142,5 +147,51 @@ namespace IMS.API.Controllers.v2
 
             return HandleResult(result, ApplicationStatusCodes.NoContent);
         }
+
+
+
+
+        /// <summary>
+        /// Upload products csv data.
+        /// </summary>
+        /// <param name="file">The product csv file.</param>
+        /// <param name="jobId">The unique identifier of the job.</param>
+        /// <returns>Job id for the preview job.</returns>
+        [HttpPost(ApiRoutes.Products.Upload)]
+        [ProducesResponseType((int)ApplicationStatusCodes.Accepted, Type = typeof(ApiResponse<UploadProductCsvResponse>))]
+        [SwaggerOperation(
+            Summary = "Uploads a product csv file.",
+            Description = "Uploads product csv file for validation and generating a preview, returns the job id for preview job.",
+            OperationId = "UploadPorductCsv"
+        )]
+        [Authorize()]
+        public async Task<IActionResult> UploadCSV([FromForm] UploadProductCsvCommand request)
+        {
+            var result = await _sender.Send(request);
+
+            return HandleResult(result, ApplicationStatusCodes.Accepted);
+        }
+
+
+        /// <summary>
+        /// Confirm importing the csv file.
+        /// </summary>
+        /// <param name="jobId">The unique identifier of the job.</param>
+        /// <returns>Job id for the preview job.</returns>
+        [HttpPost(ApiRoutes.Products.ConfirmImport)]
+        [ProducesResponseType((int)ApplicationStatusCodes.Accepted, Type = typeof(ApiResponse<Unit>))]
+        [SwaggerOperation(
+            Summary = "Uploads a product csv file.",
+            Description = "Uploads product csv file for validation and generating a preview, returns the job id for preview job.",
+            OperationId = "UploadPorductCsv"
+        )]
+        [Authorize()]
+        public async Task<IActionResult> Import([FromForm] ConfirmImportCommand command)
+        {
+            var result = await _sender.Send(command);
+
+            return HandleResult(result, ApplicationStatusCodes.Accepted);
+        }
+
     }
 }
