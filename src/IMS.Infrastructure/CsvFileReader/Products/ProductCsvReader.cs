@@ -73,6 +73,8 @@ namespace IMS.Infrastructure.CsvFileReader.Products
                     catch (CsvHelperException ex)
                     {
                         _logger.LogError(ex, "Error parsing row {RowNumber} in file {FilePath}", rowCount, filePath);
+                        return Result<List<ProductCSVModel>>.Failure(ApplicationErrors.CsvReader.MissingHeaders);
+
                     }
                 }
 
