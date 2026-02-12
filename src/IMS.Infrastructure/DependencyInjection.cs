@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using Hangfire.SqlServer;
 using IMS.Application.Common.Interfaces;
 using IMS.Domain.Abstractions;
 using IMS.Domain.Categories;
@@ -9,6 +10,7 @@ using IMS.Domain.StockHistories;
 using IMS.Domain.Transactions;
 using IMS.Infrastructure.Authentication;
 using IMS.Infrastructure.Common;
+using IMS.Infrastructure.Common.Exceptions;
 using IMS.Infrastructure.CsvFileReader.Products;
 using IMS.Infrastructure.EmailServices;
 using IMS.Infrastructure.EmailServices.Options;
@@ -24,6 +26,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -38,8 +41,18 @@ namespace IMS.Infrastructure
     {
         public static IServiceCollection AddHangFireBackgroundJobWorker(this IServiceCollection services, IConfiguration configuration)
         {
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-            services.AddHangfire(X => X.UseSqlServerStorage(configuration.GetConnectionString("DefaultConnection")));
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new MissingConfigurationSettingsException("DefaultConnection");
+
+            services.AddHangfire(X => X.UseSqlServerStorage(connectionString, new SqlServerStorageOptions
+            {
+                PrepareSchemaIfNecessary = true
+
+            }));
+
+
             services.AddHangfireServer();
 
             services.AddScoped<BackgroundJobBridge>();
@@ -48,8 +61,6 @@ namespace IMS.Infrastructure
 
             return services;
         }
-
-
         public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
 
@@ -57,9 +68,25 @@ namespace IMS.Infrastructure
 
             services.AddOptions<TokenSettings>().Bind(configuration.GetSection(TokenSettings.SectionName));
 
+
+
             var section = configuration.GetSection(TokenSettings.SectionName);
 
-            var tokenSettings = section.Get<TokenSettings>() ?? throw new ArgumentNullException(nameof(section), "TokenSettings section is missing.");
+            var tokenSettings = section.Get<TokenSettings>();
+
+
+            if (tokenSettings is null)
+                throw new MissingConfigurationSettingsException(TokenSettings.SectionName);
+
+            if (string.IsNullOrWhiteSpace(tokenSettings.SecretKey))
+                throw new MissingConfigurationSettingsException(nameof(tokenSettings.SecretKey));
+
+            if (string.IsNullOrWhiteSpace(tokenSettings.Issuer))
+                throw new MissingConfigurationSettingsException(nameof(tokenSettings.Issuer));
+
+            if (string.IsNullOrWhiteSpace(tokenSettings.Audience))
+                throw new MissingConfigurationSettingsException(nameof(tokenSettings.Audience));
+
 
             var symmetricKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenSettings.SecretKey));
 
@@ -93,6 +120,21 @@ namespace IMS.Infrastructure
 
                     options.Events = new JwtBearerEvents
                     {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.HttpContext.Request.Query["access_Token"];
+                            if (context.HttpContext.Request.Path.Value.Contains("hubs"))
+                            {
+                                if (!string.IsNullOrWhiteSpace(accessToken))
+                                {
+                                    context.HttpContext.Request.Headers.TryAdd("Authorization", $"Bearer {accessToken}");
+
+                                }
+                            }
+
+                            return Task.CompletedTask;
+                        }
+                        ,
 
                         OnChallenge = context =>
                         {
@@ -105,6 +147,7 @@ namespace IMS.Infrastructure
                                 context.HandleResponse();
                                 return Task.CompletedTask;
                             }
+
 
                             else if (context.AuthenticateFailure is SecurityTokenExpiredException)
                             {
@@ -125,6 +168,17 @@ namespace IMS.Infrastructure
                             }
 
                         }
+                        ,
+                        OnForbidden = context =>
+                        {
+
+                            context.Response.Headers.Add("Auth-Fail-Type", Errors.Identity.ForbiddenAccess.Code);
+
+
+
+                            return Task.CompletedTask;
+
+                        }
                     };
                 });
 
@@ -132,8 +186,105 @@ namespace IMS.Infrastructure
 
             return services;
         }
+        public static IServiceCollection RegisterAutoMapper(this IServiceCollection services)
+        {
+            services.AddAutoMapper(o =>
+            {
+                o.AddMaps(Assembly.GetExecutingAssembly());
+            });
+
+            return services;
+        }
+        public static IServiceCollection RegisterDbContext(this IServiceCollection services, IConfiguration configuration)
+        {
+            string connectionString = configuration.GetConnectionString("DefaultConnection")!;
 
 
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new MissingConfigurationSettingsException("DefaultConnection");
+
+
+            services.AddDbContext<ApplicationDbContext>(options =>
+            {
+                options.UseSqlServer(connectionString);
+                options.ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
+            });
+
+            services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
+            return services;
+        }
+        public static IServiceCollection RegisterFluentEmail(this IServiceCollection services, IConfiguration configuration)
+        {
+
+            services.AddOptions<SmtpSettings>().Bind(configuration.GetSection(SmtpSettings.SectionName));
+
+            var smtpSettings = configuration.GetSection(SmtpSettings.SectionName).Get<SmtpSettings>();
+
+            if (smtpSettings is null)
+                throw new MissingConfigurationSettingsException(SmtpSettings.SectionName);
+
+            if (string.IsNullOrWhiteSpace(smtpSettings.SmtpHost))
+                throw new MissingConfigurationSettingsException(nameof(smtpSettings.SmtpHost));
+
+            if (string.IsNullOrWhiteSpace(smtpSettings.FromEmail))
+                throw new MissingConfigurationSettingsException(nameof(smtpSettings.FromEmail));
+
+
+            services.AddFluentEmail(smtpSettings!.FromEmail)
+                    .AddRazorRenderer()
+                    .AddSmtpSender(() => new SmtpClient(smtpSettings.SmtpHost, smtpSettings.SmtpPort)
+                    {
+                        EnableSsl = smtpSettings.UseSSL,
+                        UseDefaultCredentials = false,
+                        DeliveryMethod = SmtpDeliveryMethod.Network,
+                        Credentials = smtpSettings.UseSSL ? new NetworkCredential(smtpSettings.FromEmail, smtpSettings.Password) : null
+                    });
+
+
+            return services;
+
+
+
+
+        }
+        public static IServiceCollection RegisterHybridCache(this IServiceCollection services)
+        {
+            services.AddHybridCache((o) =>
+            {
+                o.MaximumPayloadBytes = 1024 * 1024;
+                o.DefaultEntryOptions = new HybridCacheEntryOptions
+                {
+                    LocalCacheExpiration = TimeSpan.FromSeconds(60),
+                    Expiration = TimeSpan.FromMinutes(60)
+                };
+            });
+
+            return services;
+        }
+        public static IServiceCollection RegisterSignalR(this IServiceCollection services)
+        {
+            services.AddSignalR();
+            return services;
+        }
+        public static IServiceCollection RegisterIdentity(this IServiceCollection services)
+        {
+            services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+            {
+
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequiredLength = 6;
+                options.User.RequireUniqueEmail = true;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+            })
+             .AddEntityFrameworkStores<ApplicationDbContext>()
+             .AddDefaultTokenProviders();
+
+            return services;
+        }
         public static IServiceCollection RegisterRepositoriesAndUnitOfWork(this IServiceCollection services)
         {
             services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
@@ -161,98 +312,6 @@ namespace IMS.Infrastructure
             services.AddScoped<ISignalService, SignalService>();
             services.AddScoped<ApplicationDbContextInitializer>();
 
-
-            return services;
-        }
-
-        public static IServiceCollection RegisterAutoMapper(this IServiceCollection services)
-        {
-            services.AddAutoMapper(o =>
-            {
-                o.AddMaps(Assembly.GetExecutingAssembly());
-            });
-
-            return services;
-        }
-        public static IServiceCollection RegisterDbContext(this IServiceCollection services, IConfiguration configuration)
-        {
-            string connectionString = configuration.GetConnectionString("DefaultConnection")!;
-
-
-            services.AddDbContext<ApplicationDbContext>(options =>
-            {
-                options.UseSqlServer(connectionString);
-                options.ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
-            });
-
-            services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
-            return services;
-        }
-
-        public static IServiceCollection RegisterFluentEmail(this IServiceCollection services, IConfiguration configuration)
-        {
-
-            services.AddOptions<SmtpSettings>().Bind(configuration.GetSection(SmtpSettings.SectionName));
-
-            var smtpSettings = configuration.GetSection(SmtpSettings.SectionName).Get<SmtpSettings>();
-
-            services.AddFluentEmail(smtpSettings!.FromEmail)
-                    .AddRazorRenderer()
-                    .AddSmtpSender(() => new SmtpClient(smtpSettings.SmtpHost, smtpSettings.SmtpPort)
-                    {
-                        EnableSsl = smtpSettings.UseSSL,
-                        UseDefaultCredentials = false,
-                        DeliveryMethod = SmtpDeliveryMethod.Network,
-                        Credentials = smtpSettings.UseSSL ? new NetworkCredential(smtpSettings.FromEmail, smtpSettings.Password) : null
-                    });
-
-
-            return services;
-
-
-
-
-        }
-
-        public static IServiceCollection RegisterHybridCache(this IServiceCollection services)
-        {
-            services.AddHybridCache((o) =>
-            {
-                o.MaximumPayloadBytes = 1024 * 1024;
-                o.DefaultEntryOptions = new Microsoft.Extensions.Caching.Hybrid.HybridCacheEntryOptions
-                {
-                    LocalCacheExpiration = TimeSpan.FromSeconds(60),
-                    Expiration = TimeSpan.FromMinutes(60)
-                };
-            });
-
-            return services;
-        }
-        public static IServiceCollection RegisterSignalR(this IServiceCollection services)
-        {
-            services.AddSignalR();
-            return services;
-        }
-        public static IServiceCollection RegisterIdentity(this IServiceCollection services)
-        {
-            services.AddIdentity<ApplicationUser, IdentityRole>(options =>
-            {
-
-                options.Password.RequireDigit = true;
-                options.Password.RequireLowercase = true;
-                options.Password.RequireUppercase = true;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequiredLength = 6;
-
-
-                options.User.RequireUniqueEmail = true;
-
-
-                options.Lockout.MaxFailedAccessAttempts = 5;
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-            })
-             .AddEntityFrameworkStores<ApplicationDbContext>()
-             .AddDefaultTokenProviders();
 
             return services;
         }
