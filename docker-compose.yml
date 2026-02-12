@@ -1,0 +1,126 @@
+version: '5.0.1'
+
+services:
+  backend:
+    build: .
+    container_name: ims-service
+    image: ims-service-image
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=IMS;User Id=SA;Password=Mostafa#123;TrustServerCertificate=True
+      # Token Settings
+      - TokenSettings__SecretKey=Yj6pr{WJ+c}WL:Zmc%v364$$jkOi}O3HM_ExtraLongKey123
+      - TokenSettings__Issuer=http://localhost:5020
+      - TokenSettings__Audience=http://localhost:5020
+      - TokenSettings__AccessTokenExpiryMinutes=10
+      - TokenSettings__RefreshTokenExpiryMinutes=1000
+      - ASPNETCORE_URLS=http://+:5020
+      - Seeding__UseSeedData=false
+      # SMTP Settings
+      - SmtpSettings__SmtpHost=smtp4dev # أو اسم سيرفر الميل في دوكر
+      - SmtpSettings__SmtpPort=25
+      - SmtpSettings__UseSSL=false
+      - SmtpSettings__FromEmail=newgamerpc2016@gmail.com
+      - SmtpSettings__Password=hfgclegezffgqvus
+      - ASPNETCORE_ENVIRONMENT=Production
+      # Cors Settings
+      - CorsSettings__PolicyName=DevCorsPolicy
+      - CorsSettings__AllowedOrigins__0=http://localhost:5341
+      - CorsSettings__AllowedOrigins__1=http://localhost:3000
+      # File Manager
+      - FileManager__TempCsvPath=/Temp
+      # Hub Settings
+      - HubSettings__ImportProducts__Status=/hubs/import-status
+      - HubSettings__ImportProducts__OnPreviewReady=OnPreviewReady
+      - HubSettings__ImportProducts__OnImportCompleted=OnImportCompleted
+      - HubSettings__ImportProducts__OnJobFailed=OnJobFailed
+      - HubSettings__ImportProducts__OnProgress=OnProgress
+
+      # 1. Using (المكتبات المستخدمة)
+      - Serilog__Using__0=Serilog.Sinks.Console
+      - Serilog__Using__1=Serilog.Sinks.File
+      - Serilog__Using__2=Serilog.Sinks.Seq
+
+      # 2. MinimumLevel (مستويات اللوج)
+      - Serilog__MinimumLevel__Default=Information
+      - Serilog__MinimumLevel__Override__Microsoft=Warning
+      - Serilog__MinimumLevel__Override__Microsoft.Hosting.Lifetime=Information
+      - Serilog__MinimumLevel__Override__Microsoft.EntityFrameworkCore=Warning
+      - Serilog__MinimumLevel__Override__System=Warning
+
+      # 3. WriteTo: Console
+      - Serilog__WriteTo__0__Name=Console
+      - Serilog__WriteTo__0__Args__formatter=Serilog.Formatting.Json.JsonFormatter, Serilog
+
+      # 4. WriteTo: File
+      - Serilog__WriteTo__1__Name=File
+      - Serilog__WriteTo__1__Args__path=/app/logs/ims-.json
+      - Serilog__WriteTo__1__Args__rollingInterval=Day
+      - Serilog__WriteTo__1__Args__retainedFileCountLimit=7
+      - Serilog__WriteTo__1__Args__formatter=Serilog.Formatting.Json.JsonFormatter, Serilog
+
+      # 5. WriteTo: Seq (تم تغيير localhost ليعمل داخل دوكر)
+      - Serilog__WriteTo__2__Name=Seq
+      - Serilog__WriteTo__2__Args__serverUrl=http://seqserver:5341
+
+      # 6. Enrich (إضافة معلومات إضافية للوج)
+      - Serilog__Enrich__0=FromLogContext
+      - Serilog__Enrich__1=WithMachineName
+      - Serilog__Enrich__2=WithThreadId
+      - Serilog__Enrich__3=WithEnvironmentName
+
+      # 7. Properties
+      - Serilog__Properties__Application=IMS
+
+
+    ports:
+      - "5020:5020"
+
+    networks:
+      - backend-network
+
+    volumes:
+      - appdata:/app/EmailServices/EmailTemplates/
+
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Mostafa#123"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserverdata:/var/opt/mssql
+    networks:
+      - backend-network
+
+  seqserver:
+    image: datalust/seq
+    container_name: seqserver
+    ports:
+      - "5341:80"
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORD=ABC#123
+    networks:
+    - backend-network
+
+  smtp4dev:
+    image: rnwood/smtp4dev
+    container_name: smtpserver
+    ports:
+      - "2525:25"
+      - "3000:80"
+      - "3050:143"
+      - "3100:110"
+
+    networks:
+    - backend-network
+
+volumes:
+  sqlserverdata:
+  appdata:
+
+networks:
+  backend-network:
