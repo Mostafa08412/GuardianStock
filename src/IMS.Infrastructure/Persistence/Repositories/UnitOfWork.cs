@@ -70,7 +70,7 @@ namespace IMS.Infrastructure.Persistence.Repositories
         private void AuditAddedAndModifiedEntries()
         {
             //Search for all added entities 
-            var seedCreatedOrUpdatedBy = Guid.CreateVersion7().ToString();
+            var seedCreatedOrUpdatedBy = _currentUser.UserId ?? Guid.CreateVersion7().ToString();
 
             foreach (var entry in dbContext.ChangeTracker.Entries<IAuditable>())
             {
