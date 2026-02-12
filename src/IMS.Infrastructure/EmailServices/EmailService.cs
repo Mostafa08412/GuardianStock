@@ -46,9 +46,7 @@ namespace IMS.Infrastructure.EmailServices
                 DashboardUrl = "https://your-app.com/admin/inventory",
                 AlertTime = DateTime.UtcNow
             };
-
-
-            string templatePath = "IMS.Infrastructure.EmailServices.EmailTemplates.LowStockEmail.cshtml";
+            string templatePath = Path.Combine(AppContext.BaseDirectory, "EmailServices", "EmailTemplates", "LowStockEmail.cshtml");
 
             ServicePointManager.FindServicePoint(new Uri($"http://{smtpSettings.SmtpPort}")).ConnectionLimit = 1;
 
@@ -56,14 +54,14 @@ namespace IMS.Infrastructure.EmailServices
                  .To(smtpSettings.FromEmail)
                  .BCC(to.Select(X => new FluentEmail.Core.Models.Address(X)))
                  .Subject($"URGENT: Low Stock - {productName}")
-                 .UsingTemplateFromEmbedded(templatePath, emailModel, typeof(EmailService).Assembly)
+                 .UsingTemplateFromFile(templatePath, emailModel)
                  .SendAsync(cancellationToken);
 
             if (!result.Successful)
             {
                 var errorMessage = string.Join(',', result.ErrorMessages);
                 logger.LogWarning("Sending Low Stock Email Failed: Reason {reason}", errorMessage);
-                return Result.Failure(new Error("Email.SendFialed", errorMessage, ErrorType.Failure));
+                return Result.Failure(new Error("Email.SendFailed", errorMessage, ErrorType.Failure));
             }
             logger.LogWarning("Sending Low Stock Email Succeeded");
 
