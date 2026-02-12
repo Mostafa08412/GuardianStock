@@ -57,7 +57,12 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
             var inventory = await _unitOfWork.Inventories.GetByProductIdAsync(request.ProductId, cancellationToken);
 
             if (inventory is not null)
-                inventory.AdjustLowStockThreshold(request.LowStockAlertThreshold.Value!);
+            {
+                var result = inventory.AdjustLowStockThreshold(request.LowStockAlertThreshold.Value!);
+                if (!result.IsSuccess)
+                    return Result.Failure(result.Error);
+
+            }
         }
 
         return Result.Success();

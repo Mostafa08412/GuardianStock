@@ -6,6 +6,7 @@ namespace IMS.Application.Products.Commands.GeneratePreview
     {
         public string filePath { get; init; }
 
-        public string previewId { get; init; }
+        public string userId { get; init; }
+        public string jobId { get; init; }
     }
 }

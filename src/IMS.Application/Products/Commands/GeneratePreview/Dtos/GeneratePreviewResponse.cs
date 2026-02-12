@@ -2,18 +2,17 @@
 
 namespace IMS.Application.Products.Commands.GeneratePreview.Dtos
 {
-    public class ImportProductsReport
+    public class GeneratePreviewResponse
     {
-        public List<ImportProductsRowResult> importProductsRowResults { get; set; } = new();
-        public int Succeeded => importProductsRowResults.Count(X => X.IsValid);
-        public int Failed => importProductsRowResults.Count(X => !X.IsValid);
-        public int TotalRows => importProductsRowResults.Count();
-
+        public string JobId { get; set; }
+        public List<PreviewRowResult> RowResults { get; set; } = new();
+        public int SucceededCount => RowResults.Count(X => X.IsValid);
+        public int FailedCount => RowResults.Count(X => !X.IsValid);
 
     }
 
 
-    public class ImportProductsRowResult
+    public class PreviewRowResult
     {
         public int RowNumber { get; init; }
         public string Name { get; init; }
@@ -22,29 +21,32 @@ namespace IMS.Application.Products.Commands.GeneratePreview.Dtos
 
         public string Category { get; init; }
 
+        public string? CategoryId { get; init; }
+
         public string Price { get; init; }
 
-        public string InitialQuantity { get; init; }
+        public string Quantity { get; init; }
 
         public string Supplier { get; init; }
+        public string LowStockAlertThreshold { get; init; }
 
         public bool IsValid { get; init; }
-        public string LowStockAlertThreshold { get; init; }
 
         public List<string> Errors { get; init; } = new();
 
 
-        public static ImportProductsRowResult CreateSuccess(ProductCSVModel model, int rowNumber)
+        public static PreviewRowResult CreateSuccess(ProductCSVModel model, int rowNumber, Guid categoryId)
         {
             var p = model;
-            var importProductsRowResult = new ImportProductsRowResult
+            var importProductsRowResult = new PreviewRowResult
             {
                 RowNumber = rowNumber,
                 Name = p.Name ?? string.Empty,
                 Description = p.Description ?? string.Empty,
                 Category = p.Category ?? string.Empty,
+                CategoryId = categoryId.ToString(),
                 Supplier = p.Supplier ?? string.Empty,
-                InitialQuantity = p.InitialQuantity,
+                Quantity = p.InitialQuantity,
                 LowStockAlertThreshold = p.LowStockAlertThreshold,
                 Price = p.Price,
                 IsValid = true
@@ -54,17 +56,17 @@ namespace IMS.Application.Products.Commands.GeneratePreview.Dtos
             return importProductsRowResult;
         }
 
-        public static ImportProductsRowResult CreateFailure(ProductCSVModel model, int rowNumber, IEnumerable<string> errors)
+        public static PreviewRowResult CreateFailure(ProductCSVModel model, int rowNumber, IEnumerable<string> errors)
         {
             var p = model;
-            var importProductsRowResult = new ImportProductsRowResult
+            var importProductsRowResult = new PreviewRowResult
             {
                 RowNumber = rowNumber,
                 Name = p.Name ?? string.Empty,
                 Description = p.Description ?? string.Empty,
                 Category = p.Category ?? string.Empty,
                 Supplier = p.Supplier ?? string.Empty,
-                InitialQuantity = p.InitialQuantity,
+                Quantity = p.InitialQuantity,
                 LowStockAlertThreshold = p.LowStockAlertThreshold,
                 Price = p.Price,
                 IsValid = false
@@ -75,17 +77,17 @@ namespace IMS.Application.Products.Commands.GeneratePreview.Dtos
             return importProductsRowResult;
         }
 
-        public static ImportProductsRowResult CreateFailure(ProductCSVModel model, int rowNumber, string error)
+        public static PreviewRowResult CreateFailure(ProductCSVModel model, int rowNumber, string error)
         {
             var p = model;
-            var importProductsRowResult = new ImportProductsRowResult
+            var importProductsRowResult = new PreviewRowResult
             {
                 RowNumber = rowNumber,
                 Name = p.Name ?? string.Empty,
                 Description = p.Description ?? string.Empty,
                 Category = p.Category ?? string.Empty,
                 Supplier = p.Supplier ?? string.Empty,
-                InitialQuantity = p.InitialQuantity,
+                Quantity = p.InitialQuantity,
                 LowStockAlertThreshold = p.LowStockAlertThreshold,
                 Price = p.Price,
                 IsValid = false

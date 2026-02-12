@@ -1,3 +1,4 @@
+using IMS.Application.Products.Queries.ListProducts;
 using IMS.Domain.Abstractions;
 using IMS.Domain.Core.Errors;
 using IMS.Domain.Core.Primitives.Result;
@@ -7,7 +8,7 @@ using MediatR;
 
 namespace IMS.Application.Products.Commands.CreateProduct;
 
-public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, Result<Guid>>
+public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, Result<ProductListItemDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ISkuGenerator _skuGenerator;
@@ -18,13 +19,13 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         _skuGenerator = skuGenerator;
     }
 
-    public async Task<Result<Guid>> Handle(CreateProductCommand request, CancellationToken cancellationToken)
+    public async Task<Result<ProductListItemDto>> Handle(CreateProductCommand request, CancellationToken cancellationToken)
     {
 
-        var categoryExists = await _unitOfWork.Categories.ExistsAsync(request.CategoryId, cancellationToken);
+        var category = await _unitOfWork.Categories.GetByIdAsync(request.CategoryId, cancellationToken);
 
-        if (!categoryExists)
-            return Result<Guid>.Failure(Errors.CategoryErrors.NotFound);
+        if (category is null)
+            return Result<ProductListItemDto>.Failure(Errors.CategoryErrors.NotFound);
 
 
         var generatedSku = _skuGenerator.GenerateSKU(request.Supplier);
@@ -40,7 +41,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 
         if (productResult.IsFailure)
         {
-            return Result<Guid>.Failure(productResult.Error!);
+            return Result<ProductListItemDto>.Failure(productResult.Error!);
         }
 
         var product = productResult.Value!;
@@ -53,17 +54,27 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 
         if (inventoryResult.IsFailure)
         {
-            return Result<Guid>.Failure(inventoryResult.Error!);
+            return Result<ProductListItemDto>.Failure(inventoryResult.Error!);
         }
 
         var inventory = inventoryResult.Value!;
 
         _unitOfWork.Products.Add(product);
         _unitOfWork.Inventories.Add(inventory);
+        var productDTO =
+            new ProductListItemDto(
+                product.Id,
+                product.Name,
+                product.Sku,
+                product.Price,
+                product.Supplier,
+                category.Name,
+                product.CategoryId,
+                inventory.Quantity,
+                inventory.LowStockThreshold,
+                product.Description
+                );
 
-
-
-        return Result<Guid>.Success(product.Id);
-
+        return Result<ProductListItemDto>.Success(productDTO);
     }
 }

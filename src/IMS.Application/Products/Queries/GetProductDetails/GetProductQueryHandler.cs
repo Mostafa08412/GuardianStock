@@ -5,7 +5,7 @@ using IMS.Domain.Transactions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace IMS.Application.Products.Queries.GetProduct;
+namespace IMS.Application.Products.Queries.GetProductDetails;
 
 public class GetProductQueryHandler : IRequestHandler<GetProductQuery, Result<ProductDto>>
 {
@@ -34,6 +34,7 @@ public class GetProductQueryHandler : IRequestHandler<GetProductQuery, Result<Pr
                                      Price = product.Price,
                                      Description = product.Description,
                                      CategoryName = category.Name,
+                                     CategoryId = category.Id,
                                      Sku = product.Sku,
                                      StockQuantity = inventory.Quantity,
                                      LowStockThreshold = inventory.LowStockThreshold,
@@ -66,8 +67,12 @@ public class GetProductQueryHandler : IRequestHandler<GetProductQuery, Result<Pr
            .Select(X => X.CreatedOnUTC)
            .FirstOrDefaultAsync(cancellationToken);
 
+        if (lastRestock == default)
+            lastRestock = productData.CreatedAt;
+
+
         var recentActivity = await context.Transactions.AsNoTracking()
-            .Where(X => X.ProductId == request.ProductId && X.CreatedOnUTC >= previousMonth)
+            .Where(X => X.ProductId == request.ProductId)
             .OrderByDescending(X => X.CreatedOnUTC)
             .Take(5)
             .Select(X => new StockActivity
@@ -88,12 +93,12 @@ public class GetProductQueryHandler : IRequestHandler<GetProductQuery, Result<Pr
             WHERE T.ProductId = {request.ProductId} and T.Type = 1
             )
 
-            select AVG(daysDiff)
+            select ISNULL(AVG(daysDiff),0)
             from CTE;
 
-          ").ToListAsync(cancellationToken)).First();
+          ").ToListAsync(cancellationToken)).FirstOrDefault();
 
-        var stockHistory = from inventory in context.Inventories.AsNoTracking()
+        var stockHistory = from inventory in context.Inventories.AsNoTracking().Where(X => X.ProductId == request.ProductId)
                            join historyItem in context.StockHistories.AsNoTracking()
                            on inventory.Id equals historyItem.InventoryId
                            select new
@@ -124,7 +129,8 @@ public class GetProductQueryHandler : IRequestHandler<GetProductQuery, Result<Pr
             StockQuantity = productData.StockQuantity,
             LowStockThreshold = productData.LowStockThreshold,
             CategoryName = productData.CategoryName,
-            LastUpdatedAt = productData.LastUpdatedAt,
+            CategoryId = productData.CategoryId.ToString(),
+            UpdatedAt = productData.LastUpdatedAt,
             CreatedAt = productData.CreatedAt,
             RecentActivities = recentActivity,
             AvgReStockTime = avgRestock,
