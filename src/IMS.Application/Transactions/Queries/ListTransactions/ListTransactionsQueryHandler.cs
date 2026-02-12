@@ -23,7 +23,7 @@ namespace IMS.Application.Transactions.Queries.ListTransactions
                         join product in _context.Products.AsNoTracking()
                         on transction.ProductId equals product.Id
                         join user in _context.BusinessUsers.AsNoTracking()
-                        on transction.CreatedBy equals user.Id
+                        on transction.CreatedBy equals user.Id.ToString()
                         select new
                         {
                             Id = transction.Id,
