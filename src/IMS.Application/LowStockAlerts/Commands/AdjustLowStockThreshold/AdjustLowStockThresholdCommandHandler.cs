@@ -16,7 +16,7 @@ public class AdjustLowStockThresholdCommandHandler : IRequestHandler<AdjustLowSt
 
     public async Task<Result> Handle(AdjustLowStockThresholdCommand request, CancellationToken cancellationToken)
     {
-        var inventory = await _unitOfWork.Inventories.GetByProductIdAsync(request.ProductId, cancellationToken);
+        var inventory = await _unitOfWork.Inventories.GetByIdAsync(request.InventoryId, cancellationToken);
 
         if (inventory is null)
         {

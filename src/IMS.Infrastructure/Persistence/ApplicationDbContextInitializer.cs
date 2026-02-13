@@ -424,7 +424,7 @@ namespace IMS.Infrastructure.Persistence
             if (clock == null) return;
             // Start date for operations
             DateTime startDate = new DateTime(2024, 1, 1, 9, 0, 0);
-            int totalMonths = (2026 - 2024) * 12 + 4; // 28 months from Jan 2024 to Apr 2026
+            int totalMonths = (2026 - 2024) * 12 + 1; // 28 months from Jan 2024 to Apr 2026
 
             foreach (var product in products)
             {

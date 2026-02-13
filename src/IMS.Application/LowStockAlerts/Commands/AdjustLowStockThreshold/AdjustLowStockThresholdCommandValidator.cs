@@ -7,7 +7,7 @@ public class AdjustLowStockThresholdCommandValidator : AbstractValidator<AdjustL
 {
     public AdjustLowStockThresholdCommandValidator()
     {
-        RuleFor(x => x.ProductId).NotEmpty();
+        RuleFor(x => x.InventoryId).NotEmpty();
 
         RuleFor(x => x.NewLowStockThreshold)
             .GreaterThanOrEqualTo(Inventory.MinimumLowStockThreshold)

@@ -3,4 +3,4 @@ using MediatR;
 
 namespace IMS.Application.LowStockAlerts.Commands.DismissLowStockAlert;
 
-public record DismissLowStockAlertCommand(Guid ProductId) : IRequest<Result>;
+public record DismissLowStockAlertCommand(Guid InventoryId) : IRequest<Result>;

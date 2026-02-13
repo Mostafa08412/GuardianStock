@@ -19,9 +19,12 @@ public class ListProductsQueryHandler : IRequestHandler<ListProductsQuery, Resul
     {
         // TODO: Implement query logic
         // 1. Build query with filters (SearchTerm, CategoryId, HasLowStockAlert)
-        var query = _context.Products.AsNoTracking().AsQueryable();
+        var query = _context.Products.AsNoTracking().AsQueryable().OrderBy(X => X.Id).AsQueryable();
         var InventoryQuery = _context.Inventories.AsNoTracking().AsNoTracking();
         var CategoryQuery = _context.Categories.AsNoTracking().AsNoTracking();
+
+
+
 
         if (!string.IsNullOrEmpty(request.SortBy))
         {
@@ -97,6 +100,7 @@ public class ListProductsQueryHandler : IRequestHandler<ListProductsQuery, Resul
         {
             var stockLevel = request.StockLevel.ToLower();
 
+
             if (stockLevel == "normal")
             {
                 ProductsWithCategoriesWithInventories = ProductsWithCategoriesWithInventories.Where(X => X.Quantity > X.LowStockThreshold);
@@ -109,7 +113,7 @@ public class ListProductsQueryHandler : IRequestHandler<ListProductsQuery, Resul
                     .Where(X => (double)X.Quantity / X.LowStockThreshold > 0.3 && (double)X.Quantity / X.LowStockThreshold < 1);
 
             }
-            else
+            else if (stockLevel == "critical")
             {
                 ProductsWithCategoriesWithInventories = ProductsWithCategoriesWithInventories
                     .Where(X => (double)X.Quantity / X.LowStockThreshold <= 0.3);
@@ -132,8 +136,8 @@ public class ListProductsQueryHandler : IRequestHandler<ListProductsQuery, Resul
         var queryCount = await ProductsWithCategoriesWithInventories.CountAsync(cancellationToken);
 
         var paginatedQuery = ProductsWithCategoriesWithInventories
-             .Take(request.PageSize)
              .Skip((request.PageSize) * (request.Page - 1))
+             .Take(request.PageSize)
              .Select(X => new ProductListItemDto
              (
                  X.p.Id,

@@ -7,13 +7,17 @@
 	  <PreserveCompilationContext>true</PreserveCompilationContext>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="EmailServices\EmailTemplates\LowStockEmail.cshtml" />
-  </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="EmailServices\EmailTemplates\LowStockEmail.cshtml" />
+    <Content Include="EmailServices\EmailTemplates\LowStockEmail.cshtml" />
   </ItemGroup>
+
+
+	<ItemGroup>
+		<Content Update="EmailServices\EmailTemplates\LowStockEmail.cshtml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\IMS.Application\IMS.Application.csproj" />

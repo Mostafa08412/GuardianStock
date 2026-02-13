@@ -19,6 +19,7 @@ namespace IMS.Application.Products.Commands.GeneratePreview
         private readonly HybridCache hybridCache;
         private readonly ISignalService signalService;
 
+
         public GeneratePreviewCommandHandler(IProductCsvReader productCsvReader, IUnitOfWork unitOfWork, ISkuGenerator skuGenerator, HybridCache hybridCache, ISignalService signalService)
         {
             this.productCsvReader = productCsvReader;
@@ -31,15 +32,27 @@ namespace IMS.Application.Products.Commands.GeneratePreview
         public async Task Handle(GeneratePreviewCommand request, CancellationToken cancellationToken)
         {
 
-            await signalService.SendOnProgress(request.previewId, 0, "Preprocessing csv...", cancellationToken);
+            await signalService.SendOnProgress(request.userId, request.jobId, 21, "Reading CSV...", cancellationToken);
 
 
             var productCsvModelListResult = await productCsvReader.ReadProductCSVFile(request.filePath);
 
-            if (productCsvModelListResult.IsFailure)
-                await signalService.OnJobFailed(request.previewId, productCsvModelListResult.Error.Code, cancellationToken);
 
-            var result = new ImportProductsReport();
+            if (productCsvModelListResult.IsFailure)
+            {
+                await signalService.OnJobFailed(request.userId, request.jobId, productCsvModelListResult.Error.Description, cancellationToken);
+
+                throw new Exception(productCsvModelListResult.Error.Description);
+
+            }
+
+
+            await signalService.SendOnProgress(request.userId, request.jobId, 22, "Validating CSV...", cancellationToken);
+
+
+            var previewResponse = new GeneratePreviewResponse();
+
+            previewResponse.JobId = request.jobId;
 
             var discoveredProduct = new HashSet<(string, string)>();
 
@@ -47,16 +60,39 @@ namespace IMS.Application.Products.Commands.GeneratePreview
 
             var categoriesDict = categories.ToDictionary(x => x.Name.ToLower(), x => x.Id);
 
-            decimal totalProgress = 0.2m;
+            decimal totalProgress = 0.22m;
+
             decimal progressUnit = (0.8m) / productCsvModelListResult.Value.Count();
+
 
             for (int i = 0; i < productCsvModelListResult.Value!.Count; i++)
             {
-                var p = productCsvModelListResult.Value[i];
-                int rowNumber = i + 2;
-                var validationErrors = ValidateDomainRules(p);
+                await signalService.SendOnProgress
+                    (request.userId,
+                    request.jobId,
+                    totalProgress * 100,
+                    $"Validating {i + 1} from {productCsvModelListResult.Value.Count()}  ...",
+                    cancellationToken);
 
-                bool enteredCategoryNameIsExisting = categoriesDict.TryGetValue(p.Category.ToLower(), out Guid categoryId);
+                var productCsvModel = productCsvModelListResult.Value[i];
+
+                int rowNumber = i + 2;
+
+                var validationErrors = ValidateDomainRules(productCsvModel);
+
+                bool isProductDiscovered =
+                    discoveredProduct.Contains((productCsvModel.Name.ToLower(), productCsvModel.Category.ToLower()));
+
+                if (isProductDiscovered)
+                {
+                    previewResponse.RowResults.Add(PreviewRowResult.CreateFailure(productCsvModel, rowNumber, ApplicationErrors.CsvReader.Product.DuplicateProduct.Description));
+                    continue;
+                }
+
+
+                bool enteredCategoryNameIsExisting =
+                    categoriesDict.TryGetValue(productCsvModel.Category.ToLower(), out Guid categoryId);
+
 
                 if (!enteredCategoryNameIsExisting)
                     validationErrors.Add(ApplicationErrors.CsvReader.Product.InvalidCategory.Description);
@@ -65,39 +101,36 @@ namespace IMS.Application.Products.Commands.GeneratePreview
 
                 if (validationErrors.Any())
                 {
-                    result.importProductsRowResults.Add(ImportProductsRowResult.CreateFailure(p, rowNumber, validationErrors));
+                    previewResponse.RowResults.Add(PreviewRowResult.CreateFailure(productCsvModel, rowNumber, validationErrors));
                     continue;
                 }
 
 
 
 
-                // 3. Domain Object Creation
-                var createResult = Product.Create(p.Name, skuGenerator.GenerateSKU(p.Supplier), p.Description, Decimal.Parse(p.Price!), p.Supplier, categoryId);
+                // 3. Domain Object Creation to double validation check 
+                var createResult = Product.Create(productCsvModel.Name, skuGenerator.GenerateSKU(productCsvModel.Supplier), productCsvModel.Description, Decimal.Parse(productCsvModel.Price!), productCsvModel.Supplier, categoryId);
 
                 if (createResult.IsFailure)
                 {
-                    result.importProductsRowResults.Add(ImportProductsRowResult.CreateFailure(p, rowNumber, createResult.Error!.Description));
+                    previewResponse.RowResults.Add(PreviewRowResult.CreateFailure(productCsvModel, rowNumber, createResult.Error!.Description));
                 }
                 else
                 {
-                    discoveredProduct.Add((p.Name.ToLower(), p.Category.ToLower()));
-                    result.importProductsRowResults.Add(ImportProductsRowResult.CreateSuccess(p, rowNumber));
+                    discoveredProduct.Add((productCsvModel.Name.ToLower(), productCsvModel.Category.ToLower()));
+                    previewResponse.RowResults.Add(PreviewRowResult.CreateSuccess(productCsvModel, rowNumber, categoryId));
                 }
                 totalProgress = totalProgress + progressUnit;
 
-                await signalService.SendOnProgress(request.previewId, totalProgress * 100, "Parsing file...", cancellationToken);
+                await signalService.SendOnProgress(request.userId, request.jobId, totalProgress * 100, $"Validating {i + 1} from {productCsvModelListResult.Value.Count()}  completed.", cancellationToken);
 
             }
 
-            await signalService.SendOnProgress(request.previewId, 99.0m, "Preview is ready", cancellationToken);
+            await signalService.SendOnProgress(request.userId, request.jobId, 100.0m, "Preview is ready", cancellationToken);
 
+            await hybridCache.SetAsync(request.jobId, previewResponse);
 
-
-
-            await hybridCache.SetAsync(request.previewId, result);
-
-            await signalService.SendOnPreviewReadySignal(request.previewId, result, cancellationToken);
+            await signalService.SendOnPreviewReadySignal(request.userId, previewResponse, cancellationToken);
 
         }
         private List<string> ValidateDomainRules(ProductCSVModel p)

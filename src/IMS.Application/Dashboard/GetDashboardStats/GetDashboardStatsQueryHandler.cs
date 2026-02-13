@@ -45,6 +45,7 @@ namespace IMS.Application.Dashboard.GetDashboardStats
 
             dashboard.SalesChartData = await
                                         (context.Transactions.AsNoTracking()
+                                        .Where(X => X.CreatedOnUTC.Year == dateTime.UTCNow.Year)
                                         .OrderBy(X => X.CreatedOnUTC.Year).ThenBy(X => X.CreatedOnUTC.Month)
                                         .GroupBy(X => new { X.CreatedOnUTC.Year, X.CreatedOnUTC.Month })
                                         .Select(X => new SalesChartItemDto
@@ -78,9 +79,9 @@ namespace IMS.Application.Dashboard.GetDashboardStats
                                                     }).ToListAsync(cancellationToken);
 
 
-            dashboard.LowStockInventories = await (from inventory in context.Inventories.AsNoTracking()
+            dashboard.LowStockInventories = await (from inventory in context.Inventories.AsNoTracking().Where(X => X.LowStockAlert != default && X.LowStockAlert.DismissedAt == null)
                                                    join product in context.Products.AsNoTracking()
-                                                   on inventory.Id equals product.Id
+                                                   on inventory.ProductId equals product.Id
                                                    select new LowStockInventoryDto
                                                    {
                                                        InventoryId = inventory.Id,
@@ -96,11 +97,11 @@ namespace IMS.Application.Dashboard.GetDashboardStats
                                                        Threshold = inventory.LowStockThreshold
                                                    }
 
-                                                    ).Take(3).ToListAsync(cancellationToken);
+                                                    ).Where(X => X.Stock < X.Threshold).Take(3).ToListAsync(cancellationToken);
 
 
 
-            var recentTransaction = (await (from transaction in context.Transactions.AsNoTracking().OrderBy(X => X.CreatedOnUTC)
+            var recentTransaction = (await (from transaction in context.Transactions.AsNoTracking().OrderByDescending(X => X.CreatedOnUTC)
                                             join product in context.Products.AsNoTracking()
                                             on transaction.ProductId equals product.Id
                                             join inventory in context.Inventories.AsNoTracking()

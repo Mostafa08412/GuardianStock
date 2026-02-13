@@ -29,12 +29,18 @@ public class ListCategoriesQueryHandler : IRequestHandler<ListCategoriesQuery, R
             query = request.SortBy.ToLower() switch
             {
                 "name" => request.SortDescending ? query.OrderByDescending(c => c.Name) : query.OrderBy(c => c.Name),
-                "productcount" => request.SortDescending 
-                    ? query.OrderByDescending(c => _context.Products.Count(p => p.CategoryId == c.Id)) 
+                "products" => request.SortDescending
+                    ? query.OrderByDescending(c => _context.Products.Count(p => p.CategoryId == c.Id))
                     : query.OrderBy(c => _context.Products.Count(p => p.CategoryId == c.Id)),
                 _ => query.OrderBy(c => c.Name)
             };
         }
+
+
+        if (request.MinProductCount.HasValue)
+            query = query.Where(c => _context.Products.Count(p => p.CategoryId == c.Id) >= request.MinProductCount.Value);
+        if (request.MaxProductCount.HasValue)
+            query = query.Where(c => _context.Products.Count(p => p.CategoryId == c.Id) <= request.MaxProductCount.Value);
 
         var totalCount = await query.CountAsync(cancellationToken);
 

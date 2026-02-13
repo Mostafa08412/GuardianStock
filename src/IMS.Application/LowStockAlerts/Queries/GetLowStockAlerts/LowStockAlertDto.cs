@@ -9,4 +9,5 @@ public record LowStockAlertDto(
     int Threshold,
     string status,
     bool IsNotificationSent,
+    bool isDismissed,
     DateTime TriggeredOn);

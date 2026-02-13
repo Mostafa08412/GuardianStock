@@ -1,12 +1,16 @@
-﻿using IMS.Application.Products.Commands.GeneratePreview.Dtos;
+﻿using IMS.Application.Products.Commands.BulkImportProducts;
+using IMS.Application.Products.Commands.GeneratePreview.Dtos;
 
 namespace IMS.Application.Common.Interfaces
 {
     public interface ISignalService
     {
-        Task SendOnPreviewReadySignal(string jobId, ImportProductsReport report, CancellationToken cancellationToken);
-        Task SendOnProgress(string jobId, decimal percentage, string message, CancellationToken cancellationToken);
-        Task OnJobFailed(string jobId, string message, CancellationToken cancellationToken);
+        Task SendOnPreviewReadySignal(string userId, GeneratePreviewResponse report, CancellationToken cancellationToken);
+        Task SendOnProgress(string userId, string jobId, decimal percentage, string message, CancellationToken cancellationToken);
+        Task OnJobFailed(string userId, string jobId, string message, CancellationToken cancellationToken);
+
+        Task SendOnImportCompleted(string userId, ImportSummary summary, CancellationToken cancellationToken);
+
 
     }
 }

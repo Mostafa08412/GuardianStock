@@ -3,4 +3,4 @@ using MediatR;
 
 namespace IMS.Application.LowStockAlerts.Commands.AdjustLowStockThreshold;
 
-public record AdjustLowStockThresholdCommand(Guid ProductId, int NewLowStockThreshold) : IRequest<Result>;
+public record AdjustLowStockThresholdCommand(Guid InventoryId, int NewLowStockThreshold) : IRequest<Result>;

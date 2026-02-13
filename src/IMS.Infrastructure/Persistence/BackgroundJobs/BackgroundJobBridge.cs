@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using Hangfire;
+using MediatR;
 
 namespace IMS.Infrastructure.Persistence.BackgroundJobs
 {
@@ -16,6 +17,11 @@ namespace IMS.Infrastructure.Persistence.BackgroundJobs
             await _mediator.Send(command);
         }
 
+        [AutomaticRetry(Attempts = 0)]
+        public async Task SendRequestAsyncWithNoRetry<TRequest>(TRequest command) where TRequest : IRequest
+        {
+            await _mediator.Send(command);
+        }
 
     }
 }

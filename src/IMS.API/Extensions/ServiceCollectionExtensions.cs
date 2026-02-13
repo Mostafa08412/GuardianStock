@@ -33,9 +33,13 @@ namespace IMS.API.Extensions
 
         private static void AddCorsPolicy(this IServiceCollection services, IConfiguration configuration)
         {
+            var CorsSettings = configuration.GetSection("CorsSettings");
 
             var origins = configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>();
+
             var policyName = configuration.GetSection("CorsSettings:PolicyName").Get<string>();
+
+
             services.AddCors(options =>
             {
                 options.AddPolicy(policyName, policy =>

@@ -1,16 +1,18 @@
 using IMS.Domain.Transactions;
 
-namespace IMS.Application.Products.Queries.GetProduct;
+namespace IMS.Application.Products.Queries.GetProductDetails;
 
 public class ProductDto
 {
     public Guid Id { get; set; }
+    public string Sku { get; init; }
     public string Name { get; init; }
     public string Description { get; init; }
     public string Supplier { get; init; }
     public string CategoryName { get; init; }
+    public string CategoryId { get; init; }
     public DateTime CreatedAt { get; init; }
-    public DateTime LastUpdatedAt { get; init; }
+    public DateTime UpdatedAt { get; init; }
     public decimal TotalValue => StockQuantity * Price;
 
     public string StockStatus
@@ -33,7 +35,6 @@ public class ProductDto
 
         }
     }
-    public string Sku { get; init; }
     public decimal Price { get; init; }
     public int StockQuantity { get; init; }
     public int LowStockThreshold { get; init; }

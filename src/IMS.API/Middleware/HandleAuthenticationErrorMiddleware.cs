@@ -43,6 +43,13 @@ namespace IMS.API.Middleware
                         context.Response.StatusCode = (int)ApplicationStatusCodes.Unauthorized;
                         await context.Response.WriteAsJsonAsync(helper.BasicErrorApiResponse(error.Description, error.Code));
                     }
+
+                    if (headerValue == IMS.Domain.Core.Errors.Errors.Identity.ForbiddenAccess.Code)
+                    {
+                        var error = Errors.Identity.ForbiddenAccess;
+                        context.Response.StatusCode = (int)ApplicationStatusCodes.Forbidden;
+                        await context.Response.WriteAsJsonAsync(helper.BasicErrorApiResponse(error.Description, error.Code));
+                    }
                 }
             }
 

@@ -35,7 +35,7 @@ namespace IMS.Domain.Products
 
         public DateTime CreatedOnUTC { get; private set; }
 
-        public string CreatedBy { get; private set; }
+        public string CreatedBy { get; set; }
 
         public DateTime UpdatedOnUTC { get; private set; }
 

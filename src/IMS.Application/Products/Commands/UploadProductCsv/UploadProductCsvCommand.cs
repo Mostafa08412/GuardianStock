@@ -4,5 +4,5 @@ using Microsoft.AspNetCore.Http;
 
 namespace IMS.Application.Products.Commands.UploadProductCsv
 {
-    public record UploadProductCsvCommand(IFormFile File) : IRequest<Result<UploadProductCsvResult>>;
+    public record UploadProductCsvCommand(IFormFile File, string jobId) : IRequest<Result<UploadProductCsvResponse>>;
 }

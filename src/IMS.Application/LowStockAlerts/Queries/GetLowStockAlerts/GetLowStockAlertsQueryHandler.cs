@@ -17,7 +17,9 @@ public class GetLowStockAlertsQueryHandler : IRequestHandler<GetLowStockAlertsQu
     public async Task<Result<PaginatedList<LowStockAlertDto>>> Handle(GetLowStockAlertsQuery request, CancellationToken cancellationToken)
     {
 
-        var query = from inventory in _context.Inventories.AsNoTracking().Where(X => (X.LowStockAlert != null && X.LowStockAlert.DismissedAt == default))
+        var query = from inventory in _context.Inventories
+                    .AsNoTracking()
+                    .Where(X => (X.LowStockAlert != null))
                     join product in _context.Products.AsNoTracking()
                     on inventory.ProductId equals product.Id
                     select new
@@ -29,6 +31,7 @@ public class GetLowStockAlertsQueryHandler : IRequestHandler<GetLowStockAlertsQu
                         CurrentStock = inventory.Quantity,
                         LowStockThreshold = inventory.LowStockThreshold,
                         AlertTriggeredAt = inventory.LowStockAlert!.TriggeredAtUTC,
+                        DismissedAt = inventory.LowStockAlert!.DismissedAt,
                         IsNotificationSent = inventory.LowStockAlert!.NotificationSentAt != default
                     };
 
@@ -37,6 +40,17 @@ public class GetLowStockAlertsQueryHandler : IRequestHandler<GetLowStockAlertsQu
             query = query.Where(x =>
                 x.ProductName.Contains(request.SearchTerm) ||
                 x.ProductSku.Contains(request.SearchTerm));
+        }
+
+        if (request.IsDismissed.HasValue && request.IsDismissed.Value)
+        {
+            query = query.Where(x => x.DismissedAt != default);
+        }
+
+
+        if (request.IsDismissed.HasValue && !request.IsDismissed.Value)
+        {
+            query = query.Where(x => x.DismissedAt == default);
         }
 
         if (request.IsNotificationSent.HasValue)
@@ -90,6 +104,7 @@ public class GetLowStockAlertsQueryHandler : IRequestHandler<GetLowStockAlertsQu
             ((decimal)x.CurrentStock / x.LowStockThreshold) <= 0.3m ? "critical" :
                       ((decimal)x.CurrentStock / x.LowStockThreshold) < 1.0m ? "low" : "normal",
             x.IsNotificationSent,
+            x.DismissedAt != null,
             x.AlertTriggeredAt.ToLocalTime()));
 
         var alerts = await projectedQuery

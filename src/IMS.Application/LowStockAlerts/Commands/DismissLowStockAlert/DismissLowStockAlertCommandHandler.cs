@@ -16,7 +16,7 @@ public class DismissLowStockAlertCommandHandler : IRequestHandler<DismissLowStoc
 
     public async Task<Result> Handle(DismissLowStockAlertCommand request, CancellationToken cancellationToken)
     {
-        var inventory = await _unitOfWork.Inventories.GetByProductIdAsync(request.ProductId, cancellationToken);
+        var inventory = await _unitOfWork.Inventories.GetByIdAsync(request.InventoryId, cancellationToken);
 
         if (inventory is null)
         {

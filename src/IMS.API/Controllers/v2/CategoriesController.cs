@@ -21,7 +21,7 @@ namespace IMS.API.Controllers.v2
     [ApiController]
     [ApiVersion(2.0)]
     [Route(ApiRoutes.Categories.Base)]
-    [Authorize(Roles = Roles.Admin)]
+    [Authorize(Roles = $"{Roles.Admin},{Roles.Manager}")]
     [SwaggerResponse((int)ApplicationStatusCodes.Unauthorized, "The request is missing a valid authentication token.", typeof(ApiResponse))]
     [SwaggerResponse((int)ApplicationStatusCodes.Forbidden, "The authenticated user does not have the 'Admin' role required for this resource.", typeof(ApiResponse))]
     [SwaggerResponse((int)ApplicationStatusCodes.BadRequest, "The request payload is invalid or malformed.", typeof(ApiResponse))]
@@ -74,13 +74,10 @@ namespace IMS.API.Controllers.v2
             OperationId = "ListCategories"
         )]
         public async Task<IActionResult> GetAll(
-            [FromQuery] string? searchTerm,
-            [FromQuery] string? sortBy,
-            [FromQuery] bool sortDescending = false,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] ListCategoriesQuery query
+)
         {
-            var result = await _sender.Send(new ListCategoriesQuery(searchTerm, sortBy, sortDescending, page, pageSize));
+            var result = await _sender.Send(query);
 
             return HandleResult(result, ApplicationStatusCodes.Ok);
         }

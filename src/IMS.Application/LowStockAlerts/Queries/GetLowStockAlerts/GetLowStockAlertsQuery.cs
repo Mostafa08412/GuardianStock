@@ -1,5 +1,4 @@
 using IMS.Application.Common.Models;
-using IMS.Application.LowStockAlerts.Queries.GetLowStockAlerts;
 using IMS.Domain.Core.Primitives.Result;
 using MediatR;
 
@@ -9,6 +8,7 @@ public record GetLowStockAlertsQuery(
     string? SearchTerm,
     string? Severity,
     bool? IsNotificationSent,
+    bool? IsDismissed,
     DateTime? FromDate,
     DateTime? ToDate,
     string? SortBy,

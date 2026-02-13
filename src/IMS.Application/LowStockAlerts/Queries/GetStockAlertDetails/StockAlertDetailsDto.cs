@@ -14,7 +14,9 @@ public record StockAlertDetailsDto(
     string Status,
     DateTime? AlertTriggeredAt,
     bool IsNotificationSent,
-    List<StockTransactionDto> RecentTransactions);
+    List<StockTransactionDto> RecentTransactions,
+    bool IsDismissed,
+    DateTime? DismissedAt);
 
 public record StockTransactionDto(
     Guid Id,
