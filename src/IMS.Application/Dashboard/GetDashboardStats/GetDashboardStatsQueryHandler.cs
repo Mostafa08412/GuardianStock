@@ -79,7 +79,7 @@ namespace IMS.Application.Dashboard.GetDashboardStats
                                                     }).ToListAsync(cancellationToken);
 
 
-            dashboard.LowStockInventories = await (from inventory in context.Inventories.AsNoTracking()
+            dashboard.LowStockInventories = await (from inventory in context.Inventories.AsNoTracking().Where(X => X.LowStockAlert != default && X.LowStockAlert.DismissedAt == null)
                                                    join product in context.Products.AsNoTracking()
                                                    on inventory.ProductId equals product.Id
                                                    select new LowStockInventoryDto

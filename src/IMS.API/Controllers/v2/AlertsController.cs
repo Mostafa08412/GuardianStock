@@ -105,8 +105,15 @@ namespace IMS.API.Controllers.v2
             Description = "Changes the point at which a product triggers a low stock alert.",
             OperationId = "AdjustThreshold"
         )]
-        public async Task<IActionResult> AdjustThreshold([FromBody] AdjustLowStockThresholdCommand command)
+        public async Task<IActionResult> AdjustThreshold([FromRoute] Guid inventoryId, [FromBody] AdjustLowStockThresholdCommand command)
         {
+
+            if (inventoryId != command.InventoryId)
+            {
+                return BadRequest("Inventory Id mismatch.");
+            }
+
+
             var result = await _sender.Send(command);
 
             return HandleResult(result, ApplicationStatusCodes.NoContent);
@@ -125,9 +132,9 @@ namespace IMS.API.Controllers.v2
             Description = "Acknowledges and dismisses the current low stock alert for a product.",
             OperationId = "DismissAlert"
         )]
-        public async Task<IActionResult> DismissAlert([FromRoute] Guid productId)
+        public async Task<IActionResult> DismissAlert([FromRoute] Guid inventoryId)
         {
-            var result = await _sender.Send(new DismissLowStockAlertCommand(productId));
+            var result = await _sender.Send(new DismissLowStockAlertCommand(inventoryId));
 
             return HandleResult(result, ApplicationStatusCodes.NoContent);
         }

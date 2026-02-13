@@ -68,8 +68,8 @@
             public const string GetAll = "";
             public const string GetDetails = "{inventoryId}";
             public const string GetSummary = "summary";
-            public const string AdjustThreshold = "adjust-threshold";
-            public const string Dismiss = "dismiss/{productId}";
+            public const string AdjustThreshold = "{inventoryId}/adjust-threshold";
+            public const string Dismiss = "{inventoryId}/dismiss";
         }
     }
 }

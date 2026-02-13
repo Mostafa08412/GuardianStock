@@ -71,7 +71,10 @@ public class GetStockAlertDetailsQueryHandler : IRequestHandler<GetStockAlertDet
             status,
             inventoryEntity.LowStockAlert?.TriggeredAtUTC.ToLocalTime(),
             inventoryEntity.LowStockAlert?.IsNotificationSent ?? false,
-            transactions
+            transactions,
+            inventoryEntity.LowStockAlert?.DismissedAt != null,
+            inventoryEntity.LowStockAlert?.DismissedAt != null ? inventoryEntity.LowStockAlert.DismissedAt.Value.ToLocalTime() : null
+
         );
 
         return Result<StockAlertDetailsDto>.Success(dto);
