@@ -7,6 +7,7 @@ using IMS.Domain.Transactions;
 using IMS.Domain.Users;
 using IMS.Infrastructure.Persistence.Identity;
 using IMS.Infrastructure.Tokens;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -14,7 +15,7 @@ using System.Reflection;
 
 namespace IMS.Infrastructure.Persistence
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplicationDbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser,IdentityRole<Guid>,Guid>, IApplicationDbContext
     {
         public DbSet<User> BusinessUsers { get; private set; }
         public DbSet<RefreshToken> RefreshTokens { get; private set; }

@@ -1,7 +1,7 @@
 namespace IMS.Application.Users.Queries.GetUser;
 
 public record UserDetailsDto(
-    string Id,
+Guid Id,
     string FirstName,
     string LastName,
     string Email,

@@ -14,6 +14,7 @@
             public const string RefreshToken = $"refresh-token";
             public const string ChangePassword = $"change-password";
             public const string GoogleLogin = $"google-login";
+            public const string UpdateProfile = $"update-profile";
         }
 
         public static class Users

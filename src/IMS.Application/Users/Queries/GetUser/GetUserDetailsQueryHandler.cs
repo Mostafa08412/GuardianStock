@@ -14,7 +14,7 @@ public class GetUserDetailsQueryHandler : IRequestHandler<GetUserDetailsQuery, R
 
     public async Task<Result<UserDetailsDto>> Handle(GetUserDetailsQuery request, CancellationToken cancellationToken)
     {
-        var result = await _identityService.GetUserDetailsAsync(request.UserId, cancellationToken);
+        var result = await _identityService.GetUserDetailsAsync(Guid.Parse(request.UserId), cancellationToken);
 
         if (result.IsFailure)
         {

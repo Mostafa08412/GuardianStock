@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace IMS.Infrastructure.Persistence.Identity
 {
-    public class ApplicationUser : IdentityUser, IUser
+    public class ApplicationUser : IdentityUser<Guid>, IUser
     {
         public string FirstName { get; set; }
 

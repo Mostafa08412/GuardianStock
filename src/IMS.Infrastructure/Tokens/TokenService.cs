@@ -66,7 +66,7 @@ namespace IMS.Infrastructure.Tokens
             new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
             new Claim("FirstName", user.FirstName),
             new Claim("LastName", user.LastName),
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         });
 

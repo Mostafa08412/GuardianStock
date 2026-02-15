@@ -24,7 +24,7 @@ namespace IMS.Infrastructure.Authentication
     public sealed class IdentityService : IIdentityService
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ApplicationDbContext _context;
         private readonly ITokenService _tokenService;
@@ -32,7 +32,7 @@ namespace IMS.Infrastructure.Authentication
         private readonly IDateTime _dateTime;
         private readonly IConfiguration _configuration;
 
-        public IdentityService(IConfiguration configuration, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, SignInManager<ApplicationUser> signInManager, ApplicationDbContext context, ITokenService tokenService, IOptions<TokenSettings> tokenSettings, IDateTime dateTime)
+        public IdentityService(IConfiguration configuration, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole<Guid>> roleManager, SignInManager<ApplicationUser> signInManager, ApplicationDbContext context, ITokenService tokenService, IOptions<TokenSettings> tokenSettings, IDateTime dateTime)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -58,13 +58,13 @@ namespace IMS.Infrastructure.Authentication
                 Roles = roles
             };
         }
-        private async Task<Result<ApplicationUser>> ValidateUserByIdAsync(string userId, CancellationToken cancellationToken)
+        private async Task<Result<ApplicationUser>> ValidateUserByIdAsync(Guid userId, CancellationToken cancellationToken)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId.ToString());
 
             if ((user is null))
             {
-                return Result<ApplicationUser>.Failure(Errors.IdentityErrors.UserNotFoundById(userId));
+                return Result<ApplicationUser>.Failure(Errors.IdentityErrors.UserNotFoundById(userId.ToString()));
             }
             return Result<ApplicationUser>.Success(user);
         }
@@ -82,7 +82,7 @@ namespace IMS.Infrastructure.Authentication
         #endregion
 
         #region User Roles Management Methods    
-        public async Task<Result> AddRoleToUserAsync(string userId, string role, CancellationToken cancellationToken)
+        public async Task<Result> AddRoleToUserAsync(Guid userId, string role, CancellationToken cancellationToken)
         {
             var userResult = await ValidateUserByIdAsync(userId, cancellationToken);
             if (!userResult.IsSuccess)
@@ -98,7 +98,7 @@ namespace IMS.Infrastructure.Authentication
 
             return Result.Success();
         }
-        public async Task<Result> AddRolesToUserAsync(string userId, IEnumerable<string> roles, CancellationToken cancellationToken)
+        public async Task<Result> AddRolesToUserAsync(Guid userId, IEnumerable<string> roles, CancellationToken cancellationToken)
         {
             var appUserResult = await ValidateUserByIdAsync(userId, cancellationToken);
             if (!appUserResult.IsSuccess)
@@ -118,7 +118,7 @@ namespace IMS.Infrastructure.Authentication
 
             return Result.Success();
         }
-        public async Task<Result> RemoveRoleFromUserAsync(string userId, string role, CancellationToken cancellationToken)
+        public async Task<Result> RemoveRoleFromUserAsync(Guid userId, string role, CancellationToken cancellationToken)
         {
             var userResult = await ValidateUserByIdAsync(userId, cancellationToken);
             if (!userResult.IsSuccess)
@@ -134,7 +134,7 @@ namespace IMS.Infrastructure.Authentication
 
             return Result.Success();
         }
-        public async Task<Result<IEnumerable<string>>> GetUserRolesByUserIdAsync(string userId, CancellationToken cancellationToken)
+        public async Task<Result<IEnumerable<string>>> GetUserRolesByUserIdAsync(Guid userId, CancellationToken cancellationToken)
         {
             var userResult = await ValidateUserByIdAsync(userId, cancellationToken);
             if (!userResult.IsSuccess)
@@ -158,7 +158,7 @@ namespace IMS.Infrastructure.Authentication
         #endregion
 
         #region Get User Methods
-        public async Task<Result<IdentityUserDto>> GetUserByIdAsync(string userId, CancellationToken cancellationToken)
+        public async Task<Result<IdentityUserDto>> GetUserByIdAsync(Guid userId, CancellationToken cancellationToken)
         {
             var result = await ValidateUserByIdAsync(userId, cancellationToken);
 
@@ -316,13 +316,13 @@ namespace IMS.Infrastructure.Authentication
                 pageSize);
         }
 
-        public async Task<Result<UserDetailsDto>> GetUserDetailsAsync(string userId, CancellationToken cancellationToken = default)
+        public async Task<Result<UserDetailsDto>> GetUserDetailsAsync(Guid userId, CancellationToken cancellationToken = default)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId.ToString());
 
             if (user is null)
             {
-                return Result<UserDetailsDto>.Failure(Errors.IdentityErrors.UserNotFoundById(userId));
+                return Result<UserDetailsDto>.Failure(Errors.IdentityErrors.UserNotFoundById(userId.ToString()));
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -390,7 +390,7 @@ namespace IMS.Infrastructure.Authentication
             return Result<IdentityUserDto>.Success(identityUser);
         }
 
-        public async Task<Result> LockUserAsync(string userId, CancellationToken cancellationToken)
+        public async Task<Result> LockUserAsync(Guid userId, CancellationToken cancellationToken)
         {
             var userResult = await ValidateUserByIdAsync(userId, cancellationToken);
 
@@ -405,7 +405,7 @@ namespace IMS.Infrastructure.Authentication
             return Result.Success();
         }
 
-        public async Task<Result> UnlockUserAsync(string userId, CancellationToken cancellationToken)
+        public async Task<Result> UnlockUserAsync(Guid userId, CancellationToken cancellationToken)
         {
             var userResult = await ValidateUserByIdAsync(userId, cancellationToken);
 
@@ -530,10 +530,10 @@ namespace IMS.Infrastructure.Authentication
             return Result<AuthenticationResult>.Success(authResult);
         }
 
-        public async Task<Result> RevokeActiveRefreshTokenAsync(string userId, CancellationToken cancellationToken)
+        public async Task<Result> RevokeActiveRefreshTokenAsync(Guid userId, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(userId))
-                return Result.Failure(Errors.IdentityErrors.UserNotFoundById(userId));
+            if (userId == Guid.Empty)
+                return Result.Failure(Errors.IdentityErrors.UserNotFoundById(userId.ToString()));
 
             var user = await _userManager.Users
             .Where(X => X.Id == userId)
@@ -541,7 +541,7 @@ namespace IMS.Infrastructure.Authentication
             .FirstOrDefaultAsync(cancellationToken);
 
             if (user is null)
-                return Result.Failure(Errors.IdentityErrors.UserNotFoundById(userId));
+                return Result.Failure(Errors.IdentityErrors.UserNotFoundById(userId.ToString()));
 
             if (user.RefreshTokens.Any(X => X.IsActive))
             {
@@ -555,9 +555,9 @@ namespace IMS.Infrastructure.Authentication
 
             return Result.Success();
         }
-        public async Task<Result> ChangePasswordAsync(string userId, string currentPassword, string newPassword, string confirmNewPassword, CancellationToken cancellationToken)
+        public async Task<Result> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, string confirmNewPassword, CancellationToken cancellationToken)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId.ToString());
 
             if (user is null)
                 return Result.Failure(Errors.IdentityErrors.UserNotFound());
@@ -573,17 +573,17 @@ namespace IMS.Infrastructure.Authentication
 
 
         public async Task<Result<IdentityUserDto>> UpdateUserAsync(
-            string userId,
+            Guid userId,
             string firstName,
             string lastName,
             string? newRole,
             CancellationToken cancellationToken = default)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId.ToString());
 
             if (user is null)
             {
-                return Result<IdentityUserDto>.Failure(Errors.IdentityErrors.UserNotFoundById(userId));
+                return Result<IdentityUserDto>.Failure(Errors.IdentityErrors.UserNotFoundById(userId.ToString()));
             }
 
             user.FirstName = firstName;
@@ -631,6 +631,34 @@ namespace IMS.Infrastructure.Authentication
             }
 
             return Result<IdentityUserDto>.Success(MapToDto(user, currentRoles));
+        }
+
+        public async Task<Result<IdentityUserDto>> UpdateUserProfileAsync(
+            Guid userId,
+            string firstName,
+            string lastName,
+            CancellationToken cancellationToken = default)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+
+            if (user is null)
+            {
+                return Result<IdentityUserDto>.Failure(Errors.IdentityErrors.UserNotFoundById(userId.ToString()));
+            }
+
+            user.FirstName = firstName;
+            user.LastName = lastName;
+
+            var updateResult = await _userManager.UpdateAsync(user);
+
+            if (!updateResult.Succeeded)
+            {
+                return updateResult.ToResult<IdentityUserDto>();
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            return Result<IdentityUserDto>.Success(MapToDto(user, roles));
         }
 
         public async Task<Result<AuthenticationResult>> AuthenticateByGoogleTokenAsync(string googleTokenId, CancellationToken cancellationToken = default)

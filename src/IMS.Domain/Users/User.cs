@@ -11,7 +11,7 @@ namespace IMS.Domain.Users
         public string Username { get; private set; }
         public string Email { get; private set; }
 
-        private User(string id, string firstName, string lastName, string username, string email) : base(new Guid(id))
+        private User(Guid id, string firstName, string lastName, string username, string email) : base(id)
         {
             FirstName = firstName;
             LastName = lastName;
@@ -24,11 +24,11 @@ namespace IMS.Domain.Users
         {
         }
 
-        public static Result<User> Create(string id, string firstName, string lastName, string username, string email)
+        public static Result<User> Create(Guid id, string firstName, string lastName, string username, string email)
         {
             var errors = new List<Error>();
 
-            if (string.IsNullOrWhiteSpace(id))
+            if (id == Guid.Empty)
             {
                 errors.Add(Errors.UserErrors.IdIsRequired);
             }
@@ -61,6 +61,72 @@ namespace IMS.Domain.Users
             return Result<User>.Success(new User(id, firstName, lastName, username, email));
         }
 
+        public Result UpdateFirstName(string firstName)
+        {
+            if (string.IsNullOrWhiteSpace(firstName))
+            {
+                return Result.Failure(Errors.UserErrors.FirstNameIsRequired);
+            }
+
+            if (firstName.Length > 100)
+            {
+                return Result.Failure(Errors.UserErrors.FirstNameTooLong);
+            }
+
+            FirstName = firstName;
+
+            return Result.Success();
+        }
+
+        public Result UpdateLastName(string lastName)
+        {
+            if (string.IsNullOrWhiteSpace(lastName))
+            {
+                return Result.Failure(Errors.UserErrors.LastNameIsRequired);
+            }
+
+            if (lastName.Length > 100)
+            {
+                return Result.Failure(Errors.UserErrors.LastNameTooLong);
+            }
+
+            LastName = lastName;
+
+            return Result.Success();
+        }
+
+        public Result UpdateProfile(string firstName, string lastName)
+        {
+            var errors = new List<Error>();
+
+            if (string.IsNullOrWhiteSpace(firstName))
+            {
+                errors.Add(Errors.UserErrors.FirstNameIsRequired);
+            }
+            else if (firstName.Length > 100)
+            {
+                errors.Add(Errors.UserErrors.FirstNameTooLong);
+            }
+
+            if (string.IsNullOrWhiteSpace(lastName))
+            {
+                errors.Add(Errors.UserErrors.LastNameIsRequired);
+            }
+            else if (lastName.Length > 100)
+            {
+                errors.Add(Errors.UserErrors.LastNameTooLong);
+            }
+
+            if (errors.Any())
+            {
+                return Result.Failure(errors);
+            }
+
+            FirstName = firstName;
+            LastName = lastName;
+
+            return Result.Success();
+        }
 
     }
 }

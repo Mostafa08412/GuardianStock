@@ -8,7 +8,7 @@ namespace Domain.UnitTests.Builders;
 /// </summary>
 public class UserBuilder
 {
-    private string _id = Guid.NewGuid().ToString();
+    private Guid _id = Guid.NewGuid();
     private string _firstName = "John";
     private string _lastName = "Doe";
     private string _username = "johndoe";
@@ -28,14 +28,14 @@ public class UserBuilder
     /// </summary>
     public static UserBuilder CreateInvalid() => new UserBuilder
     {
-        _id = string.Empty,
+        _id = Guid.Empty,
         _firstName = string.Empty,
         _lastName = string.Empty,
         _username = string.Empty,
         _email = string.Empty
     };
 
-    public UserBuilder WithId(string id)
+    public UserBuilder WithId(Guid id)
     {
         _id = id;
         return this;

@@ -2,7 +2,7 @@
 {
     public sealed class AuthenticationResult
     {
-        public string UserId { get; init; }
+        public Guid UserId { get; init; }
         public string Email { get; init; }
         public string UserName { get; init; }
         public string FirstName { get; init; }

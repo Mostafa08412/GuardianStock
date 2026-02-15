@@ -4,7 +4,7 @@ namespace IMS.Infrastructure.Tokens
 {
     public class RefreshToken
     {
-        private RefreshToken(string userId, string token, DateTime expiresAtUTC)
+        private RefreshToken(Guid userId, string token, DateTime expiresAtUTC)
         {
             UserId = userId;
             Token = token;
@@ -17,7 +17,7 @@ namespace IMS.Infrastructure.Tokens
         }
 
 
-        public string UserId { get; init; }
+        public Guid UserId { get; init; }
 
         public ApplicationUser User { get; init; }
 
@@ -32,7 +32,7 @@ namespace IMS.Infrastructure.Tokens
         public bool IsActive => !IsExpired && !IsRevoked;
 
 
-        public static RefreshToken Create(string userId, string token, DateTime expiresAtUTC)
+        public static RefreshToken Create(Guid userId, string token, DateTime expiresAtUTC)
         {
             return new RefreshToken(userId, token, expiresAtUTC);
         }

@@ -14,7 +14,7 @@ public class ActivateUserCommandHandler : IRequestHandler<ActivateUserCommand, R
 
     public async Task<Result> Handle(ActivateUserCommand request, CancellationToken cancellationToken)
     {
-        var result = await _identityService.UnlockUserAsync(request.UserId, cancellationToken);
+        var result = await _identityService.UnlockUserAsync(Guid.Parse(request.UserId), cancellationToken);
 
         if (result.IsFailure)
 

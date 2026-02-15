@@ -15,7 +15,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Resul
     public async Task<Result> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
         var result = await _identityService.UpdateUserAsync(
-            request.UserId,
+            Guid.Parse(request.UserId),
             request.FirstName,
             request.LastName,
             request.Role,

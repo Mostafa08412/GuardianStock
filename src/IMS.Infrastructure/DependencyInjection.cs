@@ -269,7 +269,7 @@ namespace IMS.Infrastructure
         }
         public static IServiceCollection RegisterIdentity(this IServiceCollection services)
         {
-            services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+            services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
             {
 
                 options.Password.RequireDigit = true;

@@ -7,6 +7,8 @@ using IMS.Application.Auth.Common;
 using IMS.Application.Auth.GoogleLogin;
 using IMS.Application.Auth.Logout;
 using IMS.Application.Auth.RefreshToken;
+using IMS.Application.Auth.UpdateProfile;
+using IMS.Application.Contracts.Identity;
 using IMS.Domain.Core.Primitives.Result;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -155,6 +157,27 @@ namespace IMS.API.Controllers.v1
             OperationId = "GoogleLogin"
         )]
         public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginCommand request)
+        {
+            var result = await _sender.Send(request);
+
+            return HandleResult(result, ApplicationStatusCodes.Ok);
+        }
+
+        /// <summary>
+        /// Updates the profile information for the currently authenticated user.
+        /// </summary>
+        /// <param name="request">The update profile request containing the new first name and last name.</param>
+        /// <returns>The updated user details.</returns>
+        [Authorize]
+        [HttpPut(ApiRoutes.Authentication.UpdateProfile)]
+        [ProducesResponseType((int)ApplicationStatusCodes.Ok, Type = typeof(ApiResponse<IdentityUserDto>))]
+        [ProducesResponseType((int)ApplicationStatusCodes.BadRequest, Type = typeof(ApiResponse))]
+        [SwaggerOperation(
+            Summary = "Update profile",
+            Description = "Updates the first name and last name for the currently logged-in user.",
+            OperationId = "UpdateProfile"
+        )]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileCommand request)
         {
             var result = await _sender.Send(request);
 

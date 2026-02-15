@@ -9,22 +9,22 @@ public interface IIdentityService
     #region User Roles Management Methods
 
     Task<Result> AddRoleToUserAsync(
-        string userId,
+        Guid userId,
         string role,
         CancellationToken cancellationToken = default);
 
     Task<Result> AddRolesToUserAsync(
-        string userId,
+        Guid userId,
         IEnumerable<string> roles,
         CancellationToken cancellationToken = default);
 
     Task<Result> RemoveRoleFromUserAsync(
-        string userId,
+        Guid userId,
         string role,
         CancellationToken cancellationToken = default);
 
     Task<Result<IEnumerable<string>>> GetUserRolesByUserIdAsync(
-        string userId,
+        Guid userId,
         CancellationToken cancellationToken = default);
 
     #endregion
@@ -40,7 +40,7 @@ public interface IIdentityService
     #region Get User Methods
 
     Task<Result<IdentityUserDto>> GetUserByIdAsync(
-        string userId,
+        Guid userId,
         CancellationToken cancellationToken = default);
 
     Task<Result<IdentityUserDto>> GetUserByEmailAsync(
@@ -62,7 +62,7 @@ public interface IIdentityService
         CancellationToken cancellationToken = default);
 
     Task<Result<UserDetailsDto>> GetUserDetailsAsync(
-        string userId,
+        Guid userId,
         CancellationToken cancellationToken = default);
 
     #endregion
@@ -78,11 +78,11 @@ public interface IIdentityService
         string role = "Staff");
 
     Task<Result> LockUserAsync(
-        string userId,
+        Guid userId,
         CancellationToken cancellationToken = default);
 
     Task<Result> UnlockUserAsync(
-        string userId,
+        Guid userId,
         CancellationToken cancellationToken = default);
 
     Task<Result<AuthenticationResult>> AuthenticateAsync(
@@ -99,21 +99,27 @@ public interface IIdentityService
      CancellationToken cancellationToken = default);
 
     Task<Result> RevokeActiveRefreshTokenAsync(
-        string userId,
+        Guid userId,
         CancellationToken cancellationToken = default);
 
     Task<Result> ChangePasswordAsync(
-        string userId,
+        Guid userId,
         string currentPassword,
         string newPassword,
         string confirmNewPassword,
         CancellationToken cancellationToken = default);
 
     Task<Result<IdentityUserDto>> UpdateUserAsync(
-        string userId,
+        Guid userId,
         string firstName,
         string lastName,
         string? role,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<IdentityUserDto>> UpdateUserProfileAsync(
+        Guid userId,
+        string firstName,
+        string lastName,
         CancellationToken cancellationToken = default);
 
     Task<Result<IdentityUserDto>> CreateUserByGoogleTokenAsync(
