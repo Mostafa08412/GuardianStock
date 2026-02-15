@@ -19,12 +19,28 @@ namespace IMS.Infrastructure.Persistence
     public static class ApplicationDbContextInitializerDependencyInjection
     {
         // Changed to async Task to avoid async void side effects
-        public async static Task RegisterInitializer(this IHost applicationBuilder)
+        public async static Task ResetDatabaseIfExists(this IHost applicationBuilder)
+        {
+            using (var scope = applicationBuilder.Services.CreateScope())
+            {
+                var initializer = scope.ServiceProvider.GetRequiredService<ApplicationDbContextInitializer>();
+                await initializer.ClearDatabase();
+            }
+        }
+        public async static Task InitializeDatabase(this IHost applicationBuilder)
         {
             using (var scope = applicationBuilder.Services.CreateScope())
             {
                 var initializer = scope.ServiceProvider.GetRequiredService<ApplicationDbContextInitializer>();
                 await initializer.InitializeDatabase();
+            }
+        }
+
+        public async static Task SeedData(this IHost applicationBuilder)
+        {
+            using (var scope = applicationBuilder.Services.CreateScope())
+            {
+                var initializer = scope.ServiceProvider.GetRequiredService<ApplicationDbContextInitializer>();
                 await initializer.TrySeedAsync();
             }
         }
@@ -55,13 +71,24 @@ namespace IMS.Infrastructure.Persistence
             _dateTime = dateTime;
             _unitOfWork = unitOfWork;
         }
-
+        public async Task ClearDatabase()
+        {
+            _logger.LogInformation("Clearing database...");
+            try
+            {
+                await _context.Database.EnsureDeletedAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while clearing the database.");
+                throw;
+            }
+        }
         public async Task InitializeDatabase()
         {
             _logger.LogInformation("Initializing database...");
             try
             {
-                await _context.Database.EnsureDeletedAsync();
                 await _context.Database.EnsureCreatedAsync();
             }
             catch (Exception ex)
@@ -71,6 +98,7 @@ namespace IMS.Infrastructure.Persistence
             }
         }
 
+
         public async Task TrySeedAsync()
         {
             _logger.LogInformation("Seeding database...");
@@ -78,7 +106,6 @@ namespace IMS.Infrastructure.Persistence
             {
                 await SeedRoles();
                 await SeedApplicationUsers();
-                // Domain Seeding (Refactored to async Task)
                 await SeedDomainUserAsync();
                 await SeedCategoriesAsync();
                 await SeedProductsAsync();

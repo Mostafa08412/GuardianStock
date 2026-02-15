@@ -10,7 +10,15 @@ namespace IMS.API.Extensions
 
         public static void ConfigureMiddlewarePipeline(this WebApplication app, IConfiguration configuration)
         {
-            var useSeedData = configuration.GetSection("Seeding:UseSeedData").Get<bool>();
+            var resetDatabase = configuration.GetSection("InitializeDatabase:ResetDatabase").Get<bool>();
+            var InitialDatabase = configuration.GetSection("InitializeDatabase:InitializeDatabase").Get<bool>();
+            var seedData = configuration.GetSection("InitializeDatabase:SeedData").Get<bool>();
+            var importStatusChannel = configuration.GetSection("HubSettings:ImportProducts:Status").Get<string>();
+            var corsPolicyName = configuration.GetSection("CorsSettings:PolicyName").Get<string>();
+
+
+
+
 
             app.UseGloabalExceptionHandler();
 
@@ -27,13 +35,20 @@ namespace IMS.API.Extensions
                     options.DisplayRequestDuration();
                 });
             }
-            if (useSeedData)
-                app.RegisterInitializer();
+
+            if (resetDatabase)
+                app.ResetDatabaseIfExists().Wait();
+
+            if (InitialDatabase)
+                app.InitializeDatabase().Wait();
+
+            if (seedData)
+                app.SeedData().Wait();
 
 
-            app.MapHub<ImportHub>(configuration.GetSection("HubSettings:ImportProducts:Status").Get<string>());
+            app.MapHub<ImportHub>(importStatusChannel!);
             app.UseHangfireDashboard();
-            app.UseCors(configuration.GetSection("CorsSettings:PolicyName").Get<string>());
+            app.UseCors(corsPolicyName!);
             app.UseRouting();
             app.UseMiddleware<HandleAuthenticationErrorMiddleware>();
             app.UseAuthentication();
