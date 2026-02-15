@@ -6,18 +6,38 @@ using IMS.Domain.Core.Primitives.Result;
 
 public interface IIdentityService
 {
-    Task<Result<AuthenticationResult>> AuthenticateAsync(
-        string email,
-        string password,
+    #region User Roles Management Methods
+
+    Task<Result> AddRoleToUserAsync(
+        string userId,
+        string role,
         CancellationToken cancellationToken = default);
 
-    Task<Result<AuthenticationResult>> AuthenticateAsync(
-        string refreshToken,
+    Task<Result> AddRolesToUserAsync(
+        string userId,
+        IEnumerable<string> roles,
         CancellationToken cancellationToken = default);
 
-    Task<Result> RevokeActiveRefreshToken(
+    Task<Result> RemoveRoleFromUserAsync(
+        string userId,
+        string role,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<IEnumerable<string>>> GetUserRolesByUserIdAsync(
         string userId,
         CancellationToken cancellationToken = default);
+
+    #endregion
+
+    #region User Existence Validation Methods
+
+    Task<bool> EnsureEmailExistsAsync(
+        string email,
+        CancellationToken cancellationToken = default);
+
+    #endregion
+
+    #region Get User Methods
 
     Task<Result<IdentityUserDto>> GetUserByIdAsync(
         string userId,
@@ -28,56 +48,9 @@ public interface IIdentityService
         CancellationToken cancellationToken = default);
 
     Task<IEnumerable<string>> GetUsersEmailsByRoleAsync(
-    string role,
-    CancellationToken cancellationToken = default);
-
-    Task<Result<IEnumerable<string>>> GetUserRolesByUserIdAsync(
-        string userId,
-        CancellationToken cancellationToken = default);
-
-    Task<Result> CreateUserAsync(
-        string firstName,
-        string lastName,
-        string email,
-        string password,
-        CancellationToken cancellationToken = default,
-        string role = "Staff");
-
-    Task<Result> ChangePasswordAsync(
-        string userId,
-        string currentPassword,
-        string newPassword,
-        string confirmNewPassword,
-        CancellationToken cancellationToken = default);
-
-    Task<Result> AddRoleToUserAsync(
-        string userId,
         string role,
         CancellationToken cancellationToken = default);
 
-    Task<Result> RemoveRoleFromUserAsync(
-        string userId,
-        string role,
-        CancellationToken cancellationToken = default);
-
-    Task<Result> AddRolesToUserAsync(
-        string userId,
-        IEnumerable<string> roles,
-        CancellationToken cancellationToken = default);
-
-    Task<bool> EnsureEmailExistsAsync(
-        string email,
-        CancellationToken cancellationToken = default);
-
-    Task<Result> LockUser(
-        string userId,
-        CancellationToken cancellationToken = default);
-
-    Task<Result> UnlockUser(
-        string userId,
-        CancellationToken cancellationToken = default);
-
-    // User Management Extensions
     Task<PaginatedList<UserListItemDto>> ListUsersAsync(
         string? searchTerm,
         string? role,
@@ -92,10 +65,54 @@ public interface IIdentityService
         string userId,
         CancellationToken cancellationToken = default);
 
+    #endregion
+
+    #region User Management Methods
+
+    Task<Result> CreateUserAsync(
+        string firstName,
+        string lastName,
+        string email,
+        string password,
+        CancellationToken cancellationToken = default,
+        string role = "Staff");
+
+    Task<Result> LockUserAsync(
+        string userId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> UnlockUserAsync(
+        string userId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<AuthenticationResult>> AuthenticateAsync(
+        string email,
+        string password,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<AuthenticationResult>> AuthenticateByRefreshTokenAsync(
+     string refreshToken,
+     CancellationToken cancellationToken = default);
+
+
+
+    Task<Result> RevokeActiveRefreshTokenAsync(
+        string userId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> ChangePasswordAsync(
+        string userId,
+        string currentPassword,
+        string newPassword,
+        string confirmNewPassword,
+        CancellationToken cancellationToken = default);
+
     Task<Result> UpdateUserAsync(
         string userId,
         string firstName,
         string lastName,
         string role,
         CancellationToken cancellationToken = default);
+
+    #endregion
 }

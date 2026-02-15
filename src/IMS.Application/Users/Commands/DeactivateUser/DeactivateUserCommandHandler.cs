@@ -14,7 +14,7 @@ public class DeactivateUserCommandHandler : IRequestHandler<DeactivateUserComman
 
     public async Task<Result> Handle(DeactivateUserCommand request, CancellationToken cancellationToken)
     {
-        var result = await _identityService.LockUser(request.UserId, cancellationToken);
+        var result = await _identityService.LockUserAsync(request.UserId, cancellationToken);
 
         if (result.IsFailure)
 

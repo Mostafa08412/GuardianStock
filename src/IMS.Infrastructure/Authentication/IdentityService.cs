@@ -40,6 +40,7 @@ namespace IMS.Infrastructure.Authentication
         }
 
 
+        #region Private Helper Methods
         private static IdentityUserDto MapToDto(ApplicationUser user, IEnumerable<string> roles)
         {
             return new IdentityUserDto
@@ -52,7 +53,6 @@ namespace IMS.Infrastructure.Authentication
                 Roles = roles
             };
         }
-
         private async Task<Result<ApplicationUser>> ValidateUserByIdAsync(string userId, CancellationToken cancellationToken)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -74,7 +74,9 @@ namespace IMS.Infrastructure.Authentication
             }
             return Result<ApplicationUser>.Success(user);
         }
+        #endregion
 
+        #region User Roles Management Methods    
         public async Task<Result> AddRoleToUserAsync(string userId, string role, CancellationToken cancellationToken)
         {
             var userResult = await ValidateUserByIdAsync(userId, cancellationToken);
@@ -91,7 +93,6 @@ namespace IMS.Infrastructure.Authentication
 
             return Result.Success();
         }
-
         public async Task<Result> AddRolesToUserAsync(string userId, IEnumerable<string> roles, CancellationToken cancellationToken)
         {
             var appUserResult = await ValidateUserByIdAsync(userId, cancellationToken);
@@ -112,7 +113,36 @@ namespace IMS.Infrastructure.Authentication
 
             return Result.Success();
         }
+        public async Task<Result> RemoveRoleFromUserAsync(string userId, string role, CancellationToken cancellationToken)
+        {
+            var userResult = await ValidateUserByIdAsync(userId, cancellationToken);
+            if (!userResult.IsSuccess)
+                return Result.Failure(userResult.Errors);
 
+            var roleExists = await _roleManager.RoleExistsAsync(role);
+            if (!roleExists)
+                return Result.Failure(Errors.Identity.RoleNotFound(role));
+
+            var identityResult = await _userManager.RemoveFromRoleAsync(userResult.Value!, role);
+            if (!identityResult.Succeeded)
+                return identityResult.ToResult();
+
+            return Result.Success();
+        }
+        public async Task<Result<IEnumerable<string>>> GetUserRolesByUserIdAsync(string userId, CancellationToken cancellationToken)
+        {
+            var userResult = await ValidateUserByIdAsync(userId, cancellationToken);
+            if (!userResult.IsSuccess)
+                return Result<IEnumerable<string>>.Failure(userResult.Errors);
+
+            var roles = await _userManager.GetRolesAsync(userResult.Value!);
+            return Result<IEnumerable<string>>.Success(roles);
+        }
+
+
+        #endregion
+
+        #region User Existence Validation Methods
         public async Task<bool> EnsureEmailExistsAsync(string email, CancellationToken cancellationToken)
         {
             var user = await _userManager.FindByEmailAsync(email);
@@ -120,6 +150,9 @@ namespace IMS.Infrastructure.Authentication
             return user != null;
         }
 
+        #endregion
+
+        #region Get User Methods
         public async Task<Result<IdentityUserDto>> GetUserByIdAsync(string userId, CancellationToken cancellationToken)
         {
             var result = await ValidateUserByIdAsync(userId, cancellationToken);
@@ -149,246 +182,6 @@ namespace IMS.Infrastructure.Authentication
             var appUser = MapToDto(result.Value!, userRoles);
 
             return Result<IdentityUserDto>.Success(appUser);
-        }
-
-        public async Task<Result<IEnumerable<string>>> GetUserRolesByUserIdAsync(string userId, CancellationToken cancellationToken)
-        {
-            var userResult = await ValidateUserByIdAsync(userId, cancellationToken);
-            if (!userResult.IsSuccess)
-                return Result<IEnumerable<string>>.Failure(userResult.Errors);
-
-            var roles = await _userManager.GetRolesAsync(userResult.Value!);
-            return Result<IEnumerable<string>>.Success(roles);
-        }
-
-        public async Task<Result> RemoveRoleFromUserAsync(string userId, string role, CancellationToken cancellationToken)
-        {
-            var userResult = await ValidateUserByIdAsync(userId, cancellationToken);
-            if (!userResult.IsSuccess)
-                return Result.Failure(userResult.Errors);
-
-            var roleExists = await _roleManager.RoleExistsAsync(role);
-            if (!roleExists)
-                return Result.Failure(Errors.Identity.RoleNotFound(role));
-
-            var identityResult = await _userManager.RemoveFromRoleAsync(userResult.Value!, role);
-            if (!identityResult.Succeeded)
-                return identityResult.ToResult();
-
-            return Result.Success();
-        }
-
-        public async Task<Result> CreateUserAsync(string firstName, string lastName, string email, string password, CancellationToken cancellationToken, string role = Roles.Staff)
-        {
-            var user = await _userManager.FindByEmailAsync(email);
-
-            if (user != null)
-                return Result.Failure(Errors.Identity.EmailAlreadyExists);
-
-            ApplicationUser applicationUser = new ApplicationUser
-            {
-                FirstName = firstName,
-                LastName = lastName,
-                Email = email,
-                UserName = email
-
-            };
-
-            var identityResult = await _userManager.CreateAsync(applicationUser, password);
-
-
-            if (!identityResult.Succeeded)
-
-                return identityResult.ToResult();
-
-
-            var addToRoleResult = await _userManager.AddToRoleAsync(applicationUser, role);
-
-            if (!addToRoleResult.Succeeded)
-
-                return addToRoleResult.ToResult();
-
-            return Result.Success();
-        }
-
-        public async Task<Result> LockUser(string userId, CancellationToken cancellationToken)
-        {
-            var userResult = await ValidateUserByIdAsync(userId, cancellationToken);
-
-            if (!userResult.IsSuccess)
-                return Result.Failure(userResult.Errors);
-
-            var setResult = await _userManager.SetLockoutEndDateAsync(userResult.Value!, _dateTime.UTCNow.AddYears(2));
-
-            if (!setResult.Succeeded)
-                return Result.Failure(userResult.Errors);
-
-            return Result.Success();
-        }
-
-        public async Task<Result> UnlockUser(string userId, CancellationToken cancellationToken)
-        {
-            var userResult = await ValidateUserByIdAsync(userId, cancellationToken);
-
-            if (!userResult.IsSuccess)
-                return Result.Failure(userResult.Errors);
-
-            var setResult = await _userManager.SetLockoutEndDateAsync(userResult.Value!, null);
-
-            if (!setResult.Succeeded)
-                return Result.Failure(userResult.Errors);
-
-            return Result.Success();
-
-        }
-
-        public async Task<Result<AuthenticationResult>> AuthenticateAsync(string email, string password, CancellationToken cancellationToken)
-        {
-            var user = await _userManager.Users
-                .Where(X => X.Email == email)
-                .Include(X => X.RefreshTokens)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (user == null)
-                return Result<AuthenticationResult>.Failure(Errors.Identity.InvalidCredentials);
-
-
-            var result = await _signInManager.CheckPasswordSignInAsync(user, password, true);
-
-
-            if (!result.Succeeded && !result.IsLockedOut)
-                return Result<AuthenticationResult>.Failure(Errors.Identity.InvalidCredentials);
-
-            if (!result.Succeeded && result.IsLockedOut)
-                return Result<AuthenticationResult>.Failure(Errors.Identity.UserLockout);
-
-
-            var userRoles = await _userManager.GetRolesAsync(user);
-
-            var accessToken = _tokenService.GenerateAccessToken(user, userRoles);
-
-
-            user.LastLoginDate = _dateTime.UTCNow;
-            await _userManager.UpdateAsync(user);
-
-            RefreshToken refreshToken;
-
-            if (!user.RefreshTokens.Any(X => X.IsActive))
-            {
-                var newRefreshToken = _tokenService.GenerateRefreshToken();
-                refreshToken = RefreshToken.Create(user.Id, newRefreshToken.Item1, newRefreshToken.Item2);
-                user.RefreshTokens.Add(refreshToken);
-                await _userManager.UpdateAsync(user);
-            }
-            else
-            {
-                refreshToken = user.RefreshTokens.First(X => X.IsActive);
-            }
-
-            var authResult = new AuthenticationResult
-            {
-                UserId = user.Id,
-                Email = user.Email!,
-                UserName = user.UserName!,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Roles = userRoles,
-                AccessToken = accessToken.Item1,
-                AccessTokenExpiresAt = accessToken.Item2,
-                RefreshToken = refreshToken.Token,
-                RefreshTokenExpiresAt = refreshToken.ExpiresAtUTC
-            };
-
-
-            return Result<AuthenticationResult>.Success(authResult);
-
-
-        }
-
-        public async Task<Result<AuthenticationResult>> AuthenticateAsync(string refreshToken, CancellationToken cancellationToken)
-        {
-
-
-            if (string.IsNullOrEmpty(refreshToken))
-                return Result<AuthenticationResult>.Failure(Errors.Identity.InvalidToken);
-
-            var user = await _userManager.Users
-                .AsNoTracking()
-                .Where(X => X.RefreshTokens
-                .Any(X => X.Token == refreshToken))
-                .FirstOrDefaultAsync(cancellationToken);
-
-
-
-            if (user is null)
-                return Result<AuthenticationResult>.Failure(Errors.Identity.InvalidToken);
-
-            var RefreshToken = user.RefreshTokens.First(x => x.Token == refreshToken);
-
-            if (!RefreshToken.IsActive)
-                return Result<AuthenticationResult>.Failure(Errors.Identity.InvalidToken);
-
-
-            var userRoles = await _userManager.GetRolesAsync(user);
-
-            var accessToken = _tokenService.GenerateAccessToken(user, userRoles);
-
-
-            var authResult = new AuthenticationResult
-            {
-                UserId = user.Id,
-                Email = user.Email!,
-                UserName = user.UserName!,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Roles = userRoles,
-                AccessToken = accessToken.Item1,
-                AccessTokenExpiresAt = accessToken.Item2,
-                RefreshToken = RefreshToken.Token,
-                RefreshTokenExpiresAt = RefreshToken.ExpiresAtUTC
-            };
-
-            return Result<AuthenticationResult>.Success(authResult);
-        }
-
-        public async Task<Result> RevokeActiveRefreshToken(string userId, CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrEmpty(userId))
-                return Result.Failure(Errors.Identity.UserNotFoundById(userId));
-
-            var user = await _userManager.Users
-            .Where(X => X.Id == userId)
-             .Include(X => X.RefreshTokens)
-            .FirstOrDefaultAsync(cancellationToken);
-
-            if (user is null)
-                return Result.Failure(Errors.Identity.UserNotFoundById(userId));
-
-            if (user.RefreshTokens.Any(X => X.IsActive))
-            {
-                var refreshToken = user.RefreshTokens.First(X => X.IsActive);
-                refreshToken.Revoke(_dateTime.UTCNow);
-                await _userManager.UpdateAsync(user);
-            }
-
-
-
-
-            return Result.Success();
-        }
-        public async Task<Result> ChangePasswordAsync(string userId, string currentPassword, string newPassword, string confirmNewPassword, CancellationToken cancellationToken)
-        {
-            var user = await _userManager.FindByIdAsync(userId);
-
-            if (user is null)
-                return Result.Failure(Errors.Identity.UserNotFound());
-
-            var identityResult = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
-
-            return identityResult.ToResult();
-
-
-
         }
 
         public async Task<IEnumerable<string>> GetUsersEmailsByRoleAsync(string role, CancellationToken cancellationToken = default)
@@ -546,6 +339,230 @@ namespace IMS.Infrastructure.Authentication
 
             return Result<UserDetailsDto>.Success(userDto);
         }
+        #endregion
+
+        #region User Management Methods
+
+        public async Task<Result> CreateUserAsync(
+            string firstName,
+            string lastName,
+            string email,
+            string password,
+            CancellationToken cancellationToken,
+            string role = Roles.Staff)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user != null)
+                return Result.Failure(Errors.Identity.EmailAlreadyExists);
+
+            ApplicationUser applicationUser = new ApplicationUser
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                Email = email,
+                UserName = email
+
+            };
+
+            var identityResult = await _userManager.CreateAsync(applicationUser, password);
+
+
+            if (!identityResult.Succeeded)
+
+                return identityResult.ToResult();
+
+
+            var addToRoleResult = await _userManager.AddToRoleAsync(applicationUser, role);
+
+            if (!addToRoleResult.Succeeded)
+
+                return addToRoleResult.ToResult();
+
+            return Result.Success();
+        }
+
+        public async Task<Result> LockUserAsync(string userId, CancellationToken cancellationToken)
+        {
+            var userResult = await ValidateUserByIdAsync(userId, cancellationToken);
+
+            if (!userResult.IsSuccess)
+                return Result.Failure(userResult.Errors);
+
+            var setResult = await _userManager.SetLockoutEndDateAsync(userResult.Value!, _dateTime.UTCNow.AddYears(2));
+
+            if (!setResult.Succeeded)
+                return Result.Failure(userResult.Errors);
+
+            return Result.Success();
+        }
+
+        public async Task<Result> UnlockUserAsync(string userId, CancellationToken cancellationToken)
+        {
+            var userResult = await ValidateUserByIdAsync(userId, cancellationToken);
+
+            if (!userResult.IsSuccess)
+                return Result.Failure(userResult.Errors);
+
+            var setResult = await _userManager.SetLockoutEndDateAsync(userResult.Value!, null);
+
+            if (!setResult.Succeeded)
+                return Result.Failure(userResult.Errors);
+
+            return Result.Success();
+
+        }
+
+        public async Task<Result<AuthenticationResult>> AuthenticateAsync(string email, string password, CancellationToken cancellationToken)
+        {
+            var user = await _userManager.Users
+                .Where(X => X.Email == email)
+                .Include(X => X.RefreshTokens)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (user == null)
+                return Result<AuthenticationResult>.Failure(Errors.Identity.InvalidCredentials);
+
+
+            var result = await _signInManager.CheckPasswordSignInAsync(user, password, true);
+
+
+            if (!result.Succeeded && !result.IsLockedOut)
+                return Result<AuthenticationResult>.Failure(Errors.Identity.InvalidCredentials);
+
+            if (!result.Succeeded && result.IsLockedOut)
+                return Result<AuthenticationResult>.Failure(Errors.Identity.UserLockout);
+
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            var accessToken = _tokenService.GenerateAccessToken(user, userRoles);
+
+
+            user.LastLoginDate = _dateTime.UTCNow;
+            await _userManager.UpdateAsync(user);
+
+            RefreshToken refreshToken;
+
+            if (!user.RefreshTokens.Any(X => X.IsActive))
+            {
+                var newRefreshToken = _tokenService.GenerateRefreshToken();
+                refreshToken = RefreshToken.Create(user.Id, newRefreshToken.Item1, newRefreshToken.Item2);
+                user.RefreshTokens.Add(refreshToken);
+                await _userManager.UpdateAsync(user);
+            }
+            else
+            {
+                refreshToken = user.RefreshTokens.First(X => X.IsActive);
+            }
+
+            var authResult = new AuthenticationResult
+            {
+                UserId = user.Id,
+                Email = user.Email!,
+                UserName = user.UserName!,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Roles = userRoles,
+                AccessToken = accessToken.Item1,
+                AccessTokenExpiresAt = accessToken.Item2,
+                RefreshToken = refreshToken.Token,
+                RefreshTokenExpiresAt = refreshToken.ExpiresAtUTC
+            };
+
+
+            return Result<AuthenticationResult>.Success(authResult);
+
+
+        }
+
+        public async Task<Result<AuthenticationResult>> AuthenticateByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
+        {
+
+
+            if (string.IsNullOrEmpty(refreshToken))
+                return Result<AuthenticationResult>.Failure(Errors.Identity.InvalidToken);
+
+            var user = await _userManager.Users
+                .AsNoTracking()
+                .Where(X => X.RefreshTokens
+                .Any(X => X.Token == refreshToken))
+                .FirstOrDefaultAsync(cancellationToken);
+
+
+
+            if (user is null)
+                return Result<AuthenticationResult>.Failure(Errors.Identity.InvalidToken);
+
+            var RefreshToken = user.RefreshTokens.First(x => x.Token == refreshToken);
+
+            if (!RefreshToken.IsActive)
+                return Result<AuthenticationResult>.Failure(Errors.Identity.InvalidToken);
+
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            var accessToken = _tokenService.GenerateAccessToken(user, userRoles);
+
+
+            var authResult = new AuthenticationResult
+            {
+                UserId = user.Id,
+                Email = user.Email!,
+                UserName = user.UserName!,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Roles = userRoles,
+                AccessToken = accessToken.Item1,
+                AccessTokenExpiresAt = accessToken.Item2,
+                RefreshToken = RefreshToken.Token,
+                RefreshTokenExpiresAt = RefreshToken.ExpiresAtUTC
+            };
+
+            return Result<AuthenticationResult>.Success(authResult);
+        }
+
+        public async Task<Result> RevokeActiveRefreshTokenAsync(string userId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(userId))
+                return Result.Failure(Errors.Identity.UserNotFoundById(userId));
+
+            var user = await _userManager.Users
+            .Where(X => X.Id == userId)
+             .Include(X => X.RefreshTokens)
+            .FirstOrDefaultAsync(cancellationToken);
+
+            if (user is null)
+                return Result.Failure(Errors.Identity.UserNotFoundById(userId));
+
+            if (user.RefreshTokens.Any(X => X.IsActive))
+            {
+                var refreshToken = user.RefreshTokens.First(X => X.IsActive);
+                refreshToken.Revoke(_dateTime.UTCNow);
+                await _userManager.UpdateAsync(user);
+            }
+
+
+
+
+            return Result.Success();
+        }
+        public async Task<Result> ChangePasswordAsync(string userId, string currentPassword, string newPassword, string confirmNewPassword, CancellationToken cancellationToken)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user is null)
+                return Result.Failure(Errors.Identity.UserNotFound());
+
+            var identityResult = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+
+            return identityResult.ToResult();
+
+
+
+        }
+
+
 
         public async Task<Result> UpdateUserAsync(
             string userId,
@@ -610,5 +627,7 @@ namespace IMS.Infrastructure.Authentication
 
             return Result.Success();
         }
+        #endregion
+
     }
 }

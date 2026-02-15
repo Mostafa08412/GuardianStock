@@ -17,7 +17,7 @@ namespace IMS.Application.Auth.Logout
 
         public async Task<Result> Handle(LogoutCommand request, CancellationToken cancellationToken)
         {
-            return await _identityService.RevokeActiveRefreshToken(_currentUser.UserId);
+            return await _identityService.RevokeActiveRefreshTokenAsync(_currentUser.UserId);
         }
     }
 }

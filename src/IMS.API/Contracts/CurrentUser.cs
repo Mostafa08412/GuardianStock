@@ -6,12 +6,12 @@ namespace IMS.API.Contracts
     public sealed class CurrentUser : ICurrentUser
     {
 
-        private readonly HttpContext httpContext;
+        private readonly HttpContext? _httpContext;
 
         public CurrentUser(IHttpContextAccessor? httpContextAccessor)
         {
 
-            this.httpContext = httpContextAccessor!.HttpContext!;
+            _httpContext = httpContextAccessor?.HttpContext;
         }
 
         public string UserId
@@ -19,15 +19,17 @@ namespace IMS.API.Contracts
             get
             {
 
-                ClaimsPrincipal? user = httpContext?.User;
+                if (_httpContext == null)
+                    return "System";
+
+                ClaimsPrincipal? user = _httpContext.User;
 
                 bool IsAuthenticated = user?.Identity?.IsAuthenticated ?? false;
 
                 if (!IsAuthenticated)
-                    return "Unkown";
+                    return "Anonymous";
 
-                else
-                    return httpContext!.User.Claims.FirstOrDefault(X => X.Type == ClaimTypes.NameIdentifier)!.Value;
+                return user!.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Unkown";
 
             }
 

@@ -16,7 +16,7 @@ namespace IMS.Application.Auth.RefreshToken
 
         public async Task<Result<AuthenticationResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
         {
-            var result = await _identityService.AuthenticateAsync(
+            var result = await _identityService.AuthenticateByRefreshTokenAsync(
            request.refreshToken,
            cancellationToken);
 
