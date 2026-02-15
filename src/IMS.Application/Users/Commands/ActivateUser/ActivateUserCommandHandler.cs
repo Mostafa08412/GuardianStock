@@ -17,12 +17,9 @@ public class ActivateUserCommandHandler : IRequestHandler<ActivateUserCommand, R
         var result = await _identityService.UnlockUser(request.UserId, cancellationToken);
 
         if (result.IsFailure)
-        {
-            if (result.Errors.Any(e => e.Code == "Identity.UserNotFoundById"))
-                return Result.Failure(ApplicationErrors.UserErrors.NotFound(request.UserId));
 
             return Result.Failure(result.Errors);
-        }
+
 
         return Result.Success();
     }

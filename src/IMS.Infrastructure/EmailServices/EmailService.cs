@@ -67,5 +67,42 @@ namespace IMS.Infrastructure.EmailServices
 
             return Result.Success();
         }
+
+        public async Task<Result> SendUserCreatedEmailAsync(
+            string to,
+            string fullName,
+            string email,
+            string password,
+            CancellationToken cancellationToken)
+        {
+            var emailModel = new UserCreatedEmailModel
+            {
+                FullName = fullName,
+                Email = email,
+                Password = password,
+                LoginUrl = "https://your-app.com/login"
+            };
+
+            string templatePath = Path.Combine(AppContext.BaseDirectory, "EmailServices", "EmailTemplates", "UserCreatedEmail.cshtml");
+
+            ServicePointManager.FindServicePoint(new Uri($"http://{smtpSettings.SmtpPort}")).ConnectionLimit = 1;
+
+            var result = await fluentEmail
+                .To(to)
+                .Subject("Your Account Has Been Created")
+                .UsingTemplateFromFile(templatePath, emailModel)
+                .SendAsync(cancellationToken);
+
+            if (!result.Successful)
+            {
+                var errorMessage = string.Join(',', result.ErrorMessages);
+                logger.LogWarning("Sending User Created Email Failed: Reason {reason}", errorMessage);
+                return Result.Failure(new Error("Email.SendFailed", errorMessage, ErrorType.Failure));
+            }
+
+            logger.LogInformation("User Created Email sent successfully to {Email}", email);
+
+            return Result.Success();
+        }
     }
 }

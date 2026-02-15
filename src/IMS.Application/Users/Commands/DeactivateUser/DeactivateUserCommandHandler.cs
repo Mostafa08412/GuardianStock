@@ -17,12 +17,9 @@ public class DeactivateUserCommandHandler : IRequestHandler<DeactivateUserComman
         var result = await _identityService.LockUser(request.UserId, cancellationToken);
 
         if (result.IsFailure)
-        {
-            if (result.Errors.Any(e => e.Code == "Identity.UserNotFoundById"))
-                return Result.Failure(ApplicationErrors.UserErrors.NotFound(request.UserId));
 
             return Result.Failure(result.Errors);
-        }
+
 
         return Result.Success();
     }

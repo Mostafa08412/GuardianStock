@@ -29,8 +29,8 @@ namespace IMS.Application.Transactions.Queries.GetTransaction
 
                         select new TransactionDetailsDto(
                             transaction.Id,
-                            product != null ? product.Name : "Unknown",
-                            product != null ? product.Sku : "N/A",
+                            product.Name,
+                            product.Sku,
                             transaction.UnitPrice,
                             transaction.Quantity,
                             transaction.UnitPrice * transaction.Quantity,

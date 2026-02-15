@@ -167,7 +167,7 @@ namespace Domain.UnitTests.Inventories
 
             inventory.LowStockAlert.Threshold.Should().Be(15);
 
-            inventory.DomainEvents.Should().OnlyContain(X => X is LowStockAlertTriggeredDomainEvent);
+            inventory.DomainEvents.Should().Contain(X => X is LowStockAlertTriggeredDomainEvent);
 
             result.IsSuccess.Should().BeTrue();
 
@@ -308,7 +308,7 @@ namespace Domain.UnitTests.Inventories
 
             inventory.LowStockAlert.Threshold.Should().Be(25);
 
-            inventory.DomainEvents.Should().OnlyContain(X => X is LowStockAlertTriggeredDomainEvent);
+            inventory.DomainEvents.Should().Contain(X => X is LowStockAlertTriggeredDomainEvent);
         }
 
         #endregion

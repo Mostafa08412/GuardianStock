@@ -24,17 +24,12 @@ namespace IMS.Infrastructure.Tokens
         public string Token { get; init; }
 
         public DateTime CreatedAtUTC { get; init; } = DateTime.UtcNow;
-
         public DateTime? RevokedAtUTC { get; private set; }
-        public bool IsRevoked => RevokedAtUTC != null;
-
-
         public DateTime ExpiresAtUTC { get; init; }
+
+        public bool IsRevoked => RevokedAtUTC != null;
         public bool IsExpired => ExpiresAtUTC <= DateTime.UtcNow;
-
-
         public bool IsActive => !IsExpired && !IsRevoked;
-
 
 
         public static RefreshToken Create(string userId, string token, DateTime expiresAtUTC)

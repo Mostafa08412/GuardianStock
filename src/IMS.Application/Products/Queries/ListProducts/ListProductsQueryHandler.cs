@@ -17,8 +17,7 @@ public class ListProductsQueryHandler : IRequestHandler<ListProductsQuery, Resul
 
     public async Task<Result<PaginatedList<ProductListItemDto>>> Handle(ListProductsQuery request, CancellationToken cancellationToken)
     {
-        // TODO: Implement query logic
-        // 1. Build query with filters (SearchTerm, CategoryId, HasLowStockAlert)
+
         var query = _context.Products.AsNoTracking().AsQueryable().OrderBy(X => X.Id).AsQueryable();
         var InventoryQuery = _context.Inventories.AsNoTracking().AsNoTracking();
         var CategoryQuery = _context.Categories.AsNoTracking().AsNoTracking();

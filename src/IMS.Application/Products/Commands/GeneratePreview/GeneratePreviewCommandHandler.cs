@@ -17,10 +17,10 @@ namespace IMS.Application.Products.Commands.GeneratePreview
         private readonly IUnitOfWork unitOfWork;
         private readonly ISkuGenerator skuGenerator;
         private readonly HybridCache hybridCache;
-        private readonly ISignalService signalService;
+        private readonly IImportService signalService;
 
 
-        public GeneratePreviewCommandHandler(IProductCsvReader productCsvReader, IUnitOfWork unitOfWork, ISkuGenerator skuGenerator, HybridCache hybridCache, ISignalService signalService)
+        public GeneratePreviewCommandHandler(IProductCsvReader productCsvReader, IUnitOfWork unitOfWork, ISkuGenerator skuGenerator, HybridCache hybridCache, IImportService signalService)
         {
             this.productCsvReader = productCsvReader;
             this.unitOfWork = unitOfWork;

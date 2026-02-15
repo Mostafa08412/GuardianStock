@@ -19,6 +19,7 @@
         {
             public const string Base = Root + $"/users";
             public const string GetById = "{userId}";
+            public const string Create = "";
             public const string Update = "{userId}";
             public const string Activate = "{userId}/activate";
             public const string Deactivate = "{userId}/deactivate";
@@ -62,13 +63,19 @@
             public const string RecordPurchase = "purchase";
         }
 
+        public static class Inventories
+        {
+            public const string Base = Root + $"/inventories";
+            public const string GetAll = "";
+            public const string GetById = "{inventoryId}";
+            public const string GetSummary = "summary";
+            public const string AdjustThreshold = "{inventoryId}/adjust-threshold";
+        }
+
         public static class Alerts
         {
             public const string Base = Root + $"/alerts";
             public const string GetAll = "";
-            public const string GetDetails = "{inventoryId}";
-            public const string GetSummary = "summary";
-            public const string AdjustThreshold = "{inventoryId}/adjust-threshold";
             public const string Dismiss = "{inventoryId}/dismiss";
         }
     }

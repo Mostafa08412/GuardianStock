@@ -16,15 +16,12 @@ namespace IMS.Infrastructure.Persistence
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplicationDbContext
     {
-
-
         public DbSet<User> BusinessUsers { get; private set; }
         public DbSet<RefreshToken> RefreshTokens { get; private set; }
         public DbSet<Product> Products { get; private set; }
         public DbSet<Category> Categories { get; private set; }
         public DbSet<Inventory> Inventories { get; private set; }
         public DbSet<Transaction> Transactions { get; private set; }
-
         public DbSet<StockHistory> StockHistories { get; private set; }
         public DatabaseFacade DB { get; private set; }
 
@@ -43,8 +40,6 @@ namespace IMS.Infrastructure.Persistence
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-
-
             return await base.SaveChangesAsync(cancellationToken);
         }
     }

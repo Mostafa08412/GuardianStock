@@ -4,9 +4,9 @@ using IMS.API.Contracts.Examples;
 using IMS.API.Infrastructure;
 using IMS.Application.Common.Models;
 using IMS.Application.Users.Commands.ActivateUser;
+using IMS.Application.Users.Commands.CreateUser;
 using IMS.Application.Users.Commands.DeactivateUser;
 using IMS.Application.Users.Commands.UpdateUser;
-using IMS.Application.Users.Queries;
 using IMS.Application.Users.Queries.GetUser;
 using IMS.Application.Users.Queries.ListUsers;
 using IMS.Domain.Core.Primitives.Result;
@@ -62,17 +62,36 @@ public class UsersController : BaseController
     /// <param name="query">The query containing the User ID.</param>
     /// <returns>Detailed user profile information.</returns>
     [HttpGet(ApiRoutes.Users.GetById)]
-    [ProducesResponseType((int)ApplicationStatusCodes.Ok, Type = typeof(ApiResponse<UserDto>))]
-    [ProducesResponseType((int)ApplicationStatusCodes.NotFound, Type = typeof(ApiResponse<UserDto>))]
+    [ProducesResponseType((int)ApplicationStatusCodes.Ok, Type = typeof(ApiResponse<UserDetailsDto>))]
+    [ProducesResponseType((int)ApplicationStatusCodes.NotFound, Type = typeof(ApiResponse<UserDetailsDto>))]
     [SwaggerOperation(
         Summary = "Get user by ID",
         Description = "Retrieves full details for a single user using their unique identifier.",
         OperationId = "GetUserById"
     )]
-    public async Task<IActionResult> GetUser([FromRoute] GetUserQuery query)
+    public async Task<IActionResult> GetUser([FromRoute] GetUserDetailsQuery query)
     {
         var result = await _sender.Send(query);
         return HandleResult(result, ApplicationStatusCodes.Ok);
+    }
+
+    /// <summary>
+    /// Creates a new user account.
+    /// </summary>
+    /// <param name="command">The user creation details.</param>
+    /// <returns>No content on success.</returns>
+    [HttpPost(ApiRoutes.Users.Create)]
+    [ProducesResponseType((int)ApplicationStatusCodes.Created)]
+    [ProducesResponseType((int)ApplicationStatusCodes.BadRequest)]
+    [SwaggerOperation(
+        Summary = "Create user",
+        Description = "Creates a new user account with the specified role. Requires Admin privileges.",
+        OperationId = "CreateUser"
+    )]
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserCommand command)
+    {
+        var result = await _sender.Send(command);
+        return HandleResult(result, ApplicationStatusCodes.Created);
     }
 
     /// <summary>
@@ -89,7 +108,7 @@ public class UsersController : BaseController
         Description = "Updates user profile details. The ID in the route must match the ID in the request body.",
         OperationId = "UpdateUser"
     )]
-    public async Task<IActionResult> UpdateUser(string userId, [FromBody] UpdateUserCommand command)
+    public async Task<IActionResult> UpdateUser([FromRoute] string userId, [FromBody] UpdateUserCommand command)
     {
         if (userId != command.UserId)
         {

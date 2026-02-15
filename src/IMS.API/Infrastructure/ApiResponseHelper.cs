@@ -2,6 +2,7 @@
 using IMS.Application.Common.Models;
 using IMS.Domain.Core.Primitives;
 using IMS.Domain.Core.Primitives.Result;
+using MediatR;
 
 namespace IMS.API.Infrastructure
 {
@@ -18,10 +19,9 @@ namespace IMS.API.Infrastructure
         {
             if (result.IsSuccess) return (int)onSuccess;
 
-            return result.Error.ErrorType switch
+            return result.Error!.ErrorType switch
             {
-                ErrorType.Validation => (int)ApplicationStatusCodes.BadRequest,
-                ErrorType.Failure => (int)ApplicationStatusCodes.BadRequest,
+                ErrorType.Validation or ErrorType.Failure => (int)ApplicationStatusCodes.BadRequest,
                 ErrorType.IdentityError => (int)ApplicationStatusCodes.Unauthorized,
                 ErrorType.NotFound => (int)ApplicationStatusCodes.NotFound,
                 ErrorType.Conflict => (int)ApplicationStatusCodes.Conflict,
@@ -74,7 +74,7 @@ namespace IMS.API.Infrastructure
                 errorCode,
                 validationErrors,
                 new Dictionary<string, string>(),
-                context.Request.Path.Value,
+                context.Request.Path.Value ?? "Unknown",
                 context.TraceIdentifier);
 
             return response;
@@ -98,7 +98,7 @@ namespace IMS.API.Infrastructure
 
                 // Extract "Items" from the PaginatedList<T>
                 // We use dynamic to access 'Items' since we know it exists on PaginatedList<T>
-                data = ((dynamic)result.Value!);
+                data = ((dynamic)result.Value!) ?? Unit.Value;
 
             }
 
@@ -108,9 +108,9 @@ namespace IMS.API.Infrastructure
                 errorCode,
                 validationErrors,
                 meta,
-                context.Request.Path.Value,
+                context.Request.Path.Value ?? "Unknown",
                 context.TraceIdentifier,
-                (T)data)
+                data: (T)data!)
             {
             };
 
@@ -120,7 +120,7 @@ namespace IMS.API.Infrastructure
 
         public ApiResponse BasicErrorApiResponse(string message, string errorCode)
         {
-            return new ApiResponse(false, message, errorCode, default, default, context.Request.Path.Value, context.TraceIdentifier);
+            return new ApiResponse(false, message, errorCode, new Dictionary<string, string>(), new Dictionary<string, string>(), context.Request.Path.Value ?? "Unkown", context.TraceIdentifier);
         }
 
     }

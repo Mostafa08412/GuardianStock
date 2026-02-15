@@ -1,6 +1,7 @@
 ﻿using IMS.Application.LowStockAlerts.Commands.SendLowStockEmail;
 using IMS.Application.Products.Commands.BulkImportProducts;
 using IMS.Application.Products.Commands.GeneratePreview;
+using IMS.Application.Users.Commands.SendUserCreatedEmail;
 
 namespace IMS.Application.Common.Interfaces
 {
@@ -11,6 +12,8 @@ namespace IMS.Application.Common.Interfaces
         void EnqueueGeneratePreviewJob(GeneratePreviewCommand request);
 
         void EnqueueImportProductsFromPreviewJob(BulkImportProductsJob request);
+
+        void EnqueueSendUserCreatedEmailJob(SendUserCreatedEmailCommand request);
 
 
     }

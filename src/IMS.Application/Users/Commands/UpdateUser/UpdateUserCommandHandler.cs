@@ -18,21 +18,13 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Resul
             request.UserId,
             request.FirstName,
             request.LastName,
-            request.Email,
             request.Role,
             cancellationToken);
 
         if (result.IsFailure)
-        {
-            if (result.Errors.Any(e => e.Code == "Identity.UserNotFoundById"))
-                return Result.Failure(ApplicationErrors.UserErrors.NotFound(request.UserId));
 
-            if (result.Errors.Any(e => e.Code == "Identity.EmailAlreadyExists"))
-                return Result.Failure(ApplicationErrors.UserErrors.EmailAlreadyExists(request.Email));
-
-            // For other errors, wrap them
             return Result.Failure(result.Errors);
-        }
+
 
         return Result.Success();
     }

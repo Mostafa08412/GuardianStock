@@ -123,7 +123,7 @@ namespace IMS.Infrastructure
                         OnMessageReceived = context =>
                         {
                             var accessToken = context.HttpContext.Request.Query["access_Token"];
-                            if (context.HttpContext.Request.Path.Value.Contains("hubs"))
+                            if (context.HttpContext.Request.Path.Value?.Contains("hubs") == true)
                             {
                                 if (!string.IsNullOrWhiteSpace(accessToken))
                                 {
@@ -143,7 +143,7 @@ namespace IMS.Infrastructure
 
                             else if (context.AuthenticateFailure is SecurityTokenInvalidSignatureException)
                             {
-                                context.Response.Headers.Add("Auth-Fail-Type", Errors.Identity.InvalidToken.Code);
+                                context.Response.Headers.TryAdd("Auth-Fail-Type", Errors.Identity.InvalidToken.Code);
                                 context.HandleResponse();
                                 return Task.CompletedTask;
                             }
@@ -151,14 +151,14 @@ namespace IMS.Infrastructure
 
                             else if (context.AuthenticateFailure is SecurityTokenExpiredException)
                             {
-                                context.Response.Headers.Add("Auth-Fail-Type", Errors.Identity.ExpiredToken.Code);
+                                context.Response.Headers.TryAdd("Auth-Fail-Type", Errors.Identity.ExpiredToken.Code);
                                 context.HandleResponse();
                                 return Task.CompletedTask;
                             }
 
                             else if (!context.Request.Headers.ContainsKey("Authorization"))
                             {
-                                context.Response.Headers.Add("Auth-Fail-Type", Errors.Identity.MissingToken.Code);
+                                context.Response.Headers.TryAdd("Auth-Fail-Type", Errors.Identity.MissingToken.Code);
                                 context.HandleResponse();
                                 return Task.CompletedTask;
                             }
@@ -172,7 +172,7 @@ namespace IMS.Infrastructure
                         OnForbidden = context =>
                         {
 
-                            context.Response.Headers.Add("Auth-Fail-Type", Errors.Identity.ForbiddenAccess.Code);
+                            context.Response.Headers.TryAdd("Auth-Fail-Type", Errors.Identity.ForbiddenAccess.Code);
 
 
 
@@ -309,7 +309,7 @@ namespace IMS.Infrastructure
             services.AddSingleton<ISkuGenerator, SkuGenerator>();
             services.AddTransient<IDateTime, SettableDateProvider>();
             services.AddScoped<IFileManagerService, FileManagerService>();
-            services.AddScoped<ISignalService, SignalService>();
+            services.AddScoped<IImportService, ImportService>();
             services.AddScoped<ApplicationDbContextInitializer>();
 
 

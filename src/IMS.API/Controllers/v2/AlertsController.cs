@@ -3,11 +3,8 @@ using IMS.API.Contracts;
 using IMS.API.Contracts.Examples;
 using IMS.API.Infrastructure;
 using IMS.Application.Common.Models;
-using IMS.Application.LowStockAlerts.Commands.AdjustLowStockThreshold;
 using IMS.Application.LowStockAlerts.Commands.DismissLowStockAlert;
-using IMS.Application.LowStockAlerts.Queries.GetLowStockAlerts;
-using IMS.Application.LowStockAlerts.Queries.GetStockAlertDetails;
-using IMS.Application.LowStockAlerts.Queries.GetStockSummary;
+using IMS.Application.LowStockAlerts.Queries.ListLowStockAlerts;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -40,13 +37,13 @@ namespace IMS.API.Controllers.v2
         /// <param name="query">Filtering and pagination parameters.</param>
         /// <returns>A paginated list of stock alerts.</returns>
         [HttpGet(ApiRoutes.Alerts.GetAll)]
-        [ProducesResponseType((int)ApplicationStatusCodes.Ok, Type = typeof(ApiResponse<PaginatedList<LowStockAlertDto>>))]
+        [ProducesResponseType((int)ApplicationStatusCodes.Ok, Type = typeof(ApiResponse<PaginatedList<LowStockAlertListItemDto>>))]
         [SwaggerOperation(
             Summary = "List stock alerts",
             Description = "Fetches a paginated list of products that have fallen below their low stock threshold.",
             OperationId = "ListAlerts"
         )]
-        public async Task<IActionResult> ListAlerts([FromQuery] GetLowStockAlertsQuery query)
+        public async Task<IActionResult> ListAlerts([FromQuery] ListLowStockAlertsQuery query)
         {
             var result = await _sender.Send(query);
 
@@ -54,75 +51,9 @@ namespace IMS.API.Controllers.v2
         }
 
         /// <summary>
-        /// Retrieves detailed information for a specific stock alert.
-        /// </summary>
-        /// <param name="inventoryId">The unique identifier of the inventory item.</param>
-        /// <returns>Details about the stock alert.</returns>
-        [HttpGet(ApiRoutes.Alerts.GetDetails)]
-        [ProducesResponseType((int)ApplicationStatusCodes.Ok, Type = typeof(ApiResponse<StockAlertDetailsDto>))]
-        [ProducesResponseType((int)ApplicationStatusCodes.NotFound, Type = typeof(ApiResponse))]
-        [SwaggerOperation(
-            Summary = "Get alert details",
-            Description = "Retrieves comprehensive information about a specific stock alert, including product history.",
-            OperationId = "GetAlertDetails"
-        )]
-        public async Task<IActionResult> GetDetails([FromRoute] Guid inventoryId)
-        {
-            var result = await _sender.Send(new GetStockAlertDetailsQuery(inventoryId));
-
-            return HandleResult(result, ApplicationStatusCodes.Ok);
-        }
-
-        /// <summary>
-        /// Retrieves a summary of the overall stock status across all products.
-        /// </summary>
-        /// <returns>Counts of products in Normal, Low, and Critical stock states.</returns>
-        [HttpGet(ApiRoutes.Alerts.GetSummary)]
-        [ProducesResponseType((int)ApplicationStatusCodes.Ok, Type = typeof(ApiResponse<StockSummaryDto>))]
-        [SwaggerOperation(
-            Summary = "Get stock summary",
-            Description = "Provides a high-level overview of current inventory health levels.",
-            OperationId = "GetStockSummary"
-        )]
-        public async Task<IActionResult> GetSummary()
-        {
-            var result = await _sender.Send(new GetStockSummaryQuery());
-
-            return HandleResult(result, ApplicationStatusCodes.Ok);
-        }
-
-        /// <summary>
-        /// Updates the low stock threshold for a specific product.
-        /// </summary>
-        /// <param name="command">The threshold adjustment details.</param>
-        /// <returns>No content on success.</returns>
-        [HttpPost(ApiRoutes.Alerts.AdjustThreshold)]
-        [ProducesResponseType((int)ApplicationStatusCodes.NoContent, Type = typeof(ApiResponse))]
-        [ProducesResponseType((int)ApplicationStatusCodes.BadRequest, Type = typeof(ApiResponse))]
-        [ProducesResponseType((int)ApplicationStatusCodes.NotFound, Type = typeof(ApiResponse))]
-        [SwaggerOperation(
-            Summary = "Adjust threshold",
-            Description = "Changes the point at which a product triggers a low stock alert.",
-            OperationId = "AdjustThreshold"
-        )]
-        public async Task<IActionResult> AdjustThreshold([FromRoute] Guid inventoryId, [FromBody] AdjustLowStockThresholdCommand command)
-        {
-
-            if (inventoryId != command.InventoryId)
-            {
-                return BadRequest("Inventory Id mismatch.");
-            }
-
-
-            var result = await _sender.Send(command);
-
-            return HandleResult(result, ApplicationStatusCodes.NoContent);
-        }
-
-        /// <summary>
         /// Dismisses an active low stock alert for a specific product.
         /// </summary>
-        /// <param name="productId">The unique identifier of the product.</param>
+        /// <param name="inventoryId">The unique identifier of the product inventory.</param>
         /// <returns>No content on success.</returns>
         [HttpPost(ApiRoutes.Alerts.Dismiss)]
         [ProducesResponseType((int)ApplicationStatusCodes.NoContent, Type = typeof(ApiResponse))]

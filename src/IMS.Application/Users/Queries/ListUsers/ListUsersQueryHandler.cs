@@ -1,4 +1,3 @@
-using IMS.Application.Common.Interfaces;
 using IMS.Application.Common.Models;
 using MediatR;
 
@@ -19,6 +18,8 @@ public class ListUsersQueryHandler : IRequestHandler<ListUsersQuery, PaginatedLi
             request.SearchTerm,
             request.Role,
             request.IsActive,
+            request.SortBy,
+            request.SortDescending,
             request.PageNumber,
             request.PageSize,
             cancellationToken);

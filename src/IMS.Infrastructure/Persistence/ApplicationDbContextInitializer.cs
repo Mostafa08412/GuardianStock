@@ -83,16 +83,16 @@ namespace IMS.Infrastructure.Persistence
                 await SeedCategoriesAsync();
                 await SeedProductsAsync();
                 await SeedInventoriesAsync();
-                (_dateTime as SettableDateProvider).UTCNow = new DateTime(2025, 5, 1);
+                (_dateTime as SettableDateProvider)!.UTCNow = new DateTime(2025, 5, 1);
                 await SeedTransactions();
-                (_dateTime as SettableDateProvider).UTCNow = DateTime.UtcNow;
+                (_dateTime as SettableDateProvider)!.UTCNow = DateTime.UtcNow;
                 await SeedDataAsync();
-                applicationUsers = null;
-                users = null;
-                products = null;
-                inventories = null;
-                transactions = null;
-                categories = null;
+                applicationUsers.Clear();
+                users.Clear();
+                products.Clear();
+                inventories.Clear();
+                transactions.Clear();
+                categories.Clear();
             }
             catch (Exception ex)
             {

@@ -65,7 +65,7 @@ namespace IMS.API.Controllers.v2
         /// <param name="productId">The unique identifier of the product.</param>
         /// <returns>The product details.</returns>
         [HttpGet(ApiRoutes.Products.GetById)]
-        [ProducesResponseType((int)ApplicationStatusCodes.Ok, Type = typeof(ApiResponse<ProductDto>))]
+        [ProducesResponseType((int)ApplicationStatusCodes.Ok, Type = typeof(ApiResponse<ProductDetailsDto>))]
         [ProducesResponseType((int)ApplicationStatusCodes.NotFound, Type = typeof(ApiResponse))]
         [SwaggerOperation(
             Summary = "Get product by ID",
@@ -74,7 +74,7 @@ namespace IMS.API.Controllers.v2
         )]
         public async Task<IActionResult> GetById([FromRoute] Guid productId)
         {
-            var result = await _sender.Send(new GetProductQuery(productId));
+            var result = await _sender.Send(new GetProductDetailsQuery(productId));
 
             return HandleResult(result, ApplicationStatusCodes.Ok);
         }

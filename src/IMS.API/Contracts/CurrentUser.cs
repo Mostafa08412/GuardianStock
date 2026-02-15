@@ -19,7 +19,7 @@ namespace IMS.API.Contracts
             get
             {
 
-                ClaimsPrincipal user = httpContext?.User;
+                ClaimsPrincipal? user = httpContext?.User;
 
                 bool IsAuthenticated = user?.Identity?.IsAuthenticated ?? false;
 

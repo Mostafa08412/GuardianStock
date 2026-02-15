@@ -10,6 +10,14 @@
 	  <UserSecretsId>f20c8307-68e7-4250-9eec-b8055e5cd0eb</UserSecretsId>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>8618</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>8618</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\IMS.Application\IMS.Application.csproj" />
     <ProjectReference Include="..\IMS.Infrastructure\IMS.Infrastructure.csproj" />
@@ -23,7 +31,6 @@
     <PackageReference Include="Asp.Versioning.Mvc" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
     <PackageReference Include="FluentEmail.Razor" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" />
     <PackageReference Include="Serilog.Enrichers.Span" />
     <PackageReference Include="Serilog.Sinks.Seq" />
     <PackageReference Include="Swashbuckle.AspNetCore" />

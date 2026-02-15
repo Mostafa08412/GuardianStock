@@ -3,6 +3,7 @@ using IMS.Application.Common.Interfaces;
 using IMS.Application.LowStockAlerts.Commands.SendLowStockEmail;
 using IMS.Application.Products.Commands.BulkImportProducts;
 using IMS.Application.Products.Commands.GeneratePreview;
+using IMS.Application.Users.Commands.SendUserCreatedEmail;
 
 namespace IMS.Infrastructure.Persistence.BackgroundJobs
 {
@@ -12,21 +13,26 @@ namespace IMS.Infrastructure.Persistence.BackgroundJobs
 
         public void EnqueueSendLowStockEmailJob(SendLowStockEmailCommand request)
         {
-            var jobId = BackgroundJob.Schedule<BackgroundJobBridge>(bridge => bridge.SendRequestAsync(request), TimeSpan.FromSeconds(1));
+            BackgroundJob.Enqueue<BackgroundJobBridge>(bridge => bridge.SendRequestAsync(request));
 
         }
 
 
         public void EnqueueGeneratePreviewJob(GeneratePreviewCommand request)
         {
-            var jobId = BackgroundJob.Enqueue<BackgroundJobBridge>(bridge => bridge.SendRequestAsyncWithNoRetry(request));
+            BackgroundJob.Enqueue<BackgroundJobBridge>(bridge => bridge.SendRequestAsyncWithNoRetry(request));
 
         }
 
         public void EnqueueImportProductsFromPreviewJob(BulkImportProductsJob request)
         {
-            var jobId = BackgroundJob.Enqueue<BackgroundJobBridge>(bridge => bridge.SendRequestAsyncWithNoRetry(request));
+            BackgroundJob.Enqueue<BackgroundJobBridge>(bridge => bridge.SendRequestAsyncWithNoRetry(request));
 
+        }
+
+        public void EnqueueSendUserCreatedEmailJob(SendUserCreatedEmailCommand request)
+        {
+            BackgroundJob.Enqueue<BackgroundJobBridge>(bridge => bridge.SendRequestAsync(request));
         }
     }
 }

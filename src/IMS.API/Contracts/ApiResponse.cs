@@ -6,8 +6,8 @@
         public bool IsSuccess { get; private set; }
         public string Message { get; private set; }
         public string ErrorCode { get; private set; }
-        public IDictionary<string, string> ValidationErrors { get; private set; }
-        public IDictionary<string, string> Meta { get; private set; }
+        public IDictionary<string, string> ValidationErrors { get; private set; } = new Dictionary<string, string>();
+        public IDictionary<string, string> Meta { get; private set; } = new Dictionary<string, string>();
         public string Instance { get; private set; }
         public string TraceId { get; private set; }
 

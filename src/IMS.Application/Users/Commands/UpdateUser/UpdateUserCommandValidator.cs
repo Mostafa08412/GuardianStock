@@ -18,10 +18,6 @@ public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
             .NotEmpty().WithMessage("Last name is required")
             .MaximumLength(100).WithMessage("Last name must not exceed 100 characters");
 
-        RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("Email is required")
-            .EmailAddress().WithMessage("Invalid email format")
-            .MaximumLength(256).WithMessage("Email must not exceed 256 characters");
 
         RuleFor(x => x.Role)
             .NotEmpty().WithMessage("Role is required")

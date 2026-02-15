@@ -7,5 +7,4 @@ public record UpdateUserCommand(
     string UserId,
     string FirstName,
     string LastName,
-    string Email,
     string Role) : IRequest<Result>;

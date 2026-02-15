@@ -10,11 +10,15 @@
 
   <ItemGroup>
     <Content Include="EmailServices\EmailTemplates\LowStockEmail.cshtml" />
+    <Content Include="EmailServices\EmailTemplates\UserCreatedEmail.cshtml" />
   </ItemGroup>
 
 
 	<ItemGroup>
 		<Content Update="EmailServices\EmailTemplates\LowStockEmail.cshtml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="EmailServices\EmailTemplates\UserCreatedEmail.cshtml">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>

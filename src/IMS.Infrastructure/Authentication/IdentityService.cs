@@ -1,9 +1,11 @@
 ﻿using IMS.Application.Common.Interfaces;
 using IMS.Application.Common.Models;
 using IMS.Application.Contracts.Identity;
-using IMS.Application.Users.Queries;
+using IMS.Application.Users.Queries.GetUser;
+using IMS.Application.Users.Queries.ListUsers;
 using IMS.Domain.Core.Errors;
 using IMS.Domain.Core.Primitives.Result;
+using IMS.Domain.Enums;
 using IMS.Infrastructure.Extensions;
 using IMS.Infrastructure.Persistence;
 using IMS.Infrastructure.Persistence.Identity;
@@ -176,7 +178,7 @@ namespace IMS.Infrastructure.Authentication
             return Result.Success();
         }
 
-        public async Task<Result> CreateUserAsync(string firstName, string lastName, string email, string password, CancellationToken cancellationToken)
+        public async Task<Result> CreateUserAsync(string firstName, string lastName, string email, string password, CancellationToken cancellationToken, string role = Roles.Staff)
         {
             var user = await _userManager.FindByEmailAsync(email);
 
@@ -194,10 +196,17 @@ namespace IMS.Infrastructure.Authentication
 
             var identityResult = await _userManager.CreateAsync(applicationUser, password);
 
+
             if (!identityResult.Succeeded)
 
                 return identityResult.ToResult();
 
+
+            var addToRoleResult = await _userManager.AddToRoleAsync(applicationUser, role);
+
+            if (!addToRoleResult.Succeeded)
+
+                return addToRoleResult.ToResult();
 
             return Result.Success();
         }
@@ -262,7 +271,7 @@ namespace IMS.Infrastructure.Authentication
             user.LastLoginDate = _dateTime.UTCNow;
             await _userManager.UpdateAsync(user);
 
-            RefreshToken refreshToken = null;
+            RefreshToken refreshToken;
 
             if (!user.RefreshTokens.Any(X => X.IsActive))
             {
@@ -400,11 +409,14 @@ namespace IMS.Infrastructure.Authentication
             string? searchTerm,
             string? role,
             bool? isActive,
+            string? SortBy,
+            bool SortDescending,
             int pageNumber,
             int pageSize,
             CancellationToken cancellationToken = default)
         {
             var usersQuery = _userManager.Users.AsQueryable();
+
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
@@ -423,54 +435,96 @@ namespace IMS.Infrastructure.Authentication
                                    : u.LockoutEnd.HasValue && u.LockoutEnd > DateTimeOffset.UtcNow);
             }
 
-            var users = await usersQuery
-                .OrderBy(u => u.FirstName)
-                .ThenBy(u => u.LastName)
+
+            var roles = _context.Roles.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(role))
+            {
+                var normalizedRole = role.ToUpper();
+                roles = roles.Where(x => x.NormalizedName == normalizedRole);
+            }
+
+            var rolesDetails = from r in roles
+                               join ur in _context.UserRoles.AsNoTracking()
+                               on r.Id equals ur.RoleId
+                               select new
+                               {
+                                   UserId = ur.UserId,
+                                   RoleId = r.Id,
+                                   RoleName = r.NormalizedName
+                               };
+
+
+            var usersWithRoles = from user in usersQuery.AsNoTracking()
+                                 join userrole in rolesDetails.AsNoTracking()
+                                 on user.Id equals userrole.UserId
+                                 select new
+                                 {
+                                     User = user,
+                                     RoleId = userrole.RoleId,
+                                     RoleName = userrole.RoleName
+                                 };
+
+            if (!string.IsNullOrWhiteSpace(SortBy))
+            {
+                if (SortBy.ToLower() == "name")
+                {
+                    usersWithRoles = SortDescending ?
+                    usersWithRoles.OrderByDescending(u => u.User.FirstName).ThenByDescending(u => u.User.LastName) :
+                    usersWithRoles.OrderBy(u => u.User.FirstName).ThenBy(u => u.User.LastName);
+                }
+                if (SortBy.ToLower() == "role")
+                {
+                    usersWithRoles = SortDescending ?
+                    usersWithRoles.OrderByDescending(u => u.RoleName) :
+                    usersWithRoles.OrderBy(u => u.RoleName);
+                }
+
+                else if (SortBy.ToLower() == "email")
+                {
+                    usersWithRoles = SortDescending ?
+                    usersWithRoles.OrderByDescending(u => u.User.Email) :
+                    usersWithRoles.OrderBy(u => u.User.Email);
+                }
+            }
+
+
+            var result = usersWithRoles.Select(X => new UserListItemDto
+            {
+                Email = X.User.Email,
+                FirstName = X.User.FirstName,
+                LastName = X.User.LastName,
+                Role = X.RoleName,
+                Id = X.User.Id,
+                IsActive = X.User.LockoutEnd != default && X.User.LockoutEnd > DateTimeOffset.UtcNow ? false : true,
+                LastLoginDate = X.User.LastLoginDate
+
+            });
+
+
+
+
+            var usersDtos = await result
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
 
-            var userDtos = new List<UserListItemDto>();
-
-            foreach (var user in users)
-            {
-                var roles = await _userManager.GetRolesAsync(user);
-                var userRole = roles.FirstOrDefault() ?? "Staff";
-
-                if (!string.IsNullOrWhiteSpace(role) &&
-                    !userRole.Equals(role, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                var userIsActive = !user.LockoutEnd.HasValue || user.LockoutEnd <= DateTimeOffset.UtcNow;
-
-                userDtos.Add(new UserListItemDto(
-                    user.Id,
-                    user.FirstName,
-                    user.LastName,
-                    user.Email!,
-                    userRole,
-                    userIsActive,
-                    user.LastLoginDate));
-            }
-
-            var totalCount = await usersQuery.CountAsync(cancellationToken);
+            var totalCount = await result.CountAsync(cancellationToken);
 
             return new PaginatedList<UserListItemDto>(
-                userDtos,
+                usersDtos,
                 totalCount,
                 pageNumber,
                 pageSize);
         }
 
-        public async Task<Result<UserDto>> GetUserDetailsAsync(string userId, CancellationToken cancellationToken = default)
+        public async Task<Result<UserDetailsDto>> GetUserDetailsAsync(string userId, CancellationToken cancellationToken = default)
         {
             var user = await _userManager.FindByIdAsync(userId);
 
             if (user is null)
             {
-                return Result<UserDto>.Failure(Errors.Identity.UserNotFoundById(userId));
+                return Result<UserDetailsDto>.Failure(Errors.Identity.UserNotFoundById(userId));
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -478,7 +532,7 @@ namespace IMS.Infrastructure.Authentication
 
             var isActive = !user.LockoutEnd.HasValue || user.LockoutEnd <= DateTimeOffset.UtcNow;
 
-            var userDto = new UserDto(
+            var userDto = new UserDetailsDto(
                 user.Id,
                 user.FirstName,
                 user.LastName,
@@ -490,14 +544,13 @@ namespace IMS.Infrastructure.Authentication
                 user.LastLoginDate,
                 user.LockoutEnd?.DateTime);
 
-            return Result<UserDto>.Success(userDto);
+            return Result<UserDetailsDto>.Success(userDto);
         }
 
         public async Task<Result> UpdateUserAsync(
             string userId,
             string firstName,
             string lastName,
-            string email,
             string role,
             CancellationToken cancellationToken = default)
         {
@@ -512,17 +565,17 @@ namespace IMS.Infrastructure.Authentication
             user.LastName = lastName;
             role = role.ToUpper();
 
-            if (user.Email != email)
-            {
-                var emailExists = await _userManager.FindByEmailAsync(email);
-                if (emailExists != null && emailExists.Id != user.Id)
-                {
-                    return Result.Failure(Errors.Identity.EmailAlreadyExists);
-                }
+            //if (user.Email != email)
+            //{
+            //    var emailExists = await _userManager.FindByEmailAsync(email);
+            //    if (emailExists != null && emailExists.Id != user.Id)
+            //    {
+            //        return Result.Failure(Errors.Identity.EmailAlreadyExists);
+            //    }
 
-                user.Email = email;
-                user.UserName = email;
-            }
+            //    user.Email = email;
+            //    user.UserName = email;
+            //}
 
             var updateResult = await _userManager.UpdateAsync(user);
 

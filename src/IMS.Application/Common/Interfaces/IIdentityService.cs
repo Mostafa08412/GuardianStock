@@ -1,6 +1,7 @@
 ﻿using IMS.Application.Common.Models;
 using IMS.Application.Contracts.Identity;
-using IMS.Application.Users.Queries;
+using IMS.Application.Users.Queries.GetUser;
+using IMS.Application.Users.Queries.ListUsers;
 using IMS.Domain.Core.Primitives.Result;
 
 public interface IIdentityService
@@ -39,7 +40,8 @@ public interface IIdentityService
         string lastName,
         string email,
         string password,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        string role = "Staff");
 
     Task<Result> ChangePasswordAsync(
         string userId,
@@ -80,11 +82,13 @@ public interface IIdentityService
         string? searchTerm,
         string? role,
         bool? isActive,
+        string? SortBy,
+        bool SortDescending,
         int pageNumber,
         int pageSize,
         CancellationToken cancellationToken = default);
 
-    Task<Result<UserDto>> GetUserDetailsAsync(
+    Task<Result<UserDetailsDto>> GetUserDetailsAsync(
         string userId,
         CancellationToken cancellationToken = default);
 
@@ -92,7 +96,6 @@ public interface IIdentityService
         string userId,
         string firstName,
         string lastName,
-        string email,
         string role,
         CancellationToken cancellationToken = default);
 }

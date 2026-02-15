@@ -43,10 +43,10 @@ namespace IMS.Application.Products.Commands.BulkImportProducts
 
         private readonly IDateTime _dateTime;
 
-        private readonly ISignalService _signalService;
+        private readonly IImportService _signalService;
 
 
-        public BulkImportProductsCommandHandler(HybridCache cache, ISkuGenerator skuGenerator, IUnitOfWork uow, IDateTime dateTime, ISignalService signalService)
+        public BulkImportProductsCommandHandler(HybridCache cache, ISkuGenerator skuGenerator, IUnitOfWork uow, IDateTime dateTime, IImportService signalService)
         {
             _cache = cache;
             _skuGenerator = skuGenerator;

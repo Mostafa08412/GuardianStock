@@ -15,5 +15,12 @@ namespace IMS.Application.Common.Interfaces
         int currentQuantity,
         int threshold,
         CancellationToken cancellationToken);
+
+        Task<Result> SendUserCreatedEmailAsync(
+        string to,
+        string fullName,
+        string email,
+        string password,
+        CancellationToken cancellationToken);
     }
 }

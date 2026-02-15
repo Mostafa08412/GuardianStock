@@ -23,6 +23,10 @@ public class DismissLowStockAlertCommandHandler : IRequestHandler<DismissLowStoc
             return Result.Failure(Errors.InventoryErrors.NotFound);
         }
 
+        // Add Error handling if there is no active low stock alert to dismiss
+
+
+
         inventory.DismissLowStockAlert();
 
         return Result.Success();

@@ -18,7 +18,7 @@ namespace IMS.Domain.Core.Errors
 
             public static Error InsufficientStock = new("Inventory.InsufficientStock", "The available quantity in stock is not enough to fulfill this request.", ErrorType.ConditionNotMet);
 
-            public static Error QuantityCannotBeLowerThanThreshold = new("Inventory.QuantityCannotBeLowerThanThreshold", "The quantity must be greater that the threshold", ErrorType.Validation);
+            public static Error QuantityCannotBeLowerThanThreshold = new("Inventory.QuantityCannotBeLowerThanThreshold", $"The quantity must be greater than {Inventory.MinimumLowStockThreshold}", ErrorType.Validation);
             public static Error CannotAdjustThresholdWithActiveAlert => new(
             "Inventory.CannotAdjustThresholdWithActiveAlert",
             "The low stock threshold cannot be adjusted while there is an active alert. Please dismiss or reset the alert first.",
