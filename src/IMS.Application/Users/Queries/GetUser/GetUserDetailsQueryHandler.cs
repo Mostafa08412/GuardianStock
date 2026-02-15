@@ -1,3 +1,4 @@
+using IMS.Application.Common.Errors;
 using IMS.Domain.Core.Primitives.Result;
 using MediatR;
 
@@ -18,7 +19,7 @@ public class GetUserDetailsQueryHandler : IRequestHandler<GetUserDetailsQuery, R
 
         if (result.IsFailure)
         {
-            return Result<UserDetailsDto>.Failure(ApplicationErrors.UserErrors.NotFound(request.UserId));
+            return Result<UserDetailsDto>.Failure(ApplicationErrors.IdentityErrors.UserNotFound());
         }
 
         return result;

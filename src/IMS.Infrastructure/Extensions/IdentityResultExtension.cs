@@ -1,7 +1,7 @@
 ﻿using IMS.Domain.Core.Primitives;
 using IMS.Domain.Core.Primitives.Result;
 using Microsoft.AspNetCore.Identity;
-using static IMS.Domain.Core.Errors.Errors;
+using static IMS.Application.Common.Errors.ApplicationErrors;
 
 namespace IMS.Infrastructure.Extensions
 {
@@ -14,7 +14,7 @@ namespace IMS.Infrastructure.Extensions
 
                 // ===== Duplicate / Exists =====
                 "DuplicateEmail" =>
-                    IdentityErrors.EmailAlreadyExists,
+                   IdentityErrors.EmailAlreadyExists(),
 
                 "DuplicateUserName" =>
                     IdentityErrors.UsernameAlreadyExists(),

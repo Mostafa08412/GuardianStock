@@ -1,7 +1,7 @@
 using IMS.Application.Auth.Common;
+using IMS.Application.Common.Errors;
 using IMS.Application.Common.Mappers;
 using IMS.Domain.Abstractions;
-using IMS.Domain.Core.Errors;
 using IMS.Domain.Core.Primitives.Result;
 using IMS.Domain.Users;
 using MediatR;
@@ -27,7 +27,7 @@ namespace IMS.Application.Auth.GoogleLogin
             var googleAuthenticationResult = await _identityService.AuthenticateByGoogleTokenAsync(request.IdToken, cancellationToken);
 
 
-            if (googleAuthenticationResult.IsFailure && googleAuthenticationResult.Errors.Any(X => X.Code == Errors.IdentityErrors.UserNotFoundByEmail("").Code))
+            if (googleAuthenticationResult.IsFailure && googleAuthenticationResult.Errors.Any(X => X.Code == ApplicationErrors.IdentityErrors.UserNotFoundByEmail("").Code))
             {
 
                 var createUserResult = await _identityService.CreateUserByGoogleTokenAsync(request.IdToken, cancellationToken);

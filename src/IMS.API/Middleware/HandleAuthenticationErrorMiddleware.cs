@@ -1,5 +1,5 @@
 ﻿using IMS.API.Infrastructure;
-using IMS.Domain.Core.Errors;
+using IMS.Application.Common.Errors;
 namespace IMS.API.Middleware
 {
     public class HandleAuthenticationErrorMiddleware
@@ -24,29 +24,29 @@ namespace IMS.API.Middleware
 
                 if (!string.IsNullOrEmpty(headerValue))
                 {
-                    if (headerValue == Errors.IdentityErrors.InvalidToken.Code)
+                    if (headerValue == ApplicationErrors.IdentityErrors.InvalidToken.Code)
                     {
-                        var error = Errors.IdentityErrors.InvalidToken;
+                        var error = ApplicationErrors.IdentityErrors.InvalidToken;
                         context.Response.StatusCode = (int)ApplicationStatusCodes.Unauthorized;
                         await context.Response.WriteAsJsonAsync(helper.BasicErrorApiResponse(error.Description, error.Code));
                     }
-                    if (headerValue == IMS.Domain.Core.Errors.Errors.IdentityErrors.MissingToken.Code)
+                    if (headerValue == ApplicationErrors.IdentityErrors.MissingToken.Code)
                     {
-                        var error = Errors.IdentityErrors.MissingToken;
-                        context.Response.StatusCode = (int)ApplicationStatusCodes.Unauthorized;
-                        await context.Response.WriteAsJsonAsync(helper.BasicErrorApiResponse(error.Description, error.Code));
-                    }
-
-                    if (headerValue == IMS.Domain.Core.Errors.Errors.IdentityErrors.ExpiredToken.Code)
-                    {
-                        var error = Errors.IdentityErrors.ExpiredToken;
+                        var error = ApplicationErrors.IdentityErrors.MissingToken;
                         context.Response.StatusCode = (int)ApplicationStatusCodes.Unauthorized;
                         await context.Response.WriteAsJsonAsync(helper.BasicErrorApiResponse(error.Description, error.Code));
                     }
 
-                    if (headerValue == IMS.Domain.Core.Errors.Errors.IdentityErrors.ForbiddenAccess.Code)
+                    if (headerValue == ApplicationErrors.IdentityErrors.ExpiredToken.Code)
                     {
-                        var error = Errors.IdentityErrors.ForbiddenAccess;
+                        var error = ApplicationErrors.IdentityErrors.ExpiredToken;
+                        context.Response.StatusCode = (int)ApplicationStatusCodes.Unauthorized;
+                        await context.Response.WriteAsJsonAsync(helper.BasicErrorApiResponse(error.Description, error.Code));
+                    }
+
+                    if (headerValue == ApplicationErrors.IdentityErrors.ForbiddenAccess.Code)
+                    {
+                        var error = ApplicationErrors.IdentityErrors.ForbiddenAccess;
                         context.Response.StatusCode = (int)ApplicationStatusCodes.Forbidden;
                         await context.Response.WriteAsJsonAsync(helper.BasicErrorApiResponse(error.Description, error.Code));
                     }

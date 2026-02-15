@@ -1,9 +1,9 @@
 ﻿using Hangfire;
 using Hangfire.SqlServer;
+using IMS.Application.Common.Errors;
 using IMS.Application.Common.Interfaces;
 using IMS.Domain.Abstractions;
 using IMS.Domain.Categories;
-using IMS.Domain.Core.Errors;
 using IMS.Domain.Inventories;
 using IMS.Domain.Products;
 using IMS.Domain.StockHistories;
@@ -144,7 +144,7 @@ namespace IMS.Infrastructure
 
                             else if (context.AuthenticateFailure is SecurityTokenInvalidSignatureException)
                             {
-                                context.Response.Headers.TryAdd("Auth-Fail-Type", Errors.IdentityErrors.InvalidToken.Code);
+                                context.Response.Headers.TryAdd("Auth-Fail-Type", ApplicationErrors.IdentityErrors.InvalidToken.Code);
                                 context.HandleResponse();
                                 return Task.CompletedTask;
                             }
@@ -152,14 +152,14 @@ namespace IMS.Infrastructure
 
                             else if (context.AuthenticateFailure is SecurityTokenExpiredException)
                             {
-                                context.Response.Headers.TryAdd("Auth-Fail-Type", Errors.IdentityErrors.ExpiredToken.Code);
+                                context.Response.Headers.TryAdd("Auth-Fail-Type", ApplicationErrors.IdentityErrors.ExpiredToken.Code);
                                 context.HandleResponse();
                                 return Task.CompletedTask;
                             }
 
                             else if (!context.Request.Headers.ContainsKey("Authorization"))
                             {
-                                context.Response.Headers.TryAdd("Auth-Fail-Type", Errors.IdentityErrors.MissingToken.Code);
+                                context.Response.Headers.TryAdd("Auth-Fail-Type", ApplicationErrors.IdentityErrors.MissingToken.Code);
                                 context.HandleResponse();
                                 return Task.CompletedTask;
                             }
@@ -173,7 +173,7 @@ namespace IMS.Infrastructure
                         OnForbidden = context =>
                         {
 
-                            context.Response.Headers.TryAdd("Auth-Fail-Type", Errors.IdentityErrors.ForbiddenAccess.Code);
+                            context.Response.Headers.TryAdd("Auth-Fail-Type", ApplicationErrors.IdentityErrors.ForbiddenAccess.Code);
 
 
 

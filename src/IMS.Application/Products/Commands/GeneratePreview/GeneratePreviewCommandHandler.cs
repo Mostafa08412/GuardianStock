@@ -3,6 +3,7 @@ using IMS.Application.Common.Interfaces;
 using IMS.Application.Contracts.CsvFileReader;
 using IMS.Application.Products.Commands.GeneratePreview.Dtos;
 using IMS.Domain.Abstractions;
+using IMS.Domain.Core.Errors;
 using IMS.Domain.Inventories;
 using IMS.Domain.Products;
 using MediatR;
@@ -85,7 +86,7 @@ namespace IMS.Application.Products.Commands.GeneratePreview
 
                 if (isProductDiscovered)
                 {
-                    previewResponse.RowResults.Add(PreviewRowResult.CreateFailure(productCsvModel, rowNumber, ApplicationErrors.CsvReader.Product.DuplicateProduct.Description));
+                    previewResponse.RowResults.Add(PreviewRowResult.CreateFailure(productCsvModel, rowNumber, ApplicationErrors.CsvReader.DuplicateProduct.Description));
                     continue;
                 }
 
@@ -95,7 +96,7 @@ namespace IMS.Application.Products.Commands.GeneratePreview
 
 
                 if (!enteredCategoryNameIsExisting)
-                    validationErrors.Add(ApplicationErrors.CsvReader.Product.InvalidCategory.Description);
+                    validationErrors.Add(Errors.CategoryErrors.NotFound.Description);
 
 
 
@@ -152,7 +153,7 @@ namespace IMS.Application.Products.Commands.GeneratePreview
             // 4. Price Validation (Parsing + Domain Rule)
             if (!decimal.TryParse(p.Price, out decimal pPrice))
             {
-                errors.Add(ApplicationErrors.CsvReader.Product.InvalidPrice.Description);
+                errors.Add(Errors.ProductErrors.InvalidPrice.Description);
             }
             else if (pPrice <= 0)
             {
@@ -162,17 +163,17 @@ namespace IMS.Application.Products.Commands.GeneratePreview
             // 5. Initial Quantity Validation (Parsing)
             if (!int.TryParse(p.InitialQuantity, out _))
             {
-                errors.Add(ApplicationErrors.CsvReader.Product.InvalidInitialStock.Description);
+                errors.Add(ApplicationErrors.CsvReader.InvalidInitialStock.Description);
             }
 
             // 6. Low Stock Threshold Validation (Parsing + Business Rule)
             if (!int.TryParse(p.LowStockAlertThreshold, out int pLowStockThreshold))
             {
-                errors.Add(ApplicationErrors.CsvReader.Product.InvalidLowStockFormat.Description);
+                errors.Add(ApplicationErrors.CsvReader.InvalidLowStockFormat.Description);
             }
             else if (pLowStockThreshold < Inventory.MinimumLowStockThreshold)
             {
-                errors.Add(ApplicationErrors.CsvReader.Product.LowStockTooLow(Inventory.MinimumLowStockThreshold).Description);
+                errors.Add(ApplicationErrors.CsvReader.LowStockTooLow(Inventory.MinimumLowStockThreshold).Description);
             }
 
             return errors;
