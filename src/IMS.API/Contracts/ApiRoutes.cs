@@ -13,6 +13,7 @@
             public const string Logout = $"logout";
             public const string RefreshToken = $"refresh-token";
             public const string ChangePassword = $"change-password";
+            public const string GoogleLogin = $"google-login";
         }
 
         public static class Users

@@ -70,6 +70,15 @@ public static class ApplicationErrors
                 "The specified category does not exist in the system.",
                 ErrorType.Validation);
         }
+
+        public static class UserErrors
+        {
+            public static Error IdIsRequired => new Error("User.IdIsRequired", "User Id is required", ErrorType.Validation);
+            public static Error FirstNameIsRequired => new Error("User.FirstNameIsRequired", "First name is required", ErrorType.Validation);
+            public static Error LastNameIsRequired => new Error("User.LastNameIsRequired", "Last name is required", ErrorType.Validation);
+            public static Error UsernameIsRequired => new Error("User.UsernameIsRequired", "Username is required", ErrorType.Validation);
+            public static Error EmailIsRequired => new Error("User.EmailIsRequired", "Email is required", ErrorType.Validation);
+        }
     }
 
 

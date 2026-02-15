@@ -4,7 +4,16 @@ namespace IMS.Domain.Core.Errors
 {
     public static partial class Errors
     {
-        public static class Identity
+
+        public static class UserErrors
+        {
+            public static Error IdIsRequired => new Error("User.IdIsRequired", "User Id is required", ErrorType.Validation);
+            public static Error FirstNameIsRequired => new Error("User.FirstNameIsRequired", "First name is required", ErrorType.Validation);
+            public static Error LastNameIsRequired => new Error("User.LastNameIsRequired", "Last name is required", ErrorType.Validation);
+            public static Error UsernameIsRequired => new Error("User.UsernameIsRequired", "Username is required", ErrorType.Validation);
+            public static Error EmailIsRequired => new Error("User.EmailIsRequired", "Email is required", ErrorType.Validation);
+        }
+        public static class IdentityErrors
         {
 
 
@@ -22,6 +31,10 @@ namespace IMS.Domain.Core.Errors
                 new("Identity.UserNotFound", "The specified user does not exist.", ErrorType.NotFound);
 
             // ----- Credentials -----
+
+            public static Error InvalidGoogleIdToken =>
+             new("Identity.InvalidGoogleClientId", "The provided Google ID token is invalid.", ErrorType.IdentityError);
+
             public static Error InvalidCredentials =>
                 new("Identity.InvalidCredentials", "The provided credentials are invalid.", ErrorType.IdentityError);
 

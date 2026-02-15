@@ -1,4 +1,5 @@
-﻿using IMS.Application.Common.Interfaces;
+﻿using Google.Apis.Auth;
+using IMS.Application.Common.Interfaces;
 using IMS.Application.Common.Models;
 using IMS.Application.Contracts.Identity;
 using IMS.Application.Users.Queries.GetUser;
@@ -13,7 +14,9 @@ using IMS.Infrastructure.Tokens;
 using IMS.Infrastructure.Tokens.Options;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using System.Security.Cryptography;
 using RefreshToken = IMS.Infrastructure.Tokens.RefreshToken;
 
 namespace IMS.Infrastructure.Authentication
@@ -27,8 +30,9 @@ namespace IMS.Infrastructure.Authentication
         private readonly ITokenService _tokenService;
         private readonly TokenSettings _tokenOptions;
         private readonly IDateTime _dateTime;
+        private readonly IConfiguration _configuration;
 
-        public IdentityService(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, SignInManager<ApplicationUser> signInManager, ApplicationDbContext context, ITokenService tokenService, IOptions<TokenSettings> tokenSettings, IDateTime dateTime)
+        public IdentityService(IConfiguration configuration, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, SignInManager<ApplicationUser> signInManager, ApplicationDbContext context, ITokenService tokenService, IOptions<TokenSettings> tokenSettings, IDateTime dateTime)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -37,6 +41,7 @@ namespace IMS.Infrastructure.Authentication
             _tokenService = tokenService;
             _tokenOptions = tokenSettings.Value;
             _dateTime = dateTime;
+            _configuration = configuration;
         }
 
 
@@ -59,7 +64,7 @@ namespace IMS.Infrastructure.Authentication
 
             if ((user is null))
             {
-                return Result<ApplicationUser>.Failure(Errors.Identity.UserNotFoundById(userId));
+                return Result<ApplicationUser>.Failure(Errors.IdentityErrors.UserNotFoundById(userId));
             }
             return Result<ApplicationUser>.Success(user);
         }
@@ -70,7 +75,7 @@ namespace IMS.Infrastructure.Authentication
 
             if ((user is null))
             {
-                return Result<ApplicationUser>.Failure(Errors.Identity.UserNotFoundByEmail(email));
+                return Result<ApplicationUser>.Failure(Errors.IdentityErrors.UserNotFoundByEmail(email));
             }
             return Result<ApplicationUser>.Success(user);
         }
@@ -85,7 +90,7 @@ namespace IMS.Infrastructure.Authentication
 
             var roleExists = await _roleManager.RoleExistsAsync(role);
             if (!roleExists)
-                return Result.Failure(Errors.Identity.RoleNotFound(role));
+                return Result.Failure(Errors.IdentityErrors.RoleNotFound(role));
 
             var identityResult = await _userManager.AddToRoleAsync(userResult.Value!, role);
             if (!identityResult.Succeeded)
@@ -103,7 +108,7 @@ namespace IMS.Infrastructure.Authentication
             {
                 var roleExists = await _roleManager.RoleExistsAsync(role);
                 if (!roleExists)
-                    return Result.Failure(Errors.Identity.RoleNotFound(role));
+                    return Result.Failure(Errors.IdentityErrors.RoleNotFound(role));
             }
 
             var identityResult = await _userManager.AddToRolesAsync(appUserResult.Value!, roles);
@@ -121,7 +126,7 @@ namespace IMS.Infrastructure.Authentication
 
             var roleExists = await _roleManager.RoleExistsAsync(role);
             if (!roleExists)
-                return Result.Failure(Errors.Identity.RoleNotFound(role));
+                return Result.Failure(Errors.IdentityErrors.RoleNotFound(role));
 
             var identityResult = await _userManager.RemoveFromRoleAsync(userResult.Value!, role);
             if (!identityResult.Succeeded)
@@ -317,7 +322,7 @@ namespace IMS.Infrastructure.Authentication
 
             if (user is null)
             {
-                return Result<UserDetailsDto>.Failure(Errors.Identity.UserNotFoundById(userId));
+                return Result<UserDetailsDto>.Failure(Errors.IdentityErrors.UserNotFoundById(userId));
             }
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -343,7 +348,7 @@ namespace IMS.Infrastructure.Authentication
 
         #region User Management Methods
 
-        public async Task<Result> CreateUserAsync(
+        public async Task<Result<IdentityUserDto>> CreateUserAsync(
             string firstName,
             string lastName,
             string email,
@@ -354,7 +359,7 @@ namespace IMS.Infrastructure.Authentication
             var user = await _userManager.FindByEmailAsync(email);
 
             if (user != null)
-                return Result.Failure(Errors.Identity.EmailAlreadyExists);
+                return Result<IdentityUserDto>.Failure(Errors.IdentityErrors.EmailAlreadyExists);
 
             ApplicationUser applicationUser = new ApplicationUser
             {
@@ -370,16 +375,19 @@ namespace IMS.Infrastructure.Authentication
 
             if (!identityResult.Succeeded)
 
-                return identityResult.ToResult();
+                return identityResult.ToResult<IdentityUserDto>();
 
 
             var addToRoleResult = await _userManager.AddToRoleAsync(applicationUser, role);
 
             if (!addToRoleResult.Succeeded)
 
-                return addToRoleResult.ToResult();
+                return addToRoleResult.ToResult<IdentityUserDto>();
 
-            return Result.Success();
+
+            var identityUser = MapToDto(applicationUser, new List<string> { role });
+
+            return Result<IdentityUserDto>.Success(identityUser);
         }
 
         public async Task<Result> LockUserAsync(string userId, CancellationToken cancellationToken)
@@ -421,17 +429,17 @@ namespace IMS.Infrastructure.Authentication
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (user == null)
-                return Result<AuthenticationResult>.Failure(Errors.Identity.InvalidCredentials);
+                return Result<AuthenticationResult>.Failure(Errors.IdentityErrors.InvalidCredentials);
 
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, password, true);
 
 
             if (!result.Succeeded && !result.IsLockedOut)
-                return Result<AuthenticationResult>.Failure(Errors.Identity.InvalidCredentials);
+                return Result<AuthenticationResult>.Failure(Errors.IdentityErrors.InvalidCredentials);
 
             if (!result.Succeeded && result.IsLockedOut)
-                return Result<AuthenticationResult>.Failure(Errors.Identity.UserLockout);
+                return Result<AuthenticationResult>.Failure(Errors.IdentityErrors.UserLockout);
 
 
             var userRoles = await _userManager.GetRolesAsync(user);
@@ -481,7 +489,7 @@ namespace IMS.Infrastructure.Authentication
 
 
             if (string.IsNullOrEmpty(refreshToken))
-                return Result<AuthenticationResult>.Failure(Errors.Identity.InvalidToken);
+                return Result<AuthenticationResult>.Failure(Errors.IdentityErrors.InvalidToken);
 
             var user = await _userManager.Users
                 .AsNoTracking()
@@ -492,12 +500,12 @@ namespace IMS.Infrastructure.Authentication
 
 
             if (user is null)
-                return Result<AuthenticationResult>.Failure(Errors.Identity.InvalidToken);
+                return Result<AuthenticationResult>.Failure(Errors.IdentityErrors.InvalidToken);
 
             var RefreshToken = user.RefreshTokens.First(x => x.Token == refreshToken);
 
             if (!RefreshToken.IsActive)
-                return Result<AuthenticationResult>.Failure(Errors.Identity.InvalidToken);
+                return Result<AuthenticationResult>.Failure(Errors.IdentityErrors.InvalidToken);
 
 
             var userRoles = await _userManager.GetRolesAsync(user);
@@ -525,7 +533,7 @@ namespace IMS.Infrastructure.Authentication
         public async Task<Result> RevokeActiveRefreshTokenAsync(string userId, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(userId))
-                return Result.Failure(Errors.Identity.UserNotFoundById(userId));
+                return Result.Failure(Errors.IdentityErrors.UserNotFoundById(userId));
 
             var user = await _userManager.Users
             .Where(X => X.Id == userId)
@@ -533,7 +541,7 @@ namespace IMS.Infrastructure.Authentication
             .FirstOrDefaultAsync(cancellationToken);
 
             if (user is null)
-                return Result.Failure(Errors.Identity.UserNotFoundById(userId));
+                return Result.Failure(Errors.IdentityErrors.UserNotFoundById(userId));
 
             if (user.RefreshTokens.Any(X => X.IsActive))
             {
@@ -552,7 +560,7 @@ namespace IMS.Infrastructure.Authentication
             var user = await _userManager.FindByIdAsync(userId);
 
             if (user is null)
-                return Result.Failure(Errors.Identity.UserNotFound());
+                return Result.Failure(Errors.IdentityErrors.UserNotFound());
 
             var identityResult = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
 
@@ -564,69 +572,188 @@ namespace IMS.Infrastructure.Authentication
 
 
 
-        public async Task<Result> UpdateUserAsync(
+        public async Task<Result<IdentityUserDto>> UpdateUserAsync(
             string userId,
             string firstName,
             string lastName,
-            string role,
+            string? newRole,
             CancellationToken cancellationToken = default)
         {
             var user = await _userManager.FindByIdAsync(userId);
 
             if (user is null)
             {
-                return Result.Failure(Errors.Identity.UserNotFoundById(userId));
+                return Result<IdentityUserDto>.Failure(Errors.IdentityErrors.UserNotFoundById(userId));
             }
 
             user.FirstName = firstName;
+
             user.LastName = lastName;
-            role = role.ToUpper();
 
-            //if (user.Email != email)
-            //{
-            //    var emailExists = await _userManager.FindByEmailAsync(email);
-            //    if (emailExists != null && emailExists.Id != user.Id)
-            //    {
-            //        return Result.Failure(Errors.Identity.EmailAlreadyExists);
-            //    }
-
-            //    user.Email = email;
-            //    user.UserName = email;
-            //}
 
             var updateResult = await _userManager.UpdateAsync(user);
 
             if (!updateResult.Succeeded)
             {
-                return updateResult.ToResult();
+                return updateResult.ToResult<IdentityUserDto>();
             }
 
             var currentRoles = await _userManager.GetRolesAsync(user);
+
             var currentRole = currentRoles.FirstOrDefault();
 
-            if (currentRole != role)
+
+            if (!string.IsNullOrWhiteSpace(newRole) && currentRole != newRole)
             {
                 if (currentRole != null)
                 {
                     await _userManager.RemoveFromRoleAsync(user, currentRole);
                 }
 
-                var roleExists = await _roleManager.RoleExistsAsync(role);
+                var roleExists = await _roleManager.RoleExistsAsync(newRole);
+
                 if (!roleExists)
                 {
-                    return Result.Failure(Errors.Identity.RoleNotFound(role));
+                    return Result<IdentityUserDto>.Failure(Errors.IdentityErrors.RoleNotFound(newRole));
                 }
 
-                var addRoleResult = await _userManager.AddToRoleAsync(user, role);
+                var addRoleResult = await _userManager.AddToRoleAsync(user, newRole);
+
 
                 if (!addRoleResult.Succeeded)
                 {
-                    return addRoleResult.ToResult();
+                    return addRoleResult.ToResult<IdentityUserDto>();
                 }
+
+                currentRoles.Clear();
+
+                currentRoles.Add(newRole);
             }
 
-            return Result.Success();
+            return Result<IdentityUserDto>.Success(MapToDto(user, currentRoles));
         }
+
+        public async Task<Result<AuthenticationResult>> AuthenticateByGoogleTokenAsync(string googleTokenId, CancellationToken cancellationToken = default)
+        {
+            GoogleJsonWebSignature.ValidationSettings validationSettings = new GoogleJsonWebSignature.ValidationSettings();
+
+            validationSettings.Audience = new List<string>() { _configuration["Authentication:Google:ClientId"] ?? string.Empty };
+
+
+            try
+            {
+                var payload = await GoogleJsonWebSignature.ValidateAsync(googleTokenId, validationSettings);
+
+                var user = await _userManager.FindByEmailAsync(payload.Email);
+
+
+                if (user == null)
+                    return Result<AuthenticationResult>.Failure(Errors.IdentityErrors.UserNotFoundByEmail(payload.Email));
+
+
+                if (user.LockoutEnd != null && user.LockoutEnd > _dateTime.UTCNow)
+                    return Result<AuthenticationResult>.Failure(Errors.IdentityErrors.UserLockout);
+
+                var userRoles = await _userManager.GetRolesAsync(user);
+
+                (string accessToken, DateTime expirationDate) = _tokenService.GenerateAccessToken(user, userRoles);
+
+                user.LastLoginDate = _dateTime.UTCNow;
+
+                await _userManager.UpdateAsync(user);
+
+                RefreshToken refreshToken;
+
+                if (!user.RefreshTokens.Any(X => X.IsActive))
+                {
+                    var newRefreshToken = _tokenService.GenerateRefreshToken();
+                    refreshToken = RefreshToken.Create(user.Id, newRefreshToken.Item1, newRefreshToken.Item2);
+                    user.RefreshTokens.Add(refreshToken);
+                    await _userManager.UpdateAsync(user);
+                }
+                else
+                {
+                    refreshToken = user.RefreshTokens.First(X => X.IsActive);
+                }
+
+                var authResult = new AuthenticationResult
+                {
+                    UserId = user.Id,
+                    Email = user.Email!,
+                    UserName = user.UserName!,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Roles = userRoles,
+                    AccessToken = accessToken,
+                    AccessTokenExpiresAt = expirationDate,
+                    RefreshToken = refreshToken.Token,
+                    RefreshTokenExpiresAt = refreshToken.ExpiresAtUTC
+                };
+
+                return Result<AuthenticationResult>.Success(authResult);
+            }
+            catch (Exception)
+            {
+                return Result<AuthenticationResult>.Failure(Errors.IdentityErrors.InvalidGoogleIdToken);
+            }
+
+
+
+        }
+
+
+        public async Task<Result<IdentityUserDto>> CreateUserByGoogleTokenAsync(string googleTokenId, CancellationToken cancellationToken = default)
+        {
+            GoogleJsonWebSignature.ValidationSettings validationSettings = new GoogleJsonWebSignature.ValidationSettings();
+
+            validationSettings.Audience = new List<string>() { _configuration["Authentication:Google:ClientId"] ?? string.Empty };
+
+
+            try
+            {
+                var payload = await GoogleJsonWebSignature.ValidateAsync(googleTokenId, validationSettings);
+
+                var firstName = payload.Name.Split(' ')[0];
+
+                var lastName = payload.Name.Split(' ').Length > 1 ? payload.Name.Split(' ')[1] : string.Empty;
+
+                var email = payload.Email;
+
+                var randomPassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+
+                ApplicationUser applicationUser = new ApplicationUser
+                {
+                    FirstName = firstName,
+                    LastName = lastName,
+                    Email = email,
+                    UserName = email,
+                    EmailConfirmed = true
+                };
+
+                var createApplicationUserResult = (await _userManager.CreateAsync(applicationUser, randomPassword)).ToResult();
+
+                if (!createApplicationUserResult.IsSuccess)
+                    return Result<IdentityUserDto>.Failure(createApplicationUserResult.Errors);
+
+                var addToRoleResult = (await _userManager.AddToRoleAsync(applicationUser, Roles.Staff)).ToResult();
+
+                if (!addToRoleResult.IsSuccess)
+                    return Result<IdentityUserDto>.Failure(addToRoleResult.Errors);
+
+
+
+                return Result<IdentityUserDto>.Success(MapToDto(applicationUser, new List<string> { Roles.Staff }));
+
+
+            }
+            catch (Exception)
+            {
+                return Result<IdentityUserDto>.Failure(Errors.IdentityErrors.InvalidGoogleIdToken);
+
+            }
+
+        }
+
         #endregion
 
     }

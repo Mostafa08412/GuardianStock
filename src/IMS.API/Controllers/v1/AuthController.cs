@@ -4,10 +4,10 @@ using IMS.API.Contracts.Examples;
 using IMS.API.Infrastructure;
 using IMS.Application.Auth.ChangePassword;
 using IMS.Application.Auth.Common;
+using IMS.Application.Auth.GoogleLogin;
 using IMS.Application.Auth.Logout;
 using IMS.Application.Auth.RefreshToken;
 using IMS.Domain.Core.Primitives.Result;
-using IMS.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -136,6 +136,27 @@ namespace IMS.API.Controllers.v1
         {
             var result = await _sender.Send(request);
 
+
+            return HandleResult(result, ApplicationStatusCodes.Ok);
+        }
+
+        /// <summary>
+        /// Authenticates a user using a Google ID token.
+        /// </summary>
+        /// <param name="request">The Google login request containing the ID token.</param>
+        /// <returns>An authentication response containing the JWT token and user details.</returns>
+        [AllowAnonymous]
+        [HttpPost(ApiRoutes.Authentication.GoogleLogin)]
+        [ProducesResponseType((int)ApplicationStatusCodes.Ok, Type = typeof(ApiResponse<AuthenticationResponse>))]
+        [ProducesResponseType((int)ApplicationStatusCodes.BadRequest, Type = typeof(ApiResponse))]
+        [SwaggerOperation(
+            Summary = "Google login",
+            Description = "Authenticates a user using a Google ID token. Creates a new account if the user does not exist.",
+            OperationId = "GoogleLogin"
+        )]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginCommand request)
+        {
+            var result = await _sender.Send(request);
 
             return HandleResult(result, ApplicationStatusCodes.Ok);
         }

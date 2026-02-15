@@ -456,7 +456,7 @@ namespace IMS.Infrastructure.Persistence
                             inventory.Ship(qty);
                             var sale = Transaction.RecordSale(product.Id, qty, product.Price).Value!;
                             ForceSetCreatedDate(sale, productCursorDate);
-                            ForceSetCreatedBy(sale, users[0].Id);
+                            ForceSetCreatedBy(sale, users[0].Id.ToString());
                             transactions.Add(sale);
                         }
                         else
@@ -465,7 +465,7 @@ namespace IMS.Infrastructure.Persistence
                             inventory.Restock(qty);
                             var purchase = Transaction.RecordPurchase(product.Id, qty, product.Price).Value!;
                             ForceSetCreatedDate(purchase, productCursorDate);
-                            ForceSetCreatedBy(purchase, users[0].Id);
+                            ForceSetCreatedBy(purchase, users[0].Id.ToString());
                             transactions.Add(purchase);
                         }
                         _context.StockHistories.Add(StockHistory.Create(inventory.Id, null, clock.UTCNow, inventory.Quantity));

@@ -14,19 +14,19 @@ namespace IMS.Infrastructure.Extensions
 
                 // ===== Duplicate / Exists =====
                 "DuplicateEmail" =>
-                    Identity.EmailAlreadyExists,
+                    IdentityErrors.EmailAlreadyExists,
 
                 "DuplicateUserName" =>
-                    Identity.UsernameAlreadyExists(),
+                    IdentityErrors.UsernameAlreadyExists(),
 
                 // ===== Invalid input =====
                 "InvalidEmail" =>
-                    Identity.InvalidEmail,
+                    IdentityErrors.InvalidEmail,
 
                 "InvalidUserName" =>
-                    Identity.InvalidUsername,
+                    IdentityErrors.InvalidUsername,
                 "PasswordMismatch" =>
-                Identity.InvalidPassword,
+                IdentityErrors.InvalidPassword,
 
                 // ===== Password =====
                 "PasswordTooShort" or
@@ -34,22 +34,22 @@ namespace IMS.Infrastructure.Extensions
                 "PasswordRequiresLower" or
                 "PasswordRequiresUpper" or
                 "PasswordRequiresNonAlphanumeric" =>
-                    Identity.WeakPassword(error.Description),
+                    IdentityErrors.WeakPassword(error.Description),
 
                 "PasswordReuseNotAllowed" =>
-                    Identity.PasswordReuseNotAllowed(),
+                    IdentityErrors.PasswordReuseNotAllowed(),
 
                 // ===== Security / Tokens =====
                 "InvalidToken" =>
-                    Identity.InvalidToken,
+                    IdentityErrors.InvalidToken,
 
                 "RecoveryCodeRedemptionFailed" =>
-                    Identity.RecoveryCodeRedemptionFailed(),
+                    IdentityErrors.RecoveryCodeRedemptionFailed(),
 
 
                 // ===== Fallback =====
                 _ =>
-                    Identity.Unknown(error.Description)
+                    IdentityErrors.Unknown(error.Description)
             };
         }
 

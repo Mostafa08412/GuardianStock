@@ -24,7 +24,7 @@ namespace IMS.Application.Transactions.Queries.GetTransaction
                         join product in _context.Products on transaction.ProductId equals product.Id into prodGroup
                         from product in prodGroup.DefaultIfEmpty()
 
-                        join user in _context.BusinessUsers on transaction.CreatedBy equals user.Id into userGroup
+                        join user in _context.BusinessUsers on transaction.CreatedBy equals user.Id.ToString() into userGroup
                         from user in userGroup.DefaultIfEmpty()
 
                         select new TransactionDetailsDto(

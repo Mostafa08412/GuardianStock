@@ -4,17 +4,15 @@ using IMS.Domain.Core.Primitives.Result;
 
 namespace IMS.Domain.Users
 {
-    public sealed class User : IUser
+    public sealed class User : Aggregate, IUser
     {
-        public string Id { get; private set; } // related to the application user.
         public string FirstName { get; private set; }
         public string LastName { get; private set; }
         public string Username { get; private set; }
         public string Email { get; private set; }
 
-        private User(string id, string firstName, string lastName, string username, string email)
+        private User(string id, string firstName, string lastName, string username, string email) : base(new Guid(id))
         {
-            Id = id;
             FirstName = firstName;
             LastName = lastName;
             Username = username;
@@ -28,44 +26,41 @@ namespace IMS.Domain.Users
 
         public static Result<User> Create(string id, string firstName, string lastName, string username, string email)
         {
+            var errors = new List<Error>();
+
             if (string.IsNullOrWhiteSpace(id))
             {
-                return Result<User>.Failure(Errors.UserErrors.IdIsRequired);
+                errors.Add(Errors.UserErrors.IdIsRequired);
             }
 
             if (string.IsNullOrWhiteSpace(firstName))
             {
-                return Result<User>.Failure(Errors.UserErrors.FirstNameIsRequired);
+                errors.Add(Errors.UserErrors.FirstNameIsRequired);
             }
 
             if (string.IsNullOrWhiteSpace(lastName))
             {
-                return Result<User>.Failure(Errors.UserErrors.LastNameIsRequired);
+                errors.Add(Errors.UserErrors.LastNameIsRequired);
             }
 
             if (string.IsNullOrWhiteSpace(username))
             {
-                return Result<User>.Failure(Errors.UserErrors.UsernameIsRequired);
+                errors.Add(Errors.UserErrors.UsernameIsRequired);
             }
 
             if (string.IsNullOrWhiteSpace(email))
             {
-                return Result<User>.Failure(Errors.UserErrors.EmailIsRequired);
+                errors.Add(Errors.UserErrors.EmailIsRequired);
+            }
+
+            if (errors.Any())
+            {
+                return Result<User>.Failure(errors);
             }
 
             return Result<User>.Success(new User(id, firstName, lastName, username, email));
         }
 
-        public static class Errors
-        {
-            public static class UserErrors
-            {
-                public static Error IdIsRequired => new Error("User.IdIsRequired", "User Id is required", ErrorType.Validation);
-                public static Error FirstNameIsRequired => new Error("User.FirstNameIsRequired", "First name is required", ErrorType.Validation);
-                public static Error LastNameIsRequired => new Error("User.LastNameIsRequired", "Last name is required", ErrorType.Validation);
-                public static Error UsernameIsRequired => new Error("User.UsernameIsRequired", "Username is required", ErrorType.Validation);
-                public static Error EmailIsRequired => new Error("User.EmailIsRequired", "Email is required", ErrorType.Validation);
-            }
-        }
+
     }
 }

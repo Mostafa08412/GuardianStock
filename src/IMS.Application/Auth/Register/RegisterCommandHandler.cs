@@ -1,5 +1,7 @@
-﻿using IMS.Application.Common.Interfaces;
+﻿using IMS.Application.Auth.Common;
+using IMS.Domain.Abstractions;
 using IMS.Domain.Core.Primitives.Result;
+using IMS.Domain.Users;
 using MediatR;
 
 namespace IMS.Application.Auth.Register
@@ -8,16 +10,28 @@ namespace IMS.Application.Auth.Register
     {
         private readonly IIdentityService _identityService;
 
+        private readonly IUnitOfWork _unitOfWork;
 
-        public RegisterCommandHandler(IIdentityService identityService)
+        public RegisterCommandHandler(IIdentityService identityService, IUnitOfWork unitOfWork)
         {
             _identityService = identityService;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<Result> Handle(RegisterCommand request, CancellationToken cancellationToken)
         {
 
-            var createUserResult = await _identityService.CreateUserAsync(request.FirstName, request.LastName, request.Email, request.Password);
+            var createUserResult = await _identityService.CreateUserAsync(request.FirstName, request.LastName, request.Email, request.Password, cancellationToken);
+
+            if (createUserResult.IsFailure)
+                return Result.Failure(createUserResult.Errors);
+
+            var createDomainUserResult = User.Create(createUserResult.Value!.Id, createUserResult.Value.FirstName, createUserResult.Value.LastName, createUserResult.Value.Email, createUserResult.Value.Email);
+
+            if (createDomainUserResult.IsFailure)
+                return Result<AuthenticationResponse>.Failure(createDomainUserResult.Errors);
+
+            _unitOfWork.Users.Add(createDomainUserResult.Value!);
 
 
             return createUserResult;

@@ -37,6 +37,7 @@
     <PackageReference Include="FluentEmail.Core" />
     <PackageReference Include="FluentEmail.Razor" />
     <PackageReference Include="FluentEmail.Smtp" />
+    <PackageReference Include="Google.Apis.Auth" />
     <PackageReference Include="Hangfire" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" />

@@ -69,7 +69,7 @@ public interface IIdentityService
 
     #region User Management Methods
 
-    Task<Result> CreateUserAsync(
+    Task<Result<IdentityUserDto>> CreateUserAsync(
         string firstName,
         string lastName,
         string email,
@@ -94,7 +94,9 @@ public interface IIdentityService
      string refreshToken,
      CancellationToken cancellationToken = default);
 
-
+    Task<Result<AuthenticationResult>> AuthenticateByGoogleTokenAsync(
+     string googleTokenId,
+     CancellationToken cancellationToken = default);
 
     Task<Result> RevokeActiveRefreshTokenAsync(
         string userId,
@@ -107,12 +109,17 @@ public interface IIdentityService
         string confirmNewPassword,
         CancellationToken cancellationToken = default);
 
-    Task<Result> UpdateUserAsync(
+    Task<Result<IdentityUserDto>> UpdateUserAsync(
         string userId,
         string firstName,
         string lastName,
-        string role,
+        string? role,
         CancellationToken cancellationToken = default);
+
+    Task<Result<IdentityUserDto>> CreateUserByGoogleTokenAsync(
+        string googleTokenId
+        , CancellationToken cancellationToken = default);
+
 
     #endregion
 }

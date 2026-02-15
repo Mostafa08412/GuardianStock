@@ -3,6 +3,7 @@ using IMS.Domain.Inventories;
 using IMS.Domain.Products;
 using IMS.Domain.StockHistories;
 using IMS.Domain.Transactions;
+using IMS.Domain.Users;
 
 namespace IMS.Domain.Abstractions
 {
@@ -13,6 +14,9 @@ namespace IMS.Domain.Abstractions
         public IInventoryRepository Inventories { get; }
         public ITransactionRepository Transactions { get; }
         public IStockHistoryRepository StockHistories { get; }
+        public IUserRepository Users { get; }
+
+
 
         public Task<int> Complete(CancellationToken cancellationToken);
 

@@ -6,6 +6,7 @@ using IMS.Domain.Inventories;
 using IMS.Domain.Products;
 using IMS.Domain.StockHistories;
 using IMS.Domain.Transactions;
+using IMS.Domain.Users;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -23,6 +24,7 @@ namespace IMS.Infrastructure.Persistence.Repositories
         protected IDbContextTransaction _currentTransaction { get; private set; }
 
         public IStockHistoryRepository StockHistories { get; private set; }
+        public IUserRepository Users { get; private set; }
 
         protected ApplicationDbContext dbContext;
 
@@ -30,13 +32,14 @@ namespace IMS.Infrastructure.Persistence.Repositories
         private readonly IDateTime _dateTime;
         private readonly IMediator _mediator;
 
-        public UnitOfWork(IProductRepository products, ICategoryRepository categories, IInventoryRepository inventories, ITransactionRepository transactions, IStockHistoryRepository stockHistories, ApplicationDbContext dbContext, ICurrentUser currentUser, IDateTime dateTime, IMediator mediator)
+        public UnitOfWork(IProductRepository products, ICategoryRepository categories, IInventoryRepository inventories, ITransactionRepository transactions, IStockHistoryRepository stockHistories, IUserRepository users, ApplicationDbContext dbContext, ICurrentUser currentUser, IDateTime dateTime, IMediator mediator)
         {
             Products = products;
             Categories = categories;
             Inventories = inventories;
             Transactions = transactions;
             StockHistories = stockHistories;
+            Users = users;
             this.dbContext = dbContext;
             _currentUser = currentUser;
             _dateTime = dateTime;

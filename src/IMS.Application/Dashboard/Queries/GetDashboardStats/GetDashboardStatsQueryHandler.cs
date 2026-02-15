@@ -1,5 +1,4 @@
 ﻿using IMS.Application.Common.Interfaces;
-using IMS.Application.Dashboard.Queries;
 using IMS.Domain.Core.Primitives.Result;
 using IMS.Domain.Transactions;
 using MediatR;
@@ -108,7 +107,7 @@ namespace IMS.Application.Dashboard.Queries.GetDashboardStats
                                             join inventory in context.Inventories.AsNoTracking()
                                             on transaction.ProductId equals inventory.ProductId
                                             join user in context.BusinessUsers.AsNoTracking().DefaultIfEmpty()
-                                            on transaction.CreatedBy equals user.Id
+                                            on transaction.CreatedBy equals user.Id.ToString()
                                             select new RecentTransactionDto
                                             {
 

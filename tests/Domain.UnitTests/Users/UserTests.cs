@@ -1,4 +1,5 @@
 using Domain.UnitTests.Builders;
+using IMS.Domain.Core.Errors;
 using IMS.Domain.Users;
 
 namespace Domain.UnitTests.Users;
@@ -64,7 +65,7 @@ public class UserTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(User.Errors.UserErrors.IdIsRequired);
+        result.Error.Should().Be(Errors.UserErrors.IdIsRequired);
     }
 
     [Theory]
@@ -80,7 +81,7 @@ public class UserTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(User.Errors.UserErrors.FirstNameIsRequired);
+        result.Error.Should().Be(Errors.UserErrors.FirstNameIsRequired);
     }
 
     [Theory]
@@ -96,7 +97,7 @@ public class UserTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(User.Errors.UserErrors.LastNameIsRequired);
+        result.Error.Should().Be(Errors.UserErrors.LastNameIsRequired);
     }
 
     [Theory]
@@ -112,7 +113,7 @@ public class UserTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(User.Errors.UserErrors.UsernameIsRequired);
+        result.Error.Should().Be(Errors.UserErrors.UsernameIsRequired);
     }
 
     [Theory]
@@ -128,7 +129,7 @@ public class UserTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(User.Errors.UserErrors.EmailIsRequired);
+        result.Error.Should().Be(Errors.UserErrors.EmailIsRequired);
     }
 
     #endregion
