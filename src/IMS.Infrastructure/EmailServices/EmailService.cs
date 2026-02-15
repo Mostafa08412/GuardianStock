@@ -31,6 +31,7 @@ namespace IMS.Infrastructure.EmailServices
         public async Task<Result> SendLowStockEmailAsync(
          IEnumerable<string> to,
          string productName,
+         string inventoryId,
          string sku,
          int currentQuantity,
          int threshold,
@@ -43,7 +44,7 @@ namespace IMS.Infrastructure.EmailServices
                 Sku = sku,
                 CurrentQuantity = currentQuantity,
                 Threshold = threshold,
-                DashboardUrl = "https://your-app.com/admin/inventory",
+                DashboardUrl = $"http://localhost:8080/inventories/{inventoryId}",
                 AlertTime = DateTime.UtcNow
             };
             string templatePath = Path.Combine(AppContext.BaseDirectory, "EmailServices", "EmailTemplates", "LowStockEmail.cshtml");

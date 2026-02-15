@@ -7,6 +7,7 @@ namespace IMS.Application.LowStockAlerts.Commands.SendLowStockEmail
     public record SendLowStockEmailCommand : IRequest
     {
         public Guid ProductId { get; init; }
+        public Guid InventoryId { get; init; }
     }
 
 }

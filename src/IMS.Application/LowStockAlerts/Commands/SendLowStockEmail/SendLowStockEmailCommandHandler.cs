@@ -60,6 +60,7 @@ namespace IMS.Application.LowStockAlerts.Commands.SendLowStockEmail
                 await _emailService.SendLowStockEmailAsync(
                     receivers,
                     product.Name,
+                    request.InventoryId.ToString(),
                     product.Sku,
                     inventory.Quantity,
                     inventory.LowStockThreshold,

@@ -33,9 +33,12 @@ namespace IMS.Application.Common.EventHandlers
             logger.LogInformation("Processing low stock alert for ProductId: {ProductId}. Current Quantity: {CurrentQuantity}",
             notification.ProductId, notification.CurrentQuantity);
 
+
+
             SendLowStockEmailCommand command = new SendLowStockEmailCommand
             {
-                ProductId = notification.ProductId
+                ProductId = notification.ProductId,
+                InventoryId = notification.InventoryId
             };
 
             backgroundJobWorker.EnqueueSendLowStockEmailJob(command);

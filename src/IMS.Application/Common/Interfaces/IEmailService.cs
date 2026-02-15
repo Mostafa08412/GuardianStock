@@ -11,6 +11,7 @@ namespace IMS.Application.Common.Interfaces
         Task<Result> SendLowStockEmailAsync(
         IEnumerable<string> to,
         string productName,
+        string inventoryId,
         string sku,
         int currentQuantity,
         int threshold,
