@@ -57,8 +57,10 @@ namespace IMS.API.Infrastructure
             }
             foreach (var error in validationTypeErrors)
             {
-                // Use TryAdd to prevent crashes if the same error code appears twice
-                validationErrors.TryAdd(error.Code, error.Description);
+                var fieldName = error.Code.Contains('-') ? error.Code.Split('-')[1] : "General";
+                var fieldErrorCode = error.Code.Contains('-') ? error.Code.Split('-')[0] : error.Code;
+
+                validationErrors.TryAdd(fieldName.ToLowerInvariant(), error.Description);
             }
 
             return (isSuccess, message, errorCode, validationErrors);

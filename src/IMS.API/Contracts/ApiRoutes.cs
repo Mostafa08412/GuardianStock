@@ -15,6 +15,9 @@
             public const string ChangePassword = $"change-password";
             public const string GoogleLogin = $"google-login";
             public const string UpdateProfile = $"update-profile";
+            public const string ForgetPassword = $"forget-password";
+            public const string VerifyResetPasswordOtp = $"verify-reset-password-otp";
+            public const string ResetPassword = $"reset-password";
         }
 
         public static class Users

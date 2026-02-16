@@ -1,4 +1,5 @@
 using FluentValidation;
+using IMS.Domain.Core.Errors;
 
 namespace IMS.Application.Products.Commands.DeleteProduct;
 
@@ -7,6 +8,8 @@ public class DeleteProductCommandValidator : AbstractValidator<DeleteProductComm
     public DeleteProductCommandValidator()
     {
         RuleFor(x => x.ProductId)
-            .NotEmpty();
+            .NotEmpty()
+            .WithMessage(Errors.ProductErrors.ProductIdIsRequired.Description)
+            .WithErrorCode(Errors.ProductErrors.ProductIdIsRequired.Code);
     }
 }

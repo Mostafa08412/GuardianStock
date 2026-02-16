@@ -1,4 +1,5 @@
 using FluentValidation;
+using IMS.Domain.Core.Errors;
 using IMS.Domain.Enums;
 
 namespace IMS.Application.Users.Commands.UpdateUser;
@@ -8,20 +9,33 @@ public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
     public UpdateUserCommandValidator()
     {
         RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required");
+            .NotEmpty()
+            .WithMessage(Errors.UserErrors.IdIsRequired.Description)
+            .WithErrorCode(Errors.UserErrors.IdIsRequired.Code);
 
         RuleFor(x => x.FirstName)
-            .NotEmpty().WithMessage("First name is required")
-            .MaximumLength(100).WithMessage("First name must not exceed 100 characters");
+            .NotEmpty()
+            .WithMessage(Errors.UserErrors.FirstNameIsRequired.Description)
+            .WithErrorCode(Errors.UserErrors.FirstNameIsRequired.Code)
+            .MaximumLength(100)
+            .WithMessage(Errors.UserErrors.FirstNameTooLong.Description)
+            .WithErrorCode(Errors.UserErrors.FirstNameTooLong.Code);
 
         RuleFor(x => x.LastName)
-            .NotEmpty().WithMessage("Last name is required")
-            .MaximumLength(100).WithMessage("Last name must not exceed 100 characters");
+            .NotEmpty()
+            .WithMessage(Errors.UserErrors.LastNameIsRequired.Description)
+            .WithErrorCode(Errors.UserErrors.LastNameIsRequired.Code)
+            .MaximumLength(100)
+            .WithMessage(Errors.UserErrors.LastNameTooLong.Description)
+            .WithErrorCode(Errors.UserErrors.LastNameTooLong.Code);
 
 
         RuleFor(x => x.Role)
-            .NotEmpty().WithMessage("Role is required")
+            .NotEmpty()
+            .WithMessage(Errors.UserErrors.RoleIsRequired.Description)
+            .WithErrorCode(Errors.UserErrors.RoleIsRequired.Code)
             .Must(role => role == Roles.Admin || role == Roles.Manager || role == Roles.Staff)
-            .WithMessage("Role must be Admin, Manager, or Staff");
+            .WithMessage(Errors.UserErrors.InvalidRole.Description)
+            .WithErrorCode(Errors.UserErrors.InvalidRole.Code);
     }
 }

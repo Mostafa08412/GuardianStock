@@ -4,9 +4,17 @@ namespace IMS.Application.Common.Interfaces
 {
     public interface IEmailService
     {
+        Task SendEmailAsync(
+        string to,
+        string subject,
+        string body);
 
-        public Task SendEmailAsync(string to, string subject, string body);
-
+        Task SendForgetPasswordEmailAsync(
+        string to,
+        string name,
+        string emailAddress,
+        string otp,
+        CancellationToken cancellationToken);
 
         Task<Result> SendLowStockEmailAsync(
         IEnumerable<string> to,

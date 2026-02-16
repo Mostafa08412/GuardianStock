@@ -271,6 +271,7 @@ namespace IMS.Infrastructure
         {
             services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
             {
+                options.Tokens.EmailConfirmationTokenProvider = "ResetPasswordOTPProvider";
 
                 options.Password.RequireDigit = true;
                 options.Password.RequireLowercase = true;
@@ -282,10 +283,36 @@ namespace IMS.Infrastructure
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
             })
              .AddEntityFrameworkStores<ApplicationDbContext>()
-             .AddDefaultTokenProviders();
+             .AddDefaultTokenProviders()
+             .AddTokenProvider<ResetPasswordOTPTokenProvider<ApplicationUser>>("ResetPasswordOTPProvider");
+
 
             return services;
         }
+
+        public class ResetPasswordOTPTokenProvider<T> : TotpSecurityStampBasedTokenProvider<T> where T : class
+        {
+            public override async Task<bool> CanGenerateTwoFactorTokenAsync(UserManager<T> manager, T user)
+            {
+                return await manager.IsEmailConfirmedAsync(user) && !await manager.IsLockedOutAsync(user);
+            }
+
+            public override Task<string> GenerateAsync(string purpose, UserManager<T> manager, T user)
+            {
+                return base.GenerateAsync("ResetPasswordOTP:" + purpose, manager, user);
+            }
+
+            public override Task<string> GetUserModifierAsync(string purpose, UserManager<T> manager, T user)
+            {
+                return base.GetUserModifierAsync("ResetPasswordOTP:" + purpose, manager, user);
+            }
+
+            public override Task<bool> ValidateAsync(string purpose, string token, UserManager<T> manager, T user)
+            {
+                return base.ValidateAsync("ResetPasswordOTP:" + purpose, token, manager, user);
+            }
+        }
+
         public static IServiceCollection RegisterRepositoriesAndUnitOfWork(this IServiceCollection services)
         {
             services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));

@@ -8,10 +8,15 @@ public class AdjustLowStockThresholdCommandValidator : AbstractValidator<AdjustL
 {
     public AdjustLowStockThresholdCommandValidator()
     {
-        RuleFor(x => x.InventoryId).NotEmpty();
+        RuleFor(x => x.InventoryId)
+            .NotEmpty()
+            .WithMessage(Errors.InventoryErrors.InventoryIdIsRequired.Description)
+            .WithErrorCode(Errors.InventoryErrors.InventoryIdIsRequired.Code);
 
         RuleFor(x => x.NewLowStockThreshold)
             .GreaterThanOrEqualTo(Inventory.MinimumLowStockThreshold)
-            .WithMessage(Errors.InventoryErrors.QuantityCannotBeLowerThanThreshold.Description);
+            .WithMessage(Errors.InventoryErrors.QuantityCannotBeLowerThanThreshold.Description)
+            .WithErrorCode(Errors.InventoryErrors.QuantityCannotBeLowerThanThreshold.Code);
+
     }
 }

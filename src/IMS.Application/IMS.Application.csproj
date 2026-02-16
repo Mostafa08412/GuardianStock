@@ -25,7 +25,6 @@
 
 	<ItemGroup>
 		<Folder Include="Common\Exceptions\" />
-		<Folder Include="Inventories\Commands\AdjustThreshold\" />
 	</ItemGroup>
 
 </Project>

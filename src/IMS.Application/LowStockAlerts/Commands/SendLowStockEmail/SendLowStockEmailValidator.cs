@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using IMS.Domain.Core.Errors;
 
 namespace IMS.Application.LowStockAlerts.Commands.SendLowStockEmail
 {
@@ -8,7 +9,8 @@ namespace IMS.Application.LowStockAlerts.Commands.SendLowStockEmail
         {
             RuleFor(x => x.ProductId)
                 .NotEmpty()
-                .WithMessage("ProductId is required to send low stock alert.");
+                .WithMessage(Errors.InventoryErrors.ProductIdIsRequired.Description)
+                .WithErrorCode(Errors.InventoryErrors.ProductIdIsRequired.Code);
         }
     }
 

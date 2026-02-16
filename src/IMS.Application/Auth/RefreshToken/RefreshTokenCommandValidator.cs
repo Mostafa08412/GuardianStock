@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using IMS.Application.Common.Errors;
 
 namespace IMS.Application.Auth.RefreshToken
 {
@@ -6,7 +7,13 @@ namespace IMS.Application.Auth.RefreshToken
     {
         public RefreshTokenCommandValidator()
         {
-            RuleFor(X => X.refreshToken).NotEmpty().NotNull();
+            RuleFor(X => X.refreshToken)
+                .NotEmpty()
+                .WithMessage(ApplicationErrors.IdentityErrors.RefreshTokenIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.RefreshTokenIsRequired.Code)
+                .NotNull()
+                .WithMessage(ApplicationErrors.IdentityErrors.RefreshTokenIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.RefreshTokenIsRequired.Code);
         }
     }
 

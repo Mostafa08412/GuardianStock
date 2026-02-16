@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using IMS.Application.Common.Errors;
 
 namespace IMS.Application.Products.Commands.UploadProductCsv
 {
@@ -6,7 +7,13 @@ namespace IMS.Application.Products.Commands.UploadProductCsv
     {
         public UploadProductCsvCommandValidator()
         {
-            RuleFor(X => X.File).NotEmpty().NotNull();
+            RuleFor(X => X.File)
+                .NotEmpty()
+                .WithMessage(ApplicationErrors.CsvReader.FileIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.CsvReader.FileIsRequired.Code)
+                .NotNull()
+                .WithMessage(ApplicationErrors.CsvReader.FileIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.CsvReader.FileIsRequired.Code);
         }
     }
 }

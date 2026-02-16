@@ -1,4 +1,5 @@
 using FluentValidation;
+using IMS.Application.Common.Errors;
 
 namespace IMS.Application.Auth.GoogleLogin
 {
@@ -6,7 +7,13 @@ namespace IMS.Application.Auth.GoogleLogin
     {
         public GoogleLoginCommandValidator()
         {
-            RuleFor(x => x.IdToken).NotEmpty().NotNull();
+            RuleFor(x => x.IdToken)
+                .NotEmpty()
+                .WithMessage(ApplicationErrors.IdentityErrors.GoogleIdTokenIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.GoogleIdTokenIsRequired.Code)
+                .NotNull()
+                .WithMessage(ApplicationErrors.IdentityErrors.GoogleIdTokenIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.GoogleIdTokenIsRequired.Code);
         }
     }
 }

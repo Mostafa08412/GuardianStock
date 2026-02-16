@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using IMS.Domain.Core.Errors;
 
 namespace IMS.Application.Transactions.Queries.GetTransaction
 {
@@ -8,7 +9,8 @@ namespace IMS.Application.Transactions.Queries.GetTransaction
         {
             RuleFor(x => x.Id)
                 .NotEmpty()
-                .WithMessage("Transaction ID is required.");
+                .WithMessage(Errors.TransactionErrors.IdIsRequired.Description)
+                .WithErrorCode(Errors.TransactionErrors.IdIsRequired.Code);
         }
     }
 

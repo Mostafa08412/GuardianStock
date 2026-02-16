@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using IMS.Application.Common.Errors;
 
 namespace IMS.Application.Auth.ChangePassword
 {
@@ -7,12 +8,30 @@ namespace IMS.Application.Auth.ChangePassword
         public ChangePasswordCommandValidator()
         {
 
-            RuleFor(X => X.CurrentPassword).NotEmpty().NotNull();
-            RuleFor(X => X.NewPassword).NotEmpty().NotNull();
+            RuleFor(X => X.CurrentPassword)
+                .NotEmpty()
+                .WithMessage(ApplicationErrors.IdentityErrors.CurrentPasswordIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.CurrentPasswordIsRequired.Code)
+                .NotNull()
+                .WithMessage(ApplicationErrors.IdentityErrors.CurrentPasswordIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.CurrentPasswordIsRequired.Code);
+            RuleFor(X => X.NewPassword)
+                .NotEmpty()
+                .WithMessage(ApplicationErrors.IdentityErrors.NewPasswordIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.NewPasswordIsRequired.Code)
+                .NotNull()
+                .WithMessage(ApplicationErrors.IdentityErrors.NewPasswordIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.NewPasswordIsRequired.Code);
             RuleFor(X => X.ConfirmNewPassword)
                 .NotEmpty()
+                .WithMessage(ApplicationErrors.IdentityErrors.NewPasswordIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.NewPasswordIsRequired.Code)
                 .NotNull()
-                .Equal(X => X.NewPassword).WithMessage("New password and confirm password do not match.");
+                .WithMessage(ApplicationErrors.IdentityErrors.NewPasswordIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.NewPasswordIsRequired.Code)
+                .Equal(X => X.NewPassword)
+                .WithMessage(ApplicationErrors.IdentityErrors.ConfirmPasswordMismatch.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.ConfirmPasswordMismatch.Code);
         }
     }
 }

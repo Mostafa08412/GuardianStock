@@ -127,5 +127,22 @@ public interface IIdentityService
         , CancellationToken cancellationToken = default);
 
 
+    Task<Result<(string otp, string fullName)>> GenerateResetPasswordOTP(
+    string email,
+    CancellationToken cancellationToken = default);
+
+
+
+    Task<Result<string>> VerifyResetPasswordOTP(
+        string email,
+        string otp,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> ResetPasswordAsync(
+     string email,
+     string resetToken,
+     string newPassword,
+     CancellationToken cancellationToken = default);
+
     #endregion
 }

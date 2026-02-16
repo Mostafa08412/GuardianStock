@@ -1,4 +1,6 @@
-﻿using IMS.Domain.Core.Primitives;
+﻿using IMS.Application.Auth.ResetPassword;
+using IMS.Application.Auth.VerifyResetPasswordOtp;
+using IMS.Domain.Core.Primitives;
 
 namespace IMS.Application.Common.Errors;
 
@@ -31,6 +33,46 @@ public static class ApplicationErrors
 
         public static Error InvalidGoogleIdToken =>
             new("Identity.InvalidGoogleToken", "The Google authentication token is invalid or has expired.", ErrorType.IdentityError);
+
+        // ----- Validation: Required Fields -----
+        public static Error EmailIsRequired =>
+            new("Identity.EmailIsRequired-EmailAddress", "Email address is required.", ErrorType.Validation);
+
+        public static Error PasswordIsRequired =>
+            new("Identity.PasswordIsRequired-Password", "Password is required.", ErrorType.Validation);
+
+        public static Error CurrentPasswordIsRequired =>
+            new("Identity.CurrentPasswordIsRequired-CurrentPassword", "Current password is required.", ErrorType.Validation);
+
+        public static Error NewPasswordIsRequired =>
+            new("Identity.NewPasswordIsRequired-NewPassword", "New password is required.", ErrorType.Validation);
+
+        public static Error ConfirmPasswordMismatch =>
+            new("Identity.ConfirmPasswordMismatch-ConfirmNewPassword", "New password and confirm password do not match.", ErrorType.Validation);
+
+        public static Error FirstNameIsRequired =>
+            new("Identity.FirstNameIsRequired-FirstName", "First name is required.", ErrorType.Validation);
+
+        public static Error LastNameIsRequired =>
+            new("Identity.LastNameIsRequired-LastName", "Last name is required.", ErrorType.Validation);
+
+        public static Error FirstNameTooLong =>
+            new("Identity.FirstNameTooLong-FirstName", "First name must not exceed 100 characters.", ErrorType.Validation);
+
+        public static Error LastNameTooLong =>
+            new("Identity.LastNameTooLong-LastName", "Last name must not exceed 100 characters.", ErrorType.Validation);
+
+        public static Error GoogleIdTokenIsRequired =>
+            new("Identity.GoogleIdTokenIsRequired-IdToken", "Google ID token is required.", ErrorType.Validation);
+
+        public static Error RefreshTokenIsRequired =>
+            new("Identity.RefreshTokenIsRequired-RefreshToken", "Refresh token is required.", ErrorType.Validation);
+
+        public static Error OtpIsRequired =>
+            new("Identity.OtpIsRequired-Otp", "OTP code is required.", ErrorType.Validation);
+
+        public static Error ResetPasswordTokenIsRequired =>
+            new("Identity.ResetPasswordTokenIsRequired-ResetPasswordToken", "Reset password token is required.", ErrorType.Validation);
 
         // ----- Account Conflicts -----
         public static Error EmailAlreadyExists(string email) =>
@@ -93,6 +135,16 @@ public static class ApplicationErrors
         public static Error RecoveryCodeRedemptionFailed() =>
             new("Identity.RecoveryCodeRedemptionFailed", "The recovery code provided is invalid or has already been used.", ErrorType.Validation);
 
+        // ----- Password Reset -----
+        public static Error OtpCooldown() =>
+            new($"Identity.OtpCooldown-{nameof(VerifyResetPasswordOtpCommand.Otp)}", "Please wait 30 seconds before requesting another OTP.", ErrorType.Validation);
+
+        public static Error InvalidOtp =>
+            new($"Identity.InvalidOtp-{nameof(VerifyResetPasswordOtpCommand.Otp)}", "The OTP code entered is invalid or has expired.", ErrorType.Validation);
+
+        public static Error InvalidResetToken =>
+            new($"Identity.InvalidResetToken-{nameof(ResetPasswordCommand.ResetPasswordToken)}", "The password reset token is invalid or has expired.", ErrorType.Validation);
+
         // ----- Action Failures -----
         public static Error UpdateFailed(string details) =>
             new("Identity.UpdateFailed", $"An error occurred while updating the user profile: {details}", ErrorType.Failure);
@@ -144,5 +196,11 @@ public static class ApplicationErrors
 
         public static Error InvalidCategory => new(
             "CSV.InvalidCategory", "The specified category does not exist in the system.", ErrorType.Validation);
+    }
+
+    public static class EmailErrors
+    {
+        public static Error SendFailed(string details) =>
+            new("Email.SendFailed", $"Email delivery failed: {details}", ErrorType.Failure);
     }
 }

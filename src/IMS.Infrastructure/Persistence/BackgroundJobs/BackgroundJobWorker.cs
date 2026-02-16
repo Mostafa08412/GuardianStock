@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using IMS.Application.Auth.ForgetPassword;
 using IMS.Application.Common.Interfaces;
 using IMS.Application.LowStockAlerts.Commands.SendLowStockEmail;
 using IMS.Application.Products.Commands.BulkImportProducts;
@@ -33,6 +34,13 @@ namespace IMS.Infrastructure.Persistence.BackgroundJobs
         public void EnqueueSendUserCreatedEmailJob(SendUserCreatedEmailCommand request)
         {
             BackgroundJob.Enqueue<BackgroundJobBridge>(bridge => bridge.SendRequestAsync(request));
+        }
+
+
+        public void SendForgetPasswordEmail(SendForgetPasswordEmail request)
+        {
+            BackgroundJob.Enqueue<BackgroundJobBridge>(bridge =>
+                bridge.SendRequestAsync(request));
         }
     }
 }

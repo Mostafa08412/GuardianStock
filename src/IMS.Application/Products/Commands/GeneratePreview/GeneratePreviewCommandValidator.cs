@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using IMS.Application.Common.Errors;
 
 namespace IMS.Application.Products.Commands.GeneratePreview
 {
@@ -6,7 +7,10 @@ namespace IMS.Application.Products.Commands.GeneratePreview
     {
         public GeneratePreviewCommandValidator()
         {
-            RuleFor(X => X.filePath).NotNull().WithMessage("File path is required");
+            RuleFor(X => X.filePath)
+                .NotNull()
+                .WithMessage(ApplicationErrors.CsvReader.FileIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.CsvReader.FileIsRequired.Code);
         }
     }
 }

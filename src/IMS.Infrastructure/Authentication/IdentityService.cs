@@ -14,6 +14,7 @@ using IMS.Infrastructure.Tokens;
 using IMS.Infrastructure.Tokens.Options;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
@@ -31,8 +32,9 @@ namespace IMS.Infrastructure.Authentication
         private readonly TokenSettings _tokenOptions;
         private readonly IDateTime _dateTime;
         private readonly IConfiguration _configuration;
+        private readonly HybridCache _cache;
 
-        public IdentityService(IConfiguration configuration, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole<Guid>> roleManager, SignInManager<ApplicationUser> signInManager, ApplicationDbContext context, ITokenService tokenService, IOptions<TokenSettings> tokenSettings, IDateTime dateTime)
+        public IdentityService(HybridCache cache, IConfiguration configuration, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole<Guid>> roleManager, SignInManager<ApplicationUser> signInManager, ApplicationDbContext context, ITokenService tokenService, IOptions<TokenSettings> tokenSettings, IDateTime dateTime)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -42,6 +44,7 @@ namespace IMS.Infrastructure.Authentication
             _tokenOptions = tokenSettings.Value;
             _dateTime = dateTime;
             _configuration = configuration;
+            _cache = cache;
         }
 
 
@@ -781,6 +784,117 @@ namespace IMS.Infrastructure.Authentication
             }
 
         }
+
+
+        public async Task<Result<(string otp, string fullName)>> GenerateResetPasswordOTP(
+      string email,
+      CancellationToken cancellationToken = default)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                return Result<(string, string)>.Failure(ApplicationErrors.IdentityErrors.UserNotFoundByEmail(email));
+            }
+
+            var isUserLocked = await _userManager.IsLockedOutAsync(user);
+
+            if (isUserLocked)
+            {
+                return Result<(string, string)>.Failure(ApplicationErrors.IdentityErrors.UserLockout);
+            }
+
+            var key = await _cache.GetOrCreateAsync<string>($"ResetPasswordOTP_{email}",
+                factory: async entry =>
+                 {
+                     return string.Empty;
+                 }
+                );
+
+            if (!string.IsNullOrEmpty(key))
+            {
+                return Result<(string, string)>.Failure(ApplicationErrors.IdentityErrors.OtpCooldown());
+            }
+            else
+            {
+
+                await _userManager.UpdateSecurityStampAsync(user);
+
+            }
+
+
+            var otp = await _userManager.GenerateTwoFactorTokenAsync(user, "ResetPasswordOTPProvider");
+
+            await _cache.SetAsync($"ResetPasswordOTP_{email}", otp, new HybridCacheEntryOptions
+            {
+                Expiration = TimeSpan.FromSeconds(30)
+            });
+
+
+            return Result<(string, string)>.Success((otp, $"{user.FirstName} {user.LastName}"));
+        }
+
+
+        public async Task<Result<string>> VerifyResetPasswordOTP(
+            string email,
+            string otp,
+            CancellationToken cancellationToken = default)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                return Result<string>.Failure(ApplicationErrors.IdentityErrors.UserNotFoundByEmail(email));
+            }
+
+            var isUserLocked = await _userManager.IsLockedOutAsync(user);
+
+            if (isUserLocked)
+            {
+                return Result<string>.Failure(ApplicationErrors.IdentityErrors.UserLockout);
+            }
+
+            var isValid = await _userManager.VerifyTwoFactorTokenAsync(user, "ResetPasswordOTPProvider", otp);
+
+
+            if (!isValid)
+            {
+                await _userManager.AccessFailedAsync(user);
+                return Result<string>.Failure(ApplicationErrors.IdentityErrors.InvalidOtp);
+            }
+            await _userManager.UpdateSecurityStampAsync(user);
+
+            await _cache.RemoveAsync($"ResetPasswordOTP_{email}");
+
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+
+            return Result<string>.Success(resetToken);
+        }
+
+
+        public async Task<Result> ResetPasswordAsync(
+            string email,
+            string resetToken,
+            string newPassword,
+            CancellationToken cancellationToken = default)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                return Result.Failure(ApplicationErrors.IdentityErrors.UserNotFoundByEmail(email));
+            }
+            var resetResult = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
+
+            if (!resetResult.Succeeded && resetResult.Errors.Any(X => X.Code == ApplicationErrors.IdentityErrors.InvalidToken.Code))
+            {
+                return Result.Failure(ApplicationErrors.IdentityErrors.InvalidResetToken);
+            }
+
+            return Result.Success();
+        }
+
 
         #endregion
 

@@ -2,8 +2,10 @@
 using IMS.Application.Common.Interfaces;
 using IMS.Domain.Core.Primitives;
 using IMS.Domain.Core.Primitives.Result;
+using IMS.Application.Common.Errors;
 using IMS.Infrastructure.EmailServices.EmailTemplates;
 using IMS.Infrastructure.EmailServices.Options;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net;
@@ -15,12 +17,16 @@ namespace IMS.Infrastructure.EmailServices
         private readonly IFluentEmail fluentEmail;
         private readonly SmtpSettings smtpSettings;
         private readonly ILogger<EmailService> logger;
+        private readonly IConfiguration _configuration;
+        private readonly string _frontendBaseUrl;
 
-        public EmailService(IFluentEmail fluentEmail, IOptions<SmtpSettings> smtpSettings, ILogger<EmailService> logger)
+        public EmailService(IConfiguration configuration, IFluentEmail fluentEmail, IOptions<SmtpSettings> smtpSettings, ILogger<EmailService> logger)
         {
             this.fluentEmail = fluentEmail;
             this.smtpSettings = smtpSettings.Value;
             this.logger = logger;
+            this._configuration = configuration;
+            _frontendBaseUrl = _configuration.GetValue<string>("FrontendBaseUrl") ?? "#";
         }
 
         public async Task SendEmailAsync(string to, string subject, string body)
@@ -38,13 +44,14 @@ namespace IMS.Infrastructure.EmailServices
          CancellationToken cancellationToken)
         {
 
+
             var emailModel = new LowStockEmailModel
             {
                 ProductName = productName,
                 Sku = sku,
                 CurrentQuantity = currentQuantity,
                 Threshold = threshold,
-                DashboardUrl = $"http://localhost:8080/inventories/{inventoryId}",
+                DashboardUrl = $"{_frontendBaseUrl}/inventories/{inventoryId}",
                 AlertTime = DateTime.UtcNow
             };
             string templatePath = Path.Combine(AppContext.BaseDirectory, "EmailServices", "EmailTemplates", "LowStockEmail.cshtml");
@@ -54,7 +61,7 @@ namespace IMS.Infrastructure.EmailServices
             var result = await fluentEmail
                  .To(smtpSettings.FromEmail)
                  .BCC(to.Select(X => new FluentEmail.Core.Models.Address(X)))
-                 .Subject($"URGENT: Low Stock - {productName}")
+                 .Subject($"[Inventory Alert] Low Stock Warning: {productName} — Immediate Replenishment Required")
                  .UsingTemplateFromFile(templatePath, emailModel)
                  .SendAsync(cancellationToken);
 
@@ -62,9 +69,9 @@ namespace IMS.Infrastructure.EmailServices
             {
                 var errorMessage = string.Join(',', result.ErrorMessages);
                 logger.LogWarning("Sending Low Stock Email Failed: Reason {reason}", errorMessage);
-                return Result.Failure(new Error("Email.SendFailed", errorMessage, ErrorType.Failure));
+                return Result.Failure(ApplicationErrors.EmailErrors.SendFailed(errorMessage));
             }
-            logger.LogWarning("Sending Low Stock Email Succeeded");
+            logger.LogInformation("Low stock alert email sent successfully for product {ProductName}", productName);
 
             return Result.Success();
         }
@@ -81,7 +88,7 @@ namespace IMS.Infrastructure.EmailServices
                 FullName = fullName,
                 Email = email,
                 Password = password,
-                LoginUrl = "https://your-app.com/login"
+                LoginUrl = $"{_frontendBaseUrl}/login"
             };
 
             string templatePath = Path.Combine(AppContext.BaseDirectory, "EmailServices", "EmailTemplates", "UserCreatedEmail.cshtml");
@@ -90,7 +97,7 @@ namespace IMS.Infrastructure.EmailServices
 
             var result = await fluentEmail
                 .To(to)
-                .Subject("Your Account Has Been Created")
+                .Subject($"Welcome to the Team, {fullName} — Your Account Is Ready")
                 .UsingTemplateFromFile(templatePath, emailModel)
                 .SendAsync(cancellationToken);
 
@@ -98,12 +105,39 @@ namespace IMS.Infrastructure.EmailServices
             {
                 var errorMessage = string.Join(',', result.ErrorMessages);
                 logger.LogWarning("Sending User Created Email Failed: Reason {reason}", errorMessage);
-                return Result.Failure(new Error("Email.SendFailed", errorMessage, ErrorType.Failure));
+                return Result.Failure(ApplicationErrors.EmailErrors.SendFailed(errorMessage));
             }
 
             logger.LogInformation("User Created Email sent successfully to {Email}", email);
 
             return Result.Success();
+        }
+
+
+        public async Task SendForgetPasswordEmailAsync(string to, string name, string emailAddress, string otp, CancellationToken cancellationToken)
+        {
+
+            ForgetPasswordEmailModel model = new ForgetPasswordEmailModel
+            {
+                Name = name,
+                EmailAddress = emailAddress,
+                Otp = otp
+            };
+
+            string subject = "Password Reset Request — Secure Verification Code Enclosed";
+
+            string templatePath = Path.Combine(AppContext.BaseDirectory, "EmailServices", "EmailTemplates", "ForgetPasswordEmailTemplate.cshtml");
+
+            ServicePointManager.FindServicePoint(new Uri($"http://{smtpSettings.SmtpPort}")).ConnectionLimit = 1;
+
+            await fluentEmail
+                .To(to)
+                .Subject(subject)
+                .UsingTemplateFromFile(templatePath, model)
+                .SendAsync(cancellationToken);
+
+
+
         }
     }
 }

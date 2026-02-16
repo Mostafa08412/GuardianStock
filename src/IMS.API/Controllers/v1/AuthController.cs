@@ -4,10 +4,13 @@ using IMS.API.Contracts.Examples;
 using IMS.API.Infrastructure;
 using IMS.Application.Auth.ChangePassword;
 using IMS.Application.Auth.Common;
+using IMS.Application.Auth.ForgetPassword;
 using IMS.Application.Auth.GoogleLogin;
 using IMS.Application.Auth.Logout;
 using IMS.Application.Auth.RefreshToken;
+using IMS.Application.Auth.ResetPassword;
 using IMS.Application.Auth.UpdateProfile;
+using IMS.Application.Auth.VerifyResetPasswordOtp;
 using IMS.Application.Contracts.Identity;
 using IMS.Domain.Core.Primitives.Result;
 using MediatR;
@@ -178,6 +181,67 @@ namespace IMS.API.Controllers.v1
             OperationId = "UpdateProfile"
         )]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileCommand request)
+        {
+            var result = await _sender.Send(request);
+
+            return HandleResult(result, ApplicationStatusCodes.Ok);
+        }
+
+
+        /// <summary>
+        /// Sends a password reset OTP to the user's email address.
+        /// </summary>
+        /// <param name="request">The forget password request containing the email address.</param>
+        /// <returns>A response indicating the OTP was sent successfully.</returns>
+        [AllowAnonymous]
+        [HttpPost(ApiRoutes.Authentication.ForgetPassword)]
+        [ProducesResponseType((int)ApplicationStatusCodes.Ok, Type = typeof(ApiResponse))]
+        [SwaggerOperation(
+            Summary = "Forget password",
+            Description = "Generates a one-time password and sends it to the user's email for password reset.",
+            OperationId = "ForgetPassword"
+        )]
+        public async Task<IActionResult> ForgetPassword([FromBody] ForgetPasswordCommand request)
+        {
+            var result = await _sender.Send(request);
+
+            return HandleResult(result, ApplicationStatusCodes.Ok);
+        }
+
+        /// <summary>
+        /// Verifies the password reset OTP and returns a reset password token.
+        /// </summary>
+        /// <param name="request">The verify OTP request containing the email and OTP.</param>
+        /// <returns>A reset password token to be used for resetting the password.</returns>
+        [AllowAnonymous]
+        [HttpPost(ApiRoutes.Authentication.VerifyResetPasswordOtp)]
+        [ProducesResponseType((int)ApplicationStatusCodes.Ok, Type = typeof(ApiResponse<VerifyResetPasswordOtpResponse>))]
+        [SwaggerOperation(
+            Summary = "Verify reset password OTP",
+            Description = "Validates the OTP sent to the user's email and returns a token for password reset.",
+            OperationId = "VerifyResetPasswordOtp"
+        )]
+        public async Task<IActionResult> VerifyResetPasswordOtp([FromBody] VerifyResetPasswordOtpCommand request)
+        {
+            var result = await _sender.Send(request);
+
+            return HandleResult(result, ApplicationStatusCodes.Ok);
+        }
+
+        /// <summary>
+        /// Resets the user's password using the reset password token.
+        /// </summary>
+        /// <param name="request">The reset password request containing the token and new password.</param>
+        /// <returns>A response indicating the password was reset successfully.</returns>
+        [AllowAnonymous]
+        [HttpPost(ApiRoutes.Authentication.ResetPassword)]
+        [ProducesResponseType((int)ApplicationStatusCodes.Ok, Type = typeof(ApiResponse))]
+        [SwaggerOperation(
+            Summary = "Reset password",
+            Description = "Resets the user's password using the reset password token obtained from OTP verification.",
+            OperationId = "ResetPassword"
+        )]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand request)
         {
             var result = await _sender.Send(request);
 
