@@ -1,6 +1,7 @@
 ﻿using Domain.UnitTests.Builders;
-using IMS.Domain.Inventories;
-using static IMS.Domain.Core.Errors.Errors;
+using GuardianStock.Domain.Inventories;
+using GuardianStock.Domain.Inventories;
+using static GuardianStock.Domain.Core.Errors.Errors;
 
 namespace Domain.UnitTests.Inventories
 {

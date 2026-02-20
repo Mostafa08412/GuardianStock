@@ -1,6 +1,6 @@
 using Domain.UnitTests.Builders;
-using IMS.Domain.Core.Errors;
-using IMS.Domain.Users;
+using GuardianStock.Domain.Users;
+using GuardianStock.Domain.Core.Errors;
 
 namespace Domain.UnitTests.Users;
 

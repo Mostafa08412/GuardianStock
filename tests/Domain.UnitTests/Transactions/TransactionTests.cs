@@ -1,6 +1,7 @@
 using Domain.UnitTests.Builders;
-using IMS.Domain.Transactions;
-using Errors = IMS.Domain.Core.Errors.Errors;
+using GuardianStock.Domain.Transactions;
+using GuardianStock.Domain.Transactions;
+using Errors = GuardianStock.Domain.Core.Errors.Errors;
 
 namespace Domain.UnitTests.Transactions;
 
