@@ -1,4 +1,5 @@
-﻿using IMS.Domain.Inventories;
+﻿using GuardianStock.Domain.Core.Primitives.Result;
+using GuardianStock.Domain.Inventories;
 
 namespace Domain.UnitTests.Builders;
 

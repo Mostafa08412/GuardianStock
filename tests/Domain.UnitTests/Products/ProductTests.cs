@@ -1,6 +1,6 @@
 using Domain.UnitTests.Builders;
-using IMS.Domain.Products;
-using Errors = IMS.Domain.Core.Errors.Errors;
+using GuardianStock.Domain.Products;
+using Errors = GuardianStock.Domain.Core.Errors.Errors;
 
 namespace Domain.UnitTests.Products;
 
@@ -23,9 +23,10 @@ public class ProductTests
         var price = 1299.99m;
         var supplier = "Dell Inc.";
         var categoryId = Guid.NewGuid();
+        var imageUrl = "api/v2/products/images/test.jpg";
 
         // Act
-        var result = Product.Create(name, sku, description, price, supplier, categoryId);
+        var result = Product.Create(name, sku, description, price, supplier, categoryId, imageUrl);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -36,6 +37,7 @@ public class ProductTests
         result.Value.Price.Should().Be(price);
         result.Value.Supplier.Should().Be(supplier);
         result.Value.CategoryId.Should().Be(categoryId);
+        result.Value.ImageUrl.Should().Be(imageUrl);
     }
 
     [Fact]
@@ -357,6 +359,41 @@ public class ProductTests
 
         // Assert
         product.Sku.Should().Be(originalSku);
+    }
+
+    #endregion
+
+    #region UpdateImage Method Tests
+
+    [Fact]
+    public void UpdateImage_WithValidUrl_ShouldUpdateImageUrlSuccessfully()
+    {
+        // Arrange
+        var product = ProductBuilder.Create().BuildSuccessfully();
+        var newImageUrl = "api/v2/products/images/new-image.png";
+
+        // Act
+        var result = product.UpdateImage(newImageUrl);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        product.ImageUrl.Should().Be(newImageUrl);
+    }
+
+    [Fact]
+    public void UpdateImage_WithNullUrl_ShouldClearImageUrlSuccessfully()
+    {
+        // Arrange
+        var product = ProductBuilder.Create()
+            .WithImageUrl("api/v2/products/images/old-image.png")
+            .BuildSuccessfully();
+
+        // Act
+        var result = product.UpdateImage(null);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        product.ImageUrl.Should().BeNull();
     }
 
     #endregion

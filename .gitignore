@@ -369,3 +369,4 @@ frontend
 /src/IMS.API/temp
 /src/IMS.API/wwwroot/temp
 /.github/copilot-instructions.md
+/dockerfile

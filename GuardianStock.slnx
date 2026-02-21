@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/GuardianStock.API/GuardianStock.API.csproj" />
+    <Project Path="src/GuardianStock.Application/GuardianStock.Application.csproj" />
+    <Project Path="src/GuardianStock.Domain/GuardianStock.Domain.csproj" />
+    <Project Path="src/GuardianStock.Infrastructure/GuardianStock.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Domain.UnitTests/Domain.UnitTests.csproj" Id="cebe759b-fe02-46c9-a212-b257a565c884" />
+  </Folder>
+</Solution>

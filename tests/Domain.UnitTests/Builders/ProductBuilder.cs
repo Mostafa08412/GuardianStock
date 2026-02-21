@@ -1,4 +1,5 @@
-using IMS.Domain.Products;
+using GuardianStock.Domain.Core.Primitives.Result;
+using GuardianStock.Domain.Products;
 
 namespace Domain.UnitTests.Builders;
 
@@ -18,6 +19,7 @@ public class ProductBuilder
     private decimal _price = 99.99m;
     private string _supplier = "Test Supplier";
     private Guid _categoryId = Guid.NewGuid();
+    private string? _imageUrl = null;
 
     private ProductBuilder()
     {
@@ -79,13 +81,19 @@ public class ProductBuilder
         return this;
     }
 
+    public ProductBuilder WithImageUrl(string? imageUrl)
+    {
+        _imageUrl = imageUrl;
+        return this;
+    }
+
     /// <summary>
     /// Builds the Product using the configured values.
     /// Returns Result<Product> to match the actual factory method signature.
     /// </summary>
     public Result<Product> Build()
     {
-        return Product.Create(_name, _sku, _description, _price, _supplier, _categoryId);
+        return Product.Create(_name, _sku, _description, _price, _supplier, _categoryId, _imageUrl);
     }
 
     /// <summary>

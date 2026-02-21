@@ -1,0 +1,29 @@
+using FluentValidation;
+using GuardianStock.Application.Common.Errors;
+
+namespace GuardianStock.Application.Auth.VerifyResetPasswordOtp
+{
+    public class VerifyResetPasswordOtpCommandValidator : AbstractValidator<VerifyResetPasswordOtpCommand>
+    {
+        public VerifyResetPasswordOtpCommandValidator()
+        {
+            RuleFor(x => x.EmailAddress)
+                .NotEmpty()
+                .WithMessage(ApplicationErrors.IdentityErrors.EmailIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.EmailIsRequired.Code)
+                .NotNull()
+                .WithMessage(ApplicationErrors.IdentityErrors.EmailIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.EmailIsRequired.Code)
+                .EmailAddress()
+                .WithMessage(ApplicationErrors.IdentityErrors.InvalidEmail.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.InvalidEmail.Code);
+            RuleFor(x => x.Otp)
+                .NotEmpty()
+                .WithMessage(ApplicationErrors.IdentityErrors.OtpIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.OtpIsRequired.Code)
+                .NotNull()
+                .WithMessage(ApplicationErrors.IdentityErrors.OtpIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.OtpIsRequired.Code);
+        }
+    }
+}

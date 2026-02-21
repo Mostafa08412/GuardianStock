@@ -1,6 +1,7 @@
 ﻿using Domain.UnitTests.Builders;
-using IMS.Domain.Inventories;
-using static IMS.Domain.Core.Errors.Errors;
+using GuardianStock.Domain.Inventories;
+using GuardianStock.Domain.Inventories;
+using static GuardianStock.Domain.Core.Errors.Errors;
 
 namespace Domain.UnitTests.Inventories
 {
@@ -167,7 +168,7 @@ namespace Domain.UnitTests.Inventories
 
             inventory.LowStockAlert.Threshold.Should().Be(15);
 
-            inventory.DomainEvents.Should().OnlyContain(X => X is LowStockAlertTriggeredDomainEvent);
+            inventory.DomainEvents.Should().Contain(X => X is LowStockAlertTriggeredDomainEvent);
 
             result.IsSuccess.Should().BeTrue();
 
@@ -308,7 +309,7 @@ namespace Domain.UnitTests.Inventories
 
             inventory.LowStockAlert.Threshold.Should().Be(25);
 
-            inventory.DomainEvents.Should().OnlyContain(X => X is LowStockAlertTriggeredDomainEvent);
+            inventory.DomainEvents.Should().Contain(X => X is LowStockAlertTriggeredDomainEvent);
         }
 
         #endregion

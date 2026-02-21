@@ -1,3 +1,3 @@
 global using Xunit;
 global using FluentAssertions;
-global using IMS.Domain.Core.Primitives.Result;
+global using GuardianStock.Domain.Core.Primitives.Result;

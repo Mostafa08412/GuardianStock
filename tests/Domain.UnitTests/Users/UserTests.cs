@@ -1,5 +1,6 @@
 using Domain.UnitTests.Builders;
-using IMS.Domain.Users;
+using GuardianStock.Domain.Users;
+using GuardianStock.Domain.Core.Errors;
 
 namespace Domain.UnitTests.Users;
 
@@ -15,7 +16,7 @@ public class UserTests
     public void Create_WithValidInputs_ShouldReturnSuccessResult()
     {
         // Arrange
-        var id = Guid.NewGuid().ToString();
+        var id = Guid.NewGuid();
         var firstName = "Jane";
         var lastName = "Smith";
         var username = "janesmith";
@@ -53,9 +54,8 @@ public class UserTests
 
     [Theory]
     [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void Create_WithInvalidId_ShouldReturnFailureResult(string invalidId)
+    [InlineData("00000000-0000-0000-0000-000000000000")]
+    public void Create_WithInvalidId_ShouldReturnFailureResult(Guid invalidId)
     {
         // Arrange & Act
         var result = UserBuilder.Create()
@@ -64,7 +64,7 @@ public class UserTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(User.Errors.UserErrors.IdIsRequired);
+        result.Error.Should().Be(Errors.UserErrors.IdIsRequired);
     }
 
     [Theory]
@@ -80,7 +80,7 @@ public class UserTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(User.Errors.UserErrors.FirstNameIsRequired);
+        result.Error.Should().Be(Errors.UserErrors.FirstNameIsRequired);
     }
 
     [Theory]
@@ -96,7 +96,7 @@ public class UserTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(User.Errors.UserErrors.LastNameIsRequired);
+        result.Error.Should().Be(Errors.UserErrors.LastNameIsRequired);
     }
 
     [Theory]
@@ -112,7 +112,7 @@ public class UserTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(User.Errors.UserErrors.UsernameIsRequired);
+        result.Error.Should().Be(Errors.UserErrors.UsernameIsRequired);
     }
 
     [Theory]
@@ -128,7 +128,7 @@ public class UserTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(User.Errors.UserErrors.EmailIsRequired);
+        result.Error.Should().Be(Errors.UserErrors.EmailIsRequired);
     }
 
     #endregion
@@ -138,9 +138,11 @@ public class UserTests
     [Fact]
     public void User_AfterCreation_ShouldHaveAllPropertiesSet()
     {
+
+        var userId = Guid.NewGuid();
         // Arrange & Act
         var user = UserBuilder.Create()
-            .WithId("user-123")
+            .WithId(userId)
             .WithFirstName("Test")
             .WithLastName("User")
             .WithUsername("testuser")
@@ -148,7 +150,7 @@ public class UserTests
             .BuildSuccessfully();
 
         // Assert
-        user.Id.Should().Be("user-123");
+        user.Id.Should().Be(userId);
         user.FirstName.Should().Be("Test");
         user.LastName.Should().Be("User");
         user.Username.Should().Be("testuser");

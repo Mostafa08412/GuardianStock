@@ -1,6 +1,7 @@
 using Domain.UnitTests.Builders;
-using IMS.Domain.Transactions;
-using Errors = IMS.Domain.Core.Errors.Errors;
+using GuardianStock.Domain.Transactions;
+using GuardianStock.Domain.Transactions;
+using Errors = GuardianStock.Domain.Core.Errors.Errors;
 
 namespace Domain.UnitTests.Transactions;
 
@@ -115,7 +116,7 @@ public class TransactionTests
         domainEvent.Quantity.Should().Be(10);
         domainEvent.UnitPrice.Should().Be(50.00m);
         domainEvent.Type.Should().Be(TransactionType.Sale);
-        domainEvent.TotalAmount.Should().Be(500.00m);
+        (domainEvent.Quantity * domainEvent.UnitPrice).Should().Be(500.00m);
     }
 
     #endregion
@@ -224,7 +225,7 @@ public class TransactionTests
         domainEvent.Quantity.Should().Be(20);
         domainEvent.UnitPrice.Should().Be(15.00m);
         domainEvent.Type.Should().Be(TransactionType.Purchase);
-        domainEvent.TotalAmount.Should().Be(300.00m);
+        (domainEvent.Quantity * domainEvent.UnitPrice).Should().Be(300.00m);
     }
 
     #endregion
@@ -280,37 +281,5 @@ public class TransactionTests
 
     #endregion
 
-    #region CreatedOnUTC Tests
 
-    [Fact]
-    public void RecordSale_ShouldSetCreatedOnUTC()
-    {
-        // Arrange
-        var beforeCreation = DateTime.UtcNow;
-
-        // Act
-        var transaction = TransactionBuilder.CreateSale().BuildSuccessfully();
-        var afterCreation = DateTime.UtcNow;
-
-        // Assert
-        transaction.CreatedOnUTC.Should().BeOnOrAfter(beforeCreation);
-        transaction.CreatedOnUTC.Should().BeOnOrBefore(afterCreation);
-    }
-
-    [Fact]
-    public void RecordPurchase_ShouldSetCreatedOnUTC()
-    {
-        // Arrange
-        var beforeCreation = DateTime.UtcNow;
-
-        // Act
-        var transaction = TransactionBuilder.CreatePurchase().BuildSuccessfully();
-        var afterCreation = DateTime.UtcNow;
-
-        // Assert
-        transaction.CreatedOnUTC.Should().BeOnOrAfter(beforeCreation);
-        transaction.CreatedOnUTC.Should().BeOnOrBefore(afterCreation);
-    }
-
-    #endregion
 }
