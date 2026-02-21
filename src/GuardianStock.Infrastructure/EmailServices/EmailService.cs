@@ -3,8 +3,7 @@ using GuardianStock.Application.Common.Errors;
 using GuardianStock.Application.Common.Interfaces;
 using GuardianStock.Domain.Core.Primitives.Result;
 using GuardianStock.Infrastructure.EmailServices.EmailTemplates;
-using GuardianStock.Infrastructure.EmailServices.Options;
-using GuardianStock.Infrastructure.EmailServices.EmailTemplates;
+using GuardianStock.Infrastructure.EmailServices.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -26,7 +25,7 @@ namespace GuardianStock.Infrastructure.EmailServices
             this.smtpSettings = smtpSettings.Value;
             this.logger = logger;
             this._configuration = configuration;
-            _frontendBaseUrl = _configuration.GetValue<string>("FrontendBaseUrl") ?? "#";
+            _frontendBaseUrl = _configuration.GetSection("FrontendSettings").GetValue<string>("BaseUrl") ?? "#";
         }
 
         public async Task SendEmailAsync(string to, string subject, string body)

@@ -1,4 +1,5 @@
-﻿using GuardianStock.Application.Common.Errors;
+﻿using FluentEmail.MailKitSmtp;
+using GuardianStock.Application.Common.Errors;
 using GuardianStock.Application.Common.Interfaces;
 using GuardianStock.Domain.Abstractions;
 using GuardianStock.Domain.Categories;
@@ -12,7 +13,7 @@ using GuardianStock.Infrastructure.Common;
 using GuardianStock.Infrastructure.Common.Exceptions;
 using GuardianStock.Infrastructure.CsvFileReader.Products;
 using GuardianStock.Infrastructure.EmailServices;
-using GuardianStock.Infrastructure.EmailServices.Options;
+using GuardianStock.Infrastructure.EmailServices.Settings;
 using GuardianStock.Infrastructure.FileManager;
 using GuardianStock.Infrastructure.HubServices;
 using GuardianStock.Infrastructure.Persistence;
@@ -31,8 +32,6 @@ using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using System.Net;
-using System.Net.Mail;
 using System.Reflection;
 using System.Text;
 namespace GuardianStock.Infrastructure
@@ -232,13 +231,16 @@ namespace GuardianStock.Infrastructure
 
             services.AddFluentEmail(smtpSettings!.FromEmail)
                     .AddRazorRenderer()
-                    .AddSmtpSender(() => new SmtpClient(smtpSettings.SmtpHost, smtpSettings.SmtpPort)
+                    .AddMailKitSender(new SmtpClientOptions
                     {
-                        EnableSsl = smtpSettings.UseSSL,
-                        UseDefaultCredentials = false,
-                        DeliveryMethod = SmtpDeliveryMethod.Network,
-                        Credentials = smtpSettings.UseSSL ? new NetworkCredential(smtpSettings.FromEmail, smtpSettings.Password) : null
+                        Server = smtpSettings.SmtpHost,
+                        Port = smtpSettings.SmtpPort,
+                        UseSsl = smtpSettings.UseSSL,
+                        RequiresAuthentication = smtpSettings.UseCredentials,
+                        User = smtpSettings.FromEmail,
+                        Password = smtpSettings.Password
                     });
+
 
 
             return services;

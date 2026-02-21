@@ -19,7 +19,6 @@ namespace GuardianStock.Infrastructure.Persistence
 {
     public static class ApplicationDbContextInitializerDependencyInjection
     {
-        // Changed to async Task to avoid async void side effects
         public async static Task ResetDatabaseIfExists(this IHost applicationBuilder)
         {
             using (var scope = applicationBuilder.Services.CreateScope())
@@ -49,13 +48,13 @@ namespace GuardianStock.Infrastructure.Persistence
 
     public class ApplicationDbContextInitializer
     {
-        // Private lists to hold data before bulk adding
         private List<ApplicationUser> applicationUsers = new();
         private List<User> users = new();
         private List<Product> products = new();
         private List<Category> categories = new();
         private List<Inventory> inventories = new();
         private List<Transaction> transactions = new();
+        private List<StockHistory> stockHistories = new();
         private readonly IUnitOfWork _unitOfWork;
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -102,6 +101,10 @@ namespace GuardianStock.Infrastructure.Persistence
 
         public async Task TrySeedAsync()
         {
+
+
+
+
             _logger.LogInformation("Seeding database...");
             try
             {
@@ -115,12 +118,6 @@ namespace GuardianStock.Infrastructure.Persistence
                 await SeedTransactions();
                 (_dateTime as SettableDateProvider)!.UTCNow = DateTime.UtcNow;
                 await SeedDataAsync();
-                applicationUsers.Clear();
-                users.Clear();
-                products.Clear();
-                inventories.Clear();
-                transactions.Clear();
-                categories.Clear();
             }
             catch (Exception ex)
             {
@@ -175,18 +172,15 @@ namespace GuardianStock.Infrastructure.Persistence
                 ("Mobile Accessories", "Accessories for mobile devices")
             };
 
-            for (int i = 0; i < categoryData.Count; i++)
+            foreach (var category in categoryData)
             {
-                var data = categoryData[i];
-                categories.Add(Category.Create(data.name, data.desc).Value!);
+                categories.Add(Category.Create(category.name, category.desc).Value!);
             }
         }
 
         private async Task SeedProductsAsync()
         {
-            if (await _context.Products.AnyAsync()) return;
-            // Ensure we have categories in the list to reference
-            if (!categories.Any()) return;
+            if ((await _context.Products.AnyAsync()) || !categories.Any()) return;
 
             var productData = new List<(string name, string sku, string desc, decimal price, string manufacturer, int catIndex, string imageUrl)>
             {
@@ -310,7 +304,7 @@ namespace GuardianStock.Infrastructure.Persistence
             {
                 var inventory = Inventory.Create(Random.Shared.Next(90, 150), Random.Shared.Next(10, 30), product.Id).Value!;
                 inventories.Add(inventory);
-                _context.StockHistories.Add(StockHistory.Create(inventory.Id, null, clock.UTCNow, inventory.Quantity));
+                stockHistories.Add(StockHistory.Create(inventory.Id, null, clock.UTCNow, inventory.Quantity));
             }
         }
 
@@ -365,7 +359,7 @@ namespace GuardianStock.Infrastructure.Persistence
                             ForceSetCreatedBy(purchase, users[0].Id);
                             transactions.Add(purchase);
                         }
-                        _context.StockHistories.Add(StockHistory.Create(inventory.Id, null, clock.UTCNow, inventory.Quantity));
+                        stockHistories.Add(StockHistory.Create(inventory.Id, null, clock.UTCNow, inventory.Quantity));
                     }
                 }
             }
@@ -389,16 +383,23 @@ namespace GuardianStock.Infrastructure.Persistence
             {
                 prop.SetValue(trans, CreatedBy);
             }
+
+            prop = typeof(Transaction).GetProperty("UpdatedBy");
+            if (prop != null)
+            {
+                prop.SetValue(trans, CreatedBy);
+            }
         }
 
         private async Task SeedDataAsync()
         {
             // Add all collected lists to the context
-            if (users.Any()) _context.BusinessUsers.AddRange(users);
+            if (users.Any()) _context.AddRange(users);
             if (categories.Any()) _context.Categories.AddRange(categories);
             if (products.Any()) _context.Products.AddRange(products);
             if (inventories.Any()) _context.Inventories.AddRange(inventories);
             if (transactions.Any()) _context.Transactions.AddRange(transactions);
+            if (stockHistories.Any()) _context.StockHistories.AddRange(stockHistories);
             await _unitOfWork.Complete(default);
         }
 
@@ -413,11 +414,20 @@ namespace GuardianStock.Infrastructure.Persistence
         private async Task SeedApplicationUsers()
         {
             if (await _userManager.Users.AnyAsync()) return;
+
             var admin = new ApplicationUser { UserName = "Admin", Email = "Admin@localhost", FirstName = "System", LastName = "Admin", EmailConfirmed = true };
             var manager = new ApplicationUser { UserName = "Manager", Email = "Manager@localhost", FirstName = "System", LastName = "Manager", EmailConfirmed = true };
-            applicationUsers.AddRange(new[] { admin, manager });
+            var staff = new ApplicationUser { UserName = "Staff", Email = "Staff@localhost", FirstName = "System", LastName = "Staff", EmailConfirmed = true };
+
+
+            applicationUsers.AddRange(new[] { admin, manager, staff });
+
+
             await CreateIdentityUserAsync(admin, "Admin@123", Roles.Admin);
             await CreateIdentityUserAsync(manager, "Manager@123", Roles.Manager);
+            await CreateIdentityUserAsync(staff, "Staff@123", Roles.Staff);
+
+
             var admin1 = new ApplicationUser { UserName = "Admin1", Email = "Admin1@localhost", FirstName = "System", LastName = "Admin", EmailConfirmed = true };
             var admin2 = new ApplicationUser { UserName = "Admin2", Email = "Admin2@localhost", FirstName = "System", LastName = "Admin", EmailConfirmed = true };
             var admin3 = new ApplicationUser { UserName = "Admin3", Email = "Admin3@localhost", FirstName = "System", LastName = "Admin", EmailConfirmed = true };

@@ -1,7 +1,8 @@
-﻿using GuardianStock.Infrastructure.HubServices;
+﻿using GuardianStock.API.Middleware;
+using GuardianStock.Infrastructure.HubServices;
+using GuardianStock.Infrastructure.HubServices.Settings;
 using GuardianStock.Infrastructure.Persistence;
 using Hangfire;
-using GuardianStock.API.Middleware;
 using Serilog;
 namespace GuardianStock.API.Extensions
 {
@@ -10,14 +11,18 @@ namespace GuardianStock.API.Extensions
 
         public static void ConfigureMiddlewarePipeline(this WebApplication app, IConfiguration configuration)
         {
-            var resetDatabase = configuration.GetSection("InitializeDatabase:ResetDatabase").Get<bool>();
-            var InitialDatabase = configuration.GetSection("InitializeDatabase:InitializeDatabase").Get<bool>();
-            var seedData = configuration.GetSection("InitializeDatabase:SeedData").Get<bool>();
-            var importStatusChannel = configuration.GetSection("HubSettings:ImportProducts:Status").Get<string>();
-            var corsPolicyName = configuration.GetSection("CorsSettings:PolicyName").Get<string>();
 
+            var hubSettings = configuration
+                .GetSection(HubSettings.SectionName)
+                .Get<HubSettings>() ?? new HubSettings();
 
+            var databaseInitializationSettings = configuration
+                .GetSection(DatabaseInitializationSettings.SectionName)
+                .Get<DatabaseInitializationSettings>() ?? new DatabaseInitializationSettings();
 
+            var corsSettings = configuration
+                .GetSection(CorsSettings.SectionName)
+                .Get<CorsSettings>() ?? new CorsSettings();
 
 
             app.UseGloabalExceptionHandler();
@@ -36,19 +41,19 @@ namespace GuardianStock.API.Extensions
                 });
             }
 
-            if (resetDatabase)
+            if (databaseInitializationSettings.ResetDatabase)
                 app.ResetDatabaseIfExists().Wait();
 
-            if (InitialDatabase)
+            if (databaseInitializationSettings.InitializeDatabase)
                 app.InitializeDatabase().Wait();
 
-            if (seedData)
+            if (databaseInitializationSettings.SeedData)
                 app.SeedData().Wait();
 
 
-            app.MapHub<ImportHub>(importStatusChannel!);
+            app.MapHub<ImportHub>(hubSettings.ImportProducts.Status);
             app.UseHangfireDashboard();
-            app.UseCors(corsPolicyName!);
+            app.UseCors(corsSettings.PolicyName);
             app.UseRouting();
             app.UseMiddleware<HandleAuthenticationErrorMiddleware>();
             app.UseAuthentication();

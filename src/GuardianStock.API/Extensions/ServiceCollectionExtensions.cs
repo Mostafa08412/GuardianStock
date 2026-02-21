@@ -1,16 +1,14 @@
 ﻿using Asp.Versioning;
+using GuardianStock.API.Contracts;
 using GuardianStock.Application;
 using GuardianStock.Application.Common.Interfaces;
 using GuardianStock.Infrastructure;
-using GuardianStock.API.Contracts;
 namespace GuardianStock.API.Extensions
 {
     public static class ServiceCollectionExtensions
     {
 
-        public static void RegisterAllServices(
-            this IServiceCollection services,
-            IConfiguration configuration)
+        public static void RegisterAllServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddWebServices(configuration);
             services.AddApplicationServices();
@@ -21,13 +19,11 @@ namespace GuardianStock.API.Extensions
         {
 
             services.AddHttpContextAccessor();
-            services.AddHealthChecks();
             services.AddScoped<ICurrentUser, CurrentUser>();
             services.AddCorsPolicy(configuration);
             services.AddControllers();
             services.AddSwaggerDocumentation();
             services.AddVersioning();
-            services.AddOpenTelemetryObservability(configuration);
             return services;
         }
 

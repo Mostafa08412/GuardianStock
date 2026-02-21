@@ -8,8 +8,10 @@
     <PackageVersion Include="AutoMapper" Version="13.0.1" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="CsvHelper" Version="33.1.0" />
+    <PackageVersion Include="EFCore.BulkExtensions" Version="10.0.0" />
     <PackageVersion Include="FluentAssertions" Version="8.8.0" />
     <PackageVersion Include="FluentEmail.Core" Version="3.0.2" />
+    <PackageVersion Include="FluentEmail.MailKit" Version="3.0.2" />
     <PackageVersion Include="FluentEmail.Razor" Version="3.0.2" />
     <PackageVersion Include="FluentEmail.Smtp" Version="3.0.2" />
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
@@ -50,9 +52,7 @@
     <PackageVersion Include="Serilog.Enrichers.Environment" Version="3.0.1" />
     <PackageVersion Include="Serilog.Enrichers.Thread" Version="4.0.0" />
     <PackageVersion Include="Serilog.Settings.Configuration" Version="8.0.4" />
-    <!-- Health Checks -->
-    <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.1" />
+
     <!-- OpenTelemetry -->
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.0" />

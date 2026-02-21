@@ -13,10 +13,10 @@
     <Content Include="EmailServices\EmailTemplates\ForgetPasswordEmailTemplate.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="EmailServices\EmailTemplates\LowStockEmail.cshtml" >
+    <Content Include="EmailServices\EmailTemplates\LowStockEmail.cshtml">
 	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-    <Content Include="EmailServices\EmailTemplates\UserCreatedEmail.cshtml" >
+    <Content Include="EmailServices\EmailTemplates\UserCreatedEmail.cshtml">
 	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
   </ItemGroup>
@@ -43,16 +43,17 @@
     <PackageReference Include="AutoMapper" />
     <PackageReference Include="CsvHelper" />
     <PackageReference Include="FluentEmail.Core" />
+    <PackageReference Include="FluentEmail.MailKit" />
     <PackageReference Include="FluentEmail.Razor" />
     <PackageReference Include="FluentEmail.Smtp" />
     <PackageReference Include="Google.Apis.Auth" />
     <PackageReference Include="Hangfire" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" />
-	  <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
-	  <PackageReference Include="Microsoft.AspNetCore.SignalR" />
-	  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
-	  <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
+	<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+	<PackageReference Include="Microsoft.AspNetCore.SignalR" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+	<PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
 
   </ItemGroup>
 
