@@ -1,0 +1,26 @@
+using GuardianStock.Domain.Core.Primitives.Result;
+using MediatR;
+
+namespace GuardianStock.Application.Users.Commands.ActivateUser;
+
+public class ActivateUserCommandHandler : IRequestHandler<ActivateUserCommand, Result>
+{
+    private readonly IIdentityService _identityService;
+
+    public ActivateUserCommandHandler(IIdentityService identityService)
+    {
+        _identityService = identityService;
+    }
+
+    public async Task<Result> Handle(ActivateUserCommand request, CancellationToken cancellationToken)
+    {
+        var result = await _identityService.UnlockUserAsync(Guid.Parse(request.UserId), cancellationToken);
+
+        if (result.IsFailure)
+
+            return Result.Failure(result.Errors);
+
+
+        return Result.Success();
+    }
+}
