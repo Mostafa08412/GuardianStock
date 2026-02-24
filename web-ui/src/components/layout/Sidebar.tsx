@@ -53,7 +53,7 @@ export default function Sidebar({ }: SidebarProps) {
       <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
         <div className="w-10 h-10 rounded-xl bg-primary/10 overflow-hidden flex items-center justify-center">
           <img
-            src="https://github.com/Mostafa08412/insight-dash/blob/main/public/logo.png?raw=true"
+            src="https://github.com/Mostafa08412/GuardianStock/blob/main/web-ui/public/logo.png?raw=true"
             alt="GuardianStock Logo"
             className="w-full h-full object-cover"
           />
