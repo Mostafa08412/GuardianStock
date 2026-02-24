@@ -1509,7 +1509,7 @@ Use this approach if you want to:
 ## 1. Clone the repository
 
 ```bash
-git clone https://github.com/mostafa0842/GuardianStock.git
+git clone https://github.com/mostafa08412/GuardianStock.git
 cd GuardianStock
 ```
 
