@@ -170,7 +170,7 @@ export default function Auth() {
 
         <div className="relative z-10">
           <div className="flex items-center gap-3">
-            <img src="https://github.com/Mostafa08412/insight-dash/blob/main/public/logo.png?raw=true" alt="GuardianStock Logo" className="w-12 h-12 rounded-xl" />
+            <img src="https://github.com/Mostafa08412/GuardianStock/blob/main/web-ui/public/logo.png?raw=true" alt="GuardianStock Logo" className="w-12 h-12 rounded-xl" />
             <span className="text-2xl font-bold text-white">GuardianStock</span>
           </div>
         </div>
