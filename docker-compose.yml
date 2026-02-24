@@ -1,93 +1,96 @@
-version: '5.0.1'
+version: '3.8'
 
 services:
-  backend:
-    build: .
-    container_name: ims-service
-    image: ims-service-image
+  frontend:
+    build:
+      context: ./web-ui
+      dockerfile: Dockerfile
+    image: mostafa0841/guardianstock-frontend:latest
+    container_name: guardianstock-frontend
+    ports:
+      - "8080:80"
     environment:
-      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=IMS;User Id=SA;Password=Mostafa#123;TrustServerCertificate=True
-      # Token Settings
+      - VITE_API_BASE_URL=http://localhost:5020/api
+      - VITE_GOOGLE_CLIENT_ID=815542275627-1lvgof71mljiblem9da5c8tpf4bp5boj.apps.googleusercontent.com
+      - VITE_USE_MOCK_DATA=false
+    networks:
+      - backend-network
+    depends_on:
+      backend:
+        condition: service_started
+
+  backend:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: guardianstock-api
+    image: mostafa0841/guardianstock-api:latest
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=GuardianStock;User Id=SA;Password=Admin#123;TrustServerCertificate=True
       - TokenSettings__SecretKey=Yj6pr{WJ+c}WL:Zmc%v364$$jkOi}O3HM_ExtraLongKey123
       - TokenSettings__Issuer=http://localhost:5020
       - TokenSettings__Audience=http://localhost:5020
       - TokenSettings__AccessTokenExpiryMinutes=10
       - TokenSettings__RefreshTokenExpiryMinutes=1000
       - ASPNETCORE_URLS=http://+:5020
-      - Seeding__UseSeedData=false
-      # SMTP Settings
-      - SmtpSettings__SmtpHost=smtp4dev # أو اسم سيرفر الميل في دوكر
+      - InitializeDatabase__ResetDatabase=false
+      - InitializeDatabase__InitializeDatabase=true
+      - InitializeDatabase__SeedData=true
+      - SmtpSettings__SmtpHost=smtp4dev
       - SmtpSettings__SmtpPort=25
       - SmtpSettings__UseSSL=false
       - SmtpSettings__FromEmail=newgamerpc2016@gmail.com
       - SmtpSettings__Password=hfgclegezffgqvus
+      - SmtpSettings__UseCredentials=false
       - ASPNETCORE_ENVIRONMENT=Production
-      # Cors Settings
-      - CorsSettings__PolicyName=DevCorsPolicy
+      - CorsSettings__PolicyName=GuardianStock_Cors_Policy
       - CorsSettings__AllowedOrigins__0=http://localhost:5341
       - CorsSettings__AllowedOrigins__1=http://localhost:3000
-      # File Manager
+      - CorsSettings__AllowedOrigins__2=http://localhost:8080
       - FileManager__TempCsvPath=/Temp
-      # Hub Settings
       - HubSettings__ImportProducts__Status=/hubs/import-status
       - HubSettings__ImportProducts__OnPreviewReady=OnPreviewReady
       - HubSettings__ImportProducts__OnImportCompleted=OnImportCompleted
       - HubSettings__ImportProducts__OnJobFailed=OnJobFailed
       - HubSettings__ImportProducts__OnProgress=OnProgress
-
-      # 1. Using (المكتبات المستخدمة)
       - Serilog__Using__0=Serilog.Sinks.Console
-      - Serilog__Using__1=Serilog.Sinks.File
       - Serilog__Using__2=Serilog.Sinks.Seq
-
-      # 2. MinimumLevel (مستويات اللوج)
       - Serilog__MinimumLevel__Default=Information
       - Serilog__MinimumLevel__Override__Microsoft=Warning
       - Serilog__MinimumLevel__Override__Microsoft.Hosting.Lifetime=Information
       - Serilog__MinimumLevel__Override__Microsoft.EntityFrameworkCore=Warning
       - Serilog__MinimumLevel__Override__System=Warning
-
-      # 3. WriteTo: Console
       - Serilog__WriteTo__0__Name=Console
       - Serilog__WriteTo__0__Args__formatter=Serilog.Formatting.Json.JsonFormatter, Serilog
-
-      # 4. WriteTo: File
-      - Serilog__WriteTo__1__Name=File
-      - Serilog__WriteTo__1__Args__path=/app/logs/ims-.json
-      - Serilog__WriteTo__1__Args__rollingInterval=Day
-      - Serilog__WriteTo__1__Args__retainedFileCountLimit=7
-      - Serilog__WriteTo__1__Args__formatter=Serilog.Formatting.Json.JsonFormatter, Serilog
-
-      # 5. WriteTo: Seq (تم تغيير localhost ليعمل داخل دوكر)
-      - Serilog__WriteTo__2__Name=Seq
-      - Serilog__WriteTo__2__Args__serverUrl=http://seqserver:5341
-
-      # 6. Enrich (إضافة معلومات إضافية للوج)
+      - Serilog__WriteTo__1__Name=Seq
+      - Serilog__WriteTo__1__Args__serverUrl=http://seqserver:5341
       - Serilog__Enrich__0=FromLogContext
       - Serilog__Enrich__1=WithMachineName
       - Serilog__Enrich__2=WithThreadId
       - Serilog__Enrich__3=WithEnvironmentName
-
-      # 7. Properties
-      - Serilog__Properties__Application=IMS
-
-
+      - Serilog__Properties__Application=GuardianStock
+      - Authentication__Google__ClientId=815542275627-1lvgof71mljiblem9da5c8tpf4bp5boj.apps.googleusercontent.com
     ports:
       - "5020:5020"
-
-    networks:
-      - backend-network
-
     volumes:
       - appdata:/app/EmailServices/EmailTemplates/
-
+      - appdata:/app/products-images/
+    networks:
+      - backend-network
+    depends_on:
+      sqlserver:
+        condition: service_started
+      smtp4dev:
+        condition: service_started
+      seqserver:
+        condition: service_started
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: sqlserver
+    container_name: guardianstock-sqlserver
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "Mostafa#123"
+      MSSQL_SA_PASSWORD: "Admin#123"
     ports:
       - "1433:1433"
     volumes:
@@ -97,30 +100,30 @@ services:
 
   seqserver:
     image: datalust/seq
-    container_name: seqserver
+    container_name: guardianstock-seqserver
     ports:
       - "5341:80"
     environment:
       - ACCEPT_EULA=Y
       - SEQ_FIRSTRUN_ADMINPASSWORD=ABC#123
     networks:
-    - backend-network
+      - backend-network
 
   smtp4dev:
     image: rnwood/smtp4dev
-    container_name: smtpserver
+    container_name: guardianstock-smtpserver
     ports:
       - "2525:25"
-      - "3000:80"
+      - "3001:80" # Avoided conflict with port 3000
       - "3050:143"
       - "3100:110"
-
     networks:
-    - backend-network
+      - backend-network
 
 volumes:
   sqlserverdata:
   appdata:
+
 
 networks:
   backend-network:

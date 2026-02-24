@@ -24,11 +24,11 @@ namespace GuardianStock.Application.Auth.ChangePassword
                 .WithErrorCode(ApplicationErrors.IdentityErrors.NewPasswordIsRequired.Code);
             RuleFor(X => X.ConfirmNewPassword)
                 .NotEmpty()
-                .WithMessage(ApplicationErrors.IdentityErrors.NewPasswordIsRequired.Description)
-                .WithErrorCode(ApplicationErrors.IdentityErrors.NewPasswordIsRequired.Code)
+                .WithMessage(ApplicationErrors.IdentityErrors.ConfirmNewPasswordIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.ConfirmNewPasswordIsRequired.Code)
                 .NotNull()
-                .WithMessage(ApplicationErrors.IdentityErrors.NewPasswordIsRequired.Description)
-                .WithErrorCode(ApplicationErrors.IdentityErrors.NewPasswordIsRequired.Code)
+                .WithMessage(ApplicationErrors.IdentityErrors.ConfirmNewPasswordIsRequired.Description)
+                .WithErrorCode(ApplicationErrors.IdentityErrors.ConfirmNewPasswordIsRequired.Code)
                 .Equal(X => X.NewPassword)
                 .WithMessage(ApplicationErrors.IdentityErrors.ConfirmPasswordMismatch.Description)
                 .WithErrorCode(ApplicationErrors.IdentityErrors.ConfirmPasswordMismatch.Code);

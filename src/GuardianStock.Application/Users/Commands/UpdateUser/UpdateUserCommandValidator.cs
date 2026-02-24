@@ -1,5 +1,4 @@
 using FluentValidation;
-using GuardianStock.Domain.Enums;
 using GuardianStock.Domain.Core.Errors;
 
 namespace GuardianStock.Application.Users.Commands.UpdateUser;
@@ -33,9 +32,6 @@ public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
         RuleFor(x => x.Role)
             .NotEmpty()
             .WithMessage(Errors.UserErrors.RoleIsRequired.Description)
-            .WithErrorCode(Errors.UserErrors.RoleIsRequired.Code)
-            .Must(role => role == Roles.Admin || role == Roles.Manager || role == Roles.Staff)
-            .WithMessage(Errors.UserErrors.InvalidRole.Description)
-            .WithErrorCode(Errors.UserErrors.InvalidRole.Code);
+            .WithErrorCode(Errors.UserErrors.RoleIsRequired.Code);
     }
 }

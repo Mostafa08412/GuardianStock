@@ -57,10 +57,9 @@ namespace GuardianStock.API.Infrastructure
             }
             foreach (var error in validationTypeErrors)
             {
-                var fieldName = error.Code.Contains('-') ? error.Code.Split('-')[1] : "General";
-                var fieldErrorCode = error.Code.Contains('-') ? error.Code.Split('-')[0] : error.Code;
-
-                validationErrors.TryAdd(fieldName.ToLowerInvariant(), error.Description);
+                var fieldName = error.Code.Split("__").Skip(1).FirstOrDefault() ?? "General";
+                fieldName = char.ToLowerInvariant(fieldName[0]) + fieldName.Substring(1);
+                validationErrors.TryAdd(fieldName, error.Description);
             }
 
             return (isSuccess, message, errorCode, validationErrors);
