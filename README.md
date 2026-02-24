@@ -1,6 +1,7 @@
 <div align="center">
 
-# <img src="web-ui/public/logo.png" alt="GuardianStock Logo" width="80" style="vertical-align: middle; margin-right: 5px;" /> GuardianStock
+# <img src="web-ui/public/logo.png" alt="GuardianStock Logo" width="80" style="vertical-align: middle; margin-right: 5px;" /> 
+# GuardianStock
 ###  Inventory Management System
 
 <br />
@@ -1918,7 +1919,7 @@ This project is for **educational and portfolio purposes**.
 
 ## 👤 Author
 
-**Mostafa** — [GitHub](https://github.com/Mostafa0842)
+**Mostafa** — [GitHub](https://github.com/Mostafa08412)
 
 <br />
 
