@@ -1,7 +1,6 @@
 <div align="center">
 
-# <img src="web-ui/public/logo.png" alt="GuardianStock Logo" width="80" style="vertical-align: middle; margin-right: 1px;" /> GuardianStock
-
+# <img src="web-ui/public/logo.png" alt="GuardianStock Logo" width="80" style="vertical-align: middle; margin-right: 5px;" /> GuardianStock
 ###  Inventory Management System
 
 <br />
